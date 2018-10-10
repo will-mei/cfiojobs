@@ -1,0 +1,30 @@
+# fio -bs=4m -size=100% -rw=randread -runtime=500 -ramp_time=30 -iodepth=32 -numjobs=2 -group_reporting -direct=1 -ioengine=libaio -time_based --output-format=json -filename=/dev/sdb -name=4m-randread-devsdb.log.json
+# "DEFAULT" job should be set, if any job with an empty customized_options exists.
+#
+#job_name   runtime data_size   block_size_range    read_write_pattern              use_DEFAULT     "customized_options
+DEFAULT     600     100%        4k,256k,4m          randread,randwrite              True            "-ramp_time=30 -group_reporting -direct=1 -iodepth=4  -ioengine=libaio -time_based -numjobs=16 --output-format=json"
+
+readonly    600     100%        4k,256k,4m          read,randread                   True
+allmode     600     100%        4k,256k,4m          read,randread,write,randwrite   True            "-iodepth=32 -numjobs=1"
+
+# 10 min
+allbs       300     100% 4k,8k,16k,32k,64k,128k,256k,512k,1m,4m randread,randwrite  True            "-iodepth=16 -numjobs=2"
+# 15 min
+rand        500     100%        4k,256k,4m          randread,randwrite              True            "-iodepth=32 -numjobs=2"
+# 2 day
+durable     172800  100%        none                randrw                          False           "-direct=1  -iodepth=32 -numjobs=4 -bssplit=4k/50:256k/40:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
+#
+short       120     100%        4k,256k,4m          randread,randwrite              True            "-iodepth=32 -numjobs=2"
+normal      500     100%        4k,64k,256k,4m      read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
+#normal      500     100%        4k,256k             read,randread                   True            "-iodepth=32 -numjobs=2"
+small       500     100%        4k,16k,32k,64k,256k read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
+sequntial   500     100%        4k,256k,4m          read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
+# 0911
+#4m          600     100%        4m                  read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
+#4k          600     100%        4k                  read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
+# 0912
+4m          900     100%        4m                  read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
+4k          900     100%        4k                  read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
+0912        500     100%        4k,4m               read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
+seqr        500     100%        4m                  read                            True            "-iodepth=32 -numjobs=2"
+sseqr       100     100%        4m                  read                            True            "-iodepth=8  -numjobs=1"

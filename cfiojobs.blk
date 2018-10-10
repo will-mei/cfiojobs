@@ -1,0 +1,108 @@
+#Please got your list writen in one line(There is no space at the head of the line).
+#list_name  lbk_list
+example     /dev/sda5,/dev/sdb,/dev/sdc,/dev/sdd
+file4       /mnt/sdb/data,/mnt/sdc/data,/mnt/sdd/data,/mnt/sde/data   #esxi vm iscsi driver
+
+vd5         /dev/vdb,  #abcd
+            /dev/vdc,
+            /dev/vdd,
+            /dev/vde,
+            /dev/vdf  #for kvm vm virtio driver
+
+blk1	/dev/sdb,
+		/dev/sdc,
+		/dev/sdd,
+		/dev/sde,
+		/dev/sdf,
+		/dev/sdg,
+		/dev/sdh,
+		/dev/sdi
+
+file8    /mnt/sdb/data,
+		/mnt/sdc/data,
+		/mnt/sdd/data,
+		/mnt/sde/data,
+		/mnt/sdf/data,
+		/mnt/sdg/data,
+		/mnt/sdh/data,
+		/mnt/sdi/data
+
+one	 /dev/sdb
+
+lasa /dev/sdb,
+	/dev/sdc,
+	/dev/sdd,
+	/dev/sde,
+	/dev/sdf,
+	/dev/sdg,
+	/dev/sdh,
+	/dev/sdi,
+	/dev/sdj,
+	/dev/sdk,
+	/dev/sdl,
+	/dev/sdm,
+	/dev/nvme0n1,
+	/dev/nvme1n1
+
+lasa6 /dev/sdb,
+	/dev/sdc,
+	/dev/sdd,
+	/dev/sde,
+	/dev/sdf,
+	/dev/sdg,
+	/dev/sdh,
+	/dev/sdi,
+	/dev/sdj,
+	/dev/sdk
+
+lasa10  /dev/sdb,
+	/dev/sdc,
+	/dev/sdd,
+	/dev/sde,
+	/dev/sdf,
+	/dev/sdg,
+	/dev/sdh,
+	/dev/sdi,
+	/dev/sdj,
+	/dev/sdk
+
+gansumgr /dev/sdb,
+	/dev/sdc,
+	/dev/sdd,
+	/dev/sde,
+	/dev/sdf,
+	/dev/sdg,
+	/dev/sdh,
+	/dev/sdi,
+	/dev/sdj,
+	/dev/sdk,
+	/dev/nvme0n1,
+	/dev/nvme1n1
+
+gansuapp1 /dev/sdb,
+	/dev/sdc,
+	/dev/sdd,
+	/dev/sde,
+	/dev/sdf,
+	/dev/sdg,
+	/dev/sdh,
+	/dev/sdi,
+	/dev/sdj,
+	/dev/sdk,
+	/dev/sdl,
+	/dev/sdm
+
+gansuapp2 /dev/sdb
+
+gansuapp3 /dev/sdb,
+	/dev/nvme0n1,
+	/dev/nvme1n1
+
+gansuapp4 /dev/sdb
+
+gansuapp5 /dev/sdb,
+	/dev/nvme0n1
+
+gansuapp6 /dev/sdb
+
+gansuapp7 /dev/sdb

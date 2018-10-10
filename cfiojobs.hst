@@ -1,0 +1,1505 @@
+./cfiojobs 
+2018-08-15_14:20:58: ./cfiojobs 
+./cfiojobs -g ceph2  blkid
+./cfiojobs -g ceph2  blkid /dev/sdb1
+./cfiojobs -g ceph2  ceph -v
+./cfiojobs -g ceph2 ceph -v -x 172.18.211.63,172.18.211.64
+./cfiojobs -g ceph2 echo $HOSTNAME
+./cfiojobs -g ceph2 ls
+./cfiojobs -g ceph2  ls
+./cfiojobs -g ceph2 ls selinux*
+./cfiojobs -g ceph2 ls -x 172.18.211.63,172.18.211.64
+./cfiojobs -g ceph2  systemctl status ceph-mgr.target
+./cfiojobs -g ceph2 -x 172.18.211.62  yum -y install ./selinux-policy-*
+./cfiojobs -g ceph2 -x 172.18.211.62  yum -y remove selinux-policy-targeted
+./cfiojobs -g ceph2 -x 172.18.211.62  yum -y update ceph ceph-mon
+./cfiojobs -g ceph2 yum list ceph ceph-mon
+./cfiojobs -g ceph2 yum list ceph ceph-mon -x 172.18.211.63,172.18.211.64
+./cfiojobs -g ceph54 blkid
+./cfiojobs -g ceph54 blkid |sort
+./cfiojobs -g ceph54 --fio-list
+./cfiojobs -g ceph54 lsblk
+./cfiojobs -g ceph /bin/cp -f /etc/yum.repos.d/CentOS-Base.repo.10 /etc/yum.repos.d/CentOS-Base.repo
+./cfiojobs -g ceph /bin/cp -f /etc/yum.repos.d/CentOS-Base.repo.12 /etc/yum.repos.d/CentOS-Base.repo -q
+./cfiojobs -g ceph blkid
+./cfiojobs -g ceph  cat /etc/ntp.conf
+./cfiojobs -g ceph  cat  /etc/yum.repos.d/CentOS-Base.repo
+./cfiojobs -g ceph  cat  /etc/yum.repos.d/CentOS-Base.repo.12
+./cfiojobs -g ceph  cat mv /etc/yum.repos.d/CentOS-Base.repo.12
+./cfiojobs -g ceph ceph osd list
+./cfiojobs -g ceph ceph osd pool set rbd pg_num 1024 -x 172.18.211.56,172.18.211.57
+./cfiojobs -g ceph ceph osd pool set rbd pgp_num 1024 -x 172.18.211.56,172.18.211.57
+./cfiojobs -g ceph ceph osd tree -x 172.18.211.56,172.18.211.57
+./cfiojobs -g ceph  ceph -s
+./cfiojobs -g ceph ceph -s
+./cfiojobs -g ceph  ceph -s -q
+./cfiojobs -g ceph ceph -s -x 172.18.211.56,172.18.211.57
+./cfiojobs -g ceph  ceph -v  
+./cfiojobs -g ceph ceph -v
+./cfiojobs -g ceph cp /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.10
+./cfiojobs -g ceph  cp /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.12
+./cfiojobs -g ceph cp /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.12
+./cfiojobs -g ceph date
+./cfiojobs -g ceph  for i in $(df|grep ceph- |cut -d- -f2) ;do echo "" ;ls -l /dev/disk/by-partlabel/ceph-data-$i ;ls -l /var/lib/ceph/osd/ceph-$i/journal ;blkid|grep -E "ceph-data-$i\"|ceph-journal-$i\""  ;done
+./cfiojobs -g ceph  for i in $(df|grep ceph- |cut -d- -f2) ;do echo "" ;ls -l /var/lib/ceph/osd/ceph-$i/journal ;blkid|grep ceph-journal-$i\" ; df -h |grep ceph-$i ;ls -l /dev/disk/by-partlabel/ceph-data-$i ; blkid|grep ceph-data-$i ;done
+./cfiojobs -g ceph  for i in $(df|grep ceph- |cut -d- -f2) ;do echo "" ;ls -l /var/lib/ceph/osd/ceph-$i/journal ;blkid|grep -E "ceph-data-$i\"|ceph-journal-$i\""  ;done
+./cfiojobs -g ceph  for i in $(df|grep ceph- |cut -d- -f2) ;do echo "" ;ls -l /var/lib/ceph/osd/ceph-$i/journal ;blkid|grep -E "ceph-journal-$i\"|ceph-data-$i\"" ;ls -l /dev/disk/by-partlabel/ceph-data-$i ;df -h |grep ceph-$i ;done
+./cfiojobs -g ceph  for i in $(df|grep ceph- |cut -d- -f2) ;do echo "" ;ls -l /var/lib/ceph/osd/ceph-$i/journal ;blkid|grep -E "ceph-journal-$i\"|ceph-data-$i\"" ;ls -l /dev/disk/by-partlabel/ceph-data-$i  ;done
+./cfiojobs -g ceph  for i in $(df|grep ceph- |cut -d- -f2) ;do ls -l /var/lib/ceph/osd/ceph-$i/journal ;blkid|grep -E "ceph-data-$i\"|ceph-journal-$i\""  ;done
+./cfiojobs -g ceph getenforce
+./cfiojobs -g ceph grep enabled=1 /etc/yum.repos.d/CentOS-Base.repo
+./cfiojobs -g ceph grep enabled=1 /etc/yum.repos.d/CentOS-Base.repo |wc -l
+./cfiojobs -g ceph grep public /etc/ceph/ceph.conf
+./cfiojobs -g ceph ip a
+./cfiojobs -g ceph ip a|grep 192.168.200
+./cfiojobs -g ceph iptables -L
+./cfiojobs -g ceph ls
+./cfiojobs -g ceph  ls
+./cfiojobs -g ceph lsblk
+./cfiojobs -g ceph  lsblk
+./cfiojobs -g ceph  ls /dev/disk/by-partlabel/
+./cfiojobs -g ceph  ls /etc/yum.repos.d/
+./cfiojobs -g ceph ls -q
+./cfiojobs -g ceph rbd du img01
+./cfiojobs -g ceph  systemctl restart ceph-mon
+./cfiojobs -g ceph  systemctl restart ceph-mon.target
+./cfiojobs -g ceph  systemctl restart ceph-osd.target;echo $?; sleep3
+./cfiojobs -g ceph  tail -20 /etc/yum.repos.d/CentOS-Base.repo
+./cfiojobs -g ceph tail /etc/ntp.conf
+./cfiojobs -g ceph  tail  /etc/yum.repos.d/CentOS-Base.repo
+./cfiojobs -g ceph tail /etc/yum.repos.d/CentOS-Base.repo
+./cfiojobs -g ceph  yes|mv /etc/yum.repos.d/CentOS-Base.repo.12 /etc/yum.repos.d/CentOS-Base.repo
+./cfiojobs -g ceph  yes|mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.10
+./cfiojobs -g ceph  yum clean all ;yum makecache
+./cfiojobs -g ceph  yum list ceph
+./cfiojobs -g ceph  yum list ceph 
+./cfiojobs -g ceph yum list ceph
+./cfiojobs -g ceph  yum list ceph ceph -mon
+./cfiojobs -g ceph  yum list ceph ceph-mon
+./cfiojobs -g ceph yum list ceph ceph-mon
+./cfiojobs -g ceph yum list ceph -x 172.18.211.56
+./cfiojobs -g ceph yum search ceph ceph-mon
+./cfiojobs -g ceph yum search ceph-mon
+./cfiojobs -g ceph  yum -y install vim 
+./cfiojobs -g ceph  yum -y remove librados2-12.2.5-0.el7.x86_64 python-rbd-12.2.5-0.el7.x86_64 librbd1-12.2.5-0.el7.x86_64 librgw2-12.2.5-0.el7.x86_64 python-rados-12.2.5-0.el7.x86_64 librados2-12.2.5-0.el7.x86_64 librbd1-12.2.5-0.el7.x86_64 python-cephfs-12.2.5-0.el7.x86_64
+./cfiojobs -g ceph yum -y remove librados2-12.2.5-0.el7.x86_64 python-rbd-12.2.5-0.el7.x86_64 librbd1-12.2.5-0.el7.x86_64 librgw2-12.2.5-0.el7.x86_64 python-rados-12.2.5-0.el7.x86_64 librados2-12.2.5-0.el7.x86_64 librbd1-12.2.5-0.el7.x86_64 python-cephfs-12.2.5-0.el7.x86_64
+./cfiojobs -g ceph  yum -y update  ceph ceph-mon
+./cfiojobs -F ./f1,./f2,./f3 -g ceph -x 172.18.211.56,172.18.211.57
+./cfiojobs -F ./f1,./f2,./f3 -g ceph -x 172.18.211.56,172.18.211.57 -D /tmp
+./cfiojobs -F ./f1,./f2,./f3 -g ceph -x 172.18.211.56,172.18.211.57 -D /tmp -d
+./cfiojobs -F ./f1,./f2,./f3 -g ceph -x 172.18.211.56,172.18.211.57 -q
+./cfiojobs -F f1,f2,f3 -g ceph -x 172.18.211.56,172.18.211.57 -q
+2018-08-13_10:48:51: ./cfiojobs --fio-list -g grp1
+./cfiojobs --fio-list -g grp1
+./cfiojobs --fio -g grp1 -b blk1,blk2 -j job1,job2 -x 172.18.211.137 -o vmtest1
+./cfiojobs --fio -g grp1 -b blk1,blk2 -j job1,job2 -x 172.18.211.137 -o vmtest8
+./cfiojobs --fio -g grp1 -b blk1 -j job1 -x 172.18.211.137 -o vmtest1
+./cfiojobs --fio -g grp1 -b blk1 -j job1 -x 172.18.211.137 -o vmtest2
+./cfiojobs --fio -g grp1 -b blk1 -j job1 -x 172.18.211.137 -o vmtest2 -q
+./cfiojobs --fio -g grp1 -b blk1 -j job22 -o vmtest1
+./cfiojobs --fio -g grp1 -b blk1 -j job2 -o vmtest1
+2018-08-14_10:42:16: ./cfiojobs -g grp1 --fio-list
+2018-08-17_09:19:39: ./cfiojobs -g grp1 --fio-list -x 172.18.211.134
+./cfiojobs --fio -g grp1 ls
+./cfiojobs --fio-list -g grp1 lsblk
+./cfiojobs --fio -g grp1 ls -d
+./cfiojobs --fio-list -g grp1 -x 172.18.211.137
+./cfiojobs --fio-list -g grp1 -x 172.18.211.137 -d
+./cfiojobs --fio-list -g grp -x 172.18.211.137
+./cfiojobs --fio-list -g grp -x 172.18.211.137 -d
+./cfiojobs -g grp1 -b blk1 -j job1 -o vmtest1
+./cfiojobs -g grp1 -b blk1 -j job1 -o vmtest1 --fio
+./cfiojobs -g grp1 -b blk1 -j job1 -o vmtest2 --fio
+./cfiojobs -g grp1 -b blk1 -j job2 -o vmtest1
+./cfiojobs -g grp1  fdisk -l
+./cfiojobs -g grp1 --fio -b blk1 -j job1 -o vmtest1
+./cfiojobs -g grp1 --fio-list
+./cfiojobs -g grp1 --fio-stop
+./cfiojobs -g grp1 ls
+./cfiojobs -g grp1 lsblk
+./cfiojobs -g grp1 ls -d
+./cfiojobs -g grp1 systemctl status firewalld
+./cfiojobs -g grp1 w
+./cfiojobs -g grp1 -x 172.18.211.137 lsblk
+./cfiojobs -g grp1 -x 172.18.211.137 lsblk -q
+2018-08-17_16:04:10: ./cfiojobs -g vm2 --fio-list
+2018-08-17_16:04:48: ./cfiojobs -g vm2 --fio-list -x 172.18.211.110
+2018-08-13_14:22:27: ./cfiojobs lsblk -g grp1
+2018-08-17_16:54:59: ./cfiojobs -g grp1 systemctl status firewalld
+2018-08-17_16:56:46: ./cfiojobs -g grp1 lsblk
+2018-08-17_16:57:42: ./cfiojobs -g grp1 lsblk
+2018-08-20_10:14:52: ./cfiojobs -g grp1 lsblk
+2018-08-20_10:15:06: ./cfiojobs -g grp1 --fio-list
+2018-08-20_15:51:46: ./cfiojobs -g grp1 --fio-list
+2018-08-21_08:51:50: ./cfiojobs -g grp1 --fio-list
+2018-08-21_08:51:58: ./cfiojobs -g grp1 --fio-list
+2018-08-21_10:35:47: ./cfiojobs -g grp1 --fio-list
+2018-08-21_10:36:54: ./cfiojobs -g grp1 lsblk
+2018-08-21_10:37:57: ./cfiojobs -g grp1 ls
+2018-08-21_10:39:07: ./cfiojobs -g grp1 --fio-list
+2018-08-21_15:49:33: ./cfiojobs -g grp1 --fio-list
+2018-08-21_16:42:15: ./cfiojobs -g grp1 --fio-list
+2018-08-21_18:18:32: ./cfiojobs -g grp1 --fio-list
+2018-08-22_09:14:47: ./cfiojobs -g grp1 --fio-list
+2018-08-22_13:53:18: ./cfiojobs -g grp1 ls
+2018-08-22_14:06:56: ./cfiojobs -g grp1 --fio-list
+2018-08-22_14:08:25: ./cfiojobs -g grp1 ps aux |grep fio |grep -v grep |head -5
+2018-08-22_14:15:15: ./cfiojobs -g grp1 --fio-list
+2018-08-22_14:15:27: ./cfiojobs -g grp1 ps aux
+2018-08-22_14:15:57: ./cfiojobs -g grp1 ps aux |grep fio |grep -v grep |head -5
+2018-08-22_14:16:56: ./cfiojobs "-g grp1 ps aux |grep fio |grep -v grep |head -5"
+2018-08-22_14:18:04: ./cfiojobs "-g grp1 ps aux |grep fio |grep -v grep |head -5"
+2018-08-22_14:37:13: ./cfiojobs -g grp1 --fio-list
+2018-08-22_14:38:09: ./cfiojobs -g grp1 --fio-stop
+2018-08-22_14:38:16: ./cfiojobs -g grp1 --fio-list
+2018-08-22_14:42:51: ./cfiojobs -g grp1 -j durable -b durable --fio -o durable_1
+2018-08-22_14:43:51: ./cfiojobs -g grp1 --fio-list
+2018-08-22_14:47:31: ./cfiojobs -g grp1 --fio-list
+2018-08-22_14:52:58: ./cfiojobs -g grp1 --fio-list
+2018-08-22_14:53:34: ./cfiojobs -g grp1 date
+2018-08-22_14:55:56: ./cfiojobs -g grp1 --fio-list
+2018-08-22_14:56:29: ./cfiojobs -g grp1 --fio-list
+2018-08-22_14:58:58: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:00:03: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:00:17: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:06:45: ./cfiojobs -g grp1 date --date="-1 day"
+2018-08-22_15:07:29: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:07:55: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:18:22: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:20:12: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:24:27: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:25:05: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:29:28: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:48:57: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:51:12: ./cfiojobs -g grp1 -j durable -b durable --fio -o durable_2
+2018-08-22_15:51:35: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:51:44: ./cfiojobs -g grp1 --fio-stop
+2018-08-22_15:51:51: ./cfiojobs -g grp1 --fio-list
+2018-08-22_15:52:09: ./cfiojobs -g grp1 -j durable -b durable --fio -o durable_2
+2018-08-22_15:55:35: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:00:35: ./cfiojobs -g grp1 date
+2018-08-22_16:00:58: ./cfiojobs -g grp1 date +%s
+2018-08-22_16:03:57: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:04:22: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:10:37: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:14:26: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:21:57: ./cfiojobs -g grp1 -j durable -b durable --fio -o durable_2
+2018-08-22_16:24:13: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:24:23: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:37:06: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:37:34: ./cfiojobs -g grp1 -j durable -b durable --fio -o durable_2
+2018-08-22_16:37:59: ./cfiojobs -g grp1 -j durable -b durable --fio -o durable_2
+2018-08-22_16:43:45: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:43:55: ./cfiojobs -g grp1 --fio-stop
+2018-08-22_16:44:07: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:44:13: ./cfiojobs -g grp1 -j durable -b durable --fio -o durable_3
+2018-08-22_16:44:59: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:53:08: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:53:14: ./cfiojobs -g grp1 --fio-stop
+2018-08-22_16:53:20: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:54:46: ./cfiojobs -g grp1 -j durable -b durable --fio -o durable_3
+2018-08-22_16:57:17: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:57:22: ./cfiojobs -g grp1 --fio-stop
+2018-08-22_16:57:28: ./cfiojobs -g grp1 --fio-list
+2018-08-22_16:57:39: ./cfiojobs -g grp1 -j durable -b durable --fio -o durable_3
+2018-08-22_17:03:28: ./cfiojobs -g grp1 --fio-list
+2018-08-22_17:06:21: ./cfiojobs -g grp1 --fio-list
+2018-08-22_17:08:39: ./cfiojobs -g grp1 --fio-list
+2018-08-22_18:16:11: ./cfiojobs -g grp1 -j allmode -b durable -o vmtest1
+2018-08-22_18:16:30: ./cfiojobs -g grp1 -j allmode -b durable -o vmtest1 --fio
+2018-08-22_18:34:21: ./cfiojobs -g grp1 --fio-list
+2018-08-22_18:38:08: ./cfiojobs -g grp1 --fio-list
+2018-08-22_18:40:03: ./cfiojobs -g grp1 --fio-list
+2018-08-22_18:40:22: ./cfiojobs -g grp1 free
+2018-08-22_18:40:36: ./cfiojobs -g grp1 free -h
+2018-08-23_08:49:07: ./cfiojobs -g grp1 --fio-list
+2018-08-23_09:09:34: ./cfiojobs -g grp1 lsblk
+2018-08-23_09:09:55: ./cfiojobs -g grp1 df -h
+2018-08-23_09:11:15: ./cfiojobs --fio -g grp1 -j allmode -b durable -o vmtest2
+2018-08-23_09:13:10: ./cfiojobs -g grp1 --fio-list
+2018-08-23_09:19:27: ./cfiojobs -g grp1 df -h
+2018-08-23_10:14:24: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:15:00: ./cfiojobs -g grp1 date
+2018-08-23_10:16:29: ./cfiojobs -g grp1 date -R
+2018-08-23_10:17:28: ./cfiojobs -g grp1 cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime; date -R
+2018-08-23_10:18:23: ./cfiojobs -g grp1  systemctl status chronyd
+2018-08-23_10:19:26: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:20:05: ./cfiojobs -g grp1 date -R
+2018-08-23_10:21:58: ./cfiojobs -g grp1 date +%s
+2018-08-23_10:32:57: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:33:43: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:35:23: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:36:22: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:46:08: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:51:30: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:52:22: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:54:10: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:55:22: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:57:14: ./cfiojobs -g grp1 --fio-list
+2018-08-23_10:59:23: ./cfiojobs -g grp1 --fio-list
+2018-08-23_11:03:25: ./cfiojobs -g grp1 --fio-list
+2018-08-23_11:16:47: ./cfiojobs -g grp1 --fio-list
+2018-08-23_12:10:30: ./cfiojobs -g grp1 --fio-list
+2018-08-23_12:11:37: ./cfiojobs -g grp1 --fio-list
+2018-08-23_12:13:19: ./cfiojobs -g grp1 --fio-list
+2018-08-23_12:16:09: ./cfiojobs -g grp1 --fio-list
+2018-08-23_12:18:37: ./cfiojobs -g grp1 --fio-list
+2018-08-23_12:29:55: ./cfiojobs --fio -g grp1 -j allmode -b durable -d -o vmtest3
+2018-08-23_12:36:09: ./cfiojobs -g grp1 --fio-list
+2018-08-23_12:40:17: ./cfiojobs -g grp1 --fio-list
+2018-08-23_13:45:11: ./cfiojobs -g grp1 --fio-list
+2018-08-23_13:45:39: ./cfiojobs -g grp1 --fio-list
+2018-08-23_14:09:04: ./cfiojobs -g grp1 --fio-list
+2018-08-23_14:09:32: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_14:14:20: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_15:00:21: ./cfiojobs --fio -g grp1 -j allmode -b durable -d -o vmtest4 -f
+2018-08-23_15:00:35: ./cfiojobs --fio -g grp1 -j allmode -b durable -o vmtest4 -f
+2018-08-23_15:08:43: ./cfiojobs -g grp1 --fio-list
+2018-08-23_15:16:25: ./cfiojobs -g grp1 --fio-list
+2018-08-23_15:16:43: ./cfiojobs -g grp1 --fio-list
+2018-08-23_15:18:47: ./cfiojobs -g grp1 --fio-list
+2018-08-23_15:19:10: ./cfiojobs -g grp1 --fio-list
+2018-08-23_15:48:54: ./cfiojobs 
+2018-08-23_16:28:10: ./cfiojobs -g grp1 --fio-list
+2018-08-23_17:28:30: ./cfiojobs --fio -g grp1 -j allmode -b durable -o vmtest5 -f
+2018-08-23_17:33:38: ./cfiojobs -g grp1 --fio-list
+2018-08-23_17:33:54: ./cfiojobs -g grp1 --fio-list
+2018-08-23_17:34:13: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_17:34:49: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_17:38:21: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_17:38:53: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_17:39:00: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_17:39:07: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_17:42:20: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_17:43:07: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_17:43:37: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_17:44:11: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_17:47:32: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_18:29:39: ./cfiojobs --fio -g grp1 -j job1 -b durable -o vmtest5 -f
+2018-08-23_18:32:34: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_18:36:26: ./cfiojobs --fio -g grp1 -j job1 -b durable -o vmtest5 -f
+2018-08-23_18:42:29: ./cfiojobs --fio -g grp1 -j allmode -b durable -o vmtest5 -f
+2018-08-23_18:50:18: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_18:50:53: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-23_18:55:24: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-24_09:01:15: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-24_09:57:37: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-24_09:58:55: ./cfiojobs -g grp1 df -h -x 172.18.211.137
+2018-08-24_09:59:06: ./cfiojobs --fio -g grp1 -j allmode -b durable -o vmtest6 -f
+2018-08-24_10:00:49: ./cfiojobs -g grp1 --fio-list -x 172.18.211.137
+2018-08-27_15:49:48: ./cfiojobs -g lasa -q lsblk
+2018-08-27_15:50:57: ./cfiojobs -g lasa lsblk;sleep 2
+2018-08-27_16:25:52: ./cfiojobs -g lasa fio -v
+2018-08-27_16:29:28: ./cfiojobs 
+2018-08-27_16:31:32: ./cfiojobs -g lasa -F /home/meiwei/fio -D /usr/bin/
+2018-08-27_16:33:47: ./cfiojobs -g lasa chmod +x /usr/bin/fio
+2018-08-27_16:35:54: ./cfiojobs -g lasa yum install -y  librbd1 
+2018-08-27_16:46:00: ./cfiojobs -g lasa  fio -v
+2018-08-27_16:56:49: ./cfiojobs 
+2018-08-27_16:57:57: ./cfiojobs --fio -g lasa -j lasa -b lasa -f -o lasa_0827
+2018-08-27_17:00:18: ./cfiojobs -g lasa --fio-list
+2018-08-27_17:15:54: ./cfiojobs -g lasa --fio-list
+2018-08-27_17:39:54: ./cfiojobs -g lasa --fio-list
+2018-08-27_18:08:40: ./cfiojobs -g lasa --fio-list
+2018-08-27_18:24:42: ./cfiojobs -g lasa --fio-list
+2018-08-27_18:39:42: ./cfiojobs -g lasa --fio-list
+2018-08-28_08:44:36: ./cfiojobs -g lasa --fio-list
+2018-08-28_08:46:46: ./cfiojobs --fio -g lasa -j lasa -b lasa -f -o lasa_0827
+2018-08-28_08:49:34: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:17:45: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:23:55: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:27:16: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:31:08: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:37:35: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:39:06: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:40:08: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:45:12: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:45:32: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:48:50: ./cfiojobs -g lasa --fio-list
+2018-08-28_09:50:22: ./cfiojobs -g lasa --fio-list
+2018-08-28_10:57:50: ./cfiojobs -g lasa --fio-list
+2018-08-28_13:36:16: ./cfiojobs -g lasa --fio-list
+2018-08-28_13:36:42: ./cfiojobs -g lasa --fio-list
+2018-08-28_13:37:00: ./cfiojobs -g lasa -q ls
+2018-08-28_13:38:31: ./cfiojobs -g lasa -q ls
+2018-08-28_13:44:07: ./cfiojobs -g lasa -q ls
+2018-08-28_14:04:09: ./cfiojobs -g lasa -q hostname
+2018-08-28_14:05:03: ./cfiojobs -g lasa -q hostname -f
+2018-08-28_18:19:39: ./cfiojobs -g lasa --fio-list
+2018-08-28_18:25:51: ./cfiojobs --fio -g lasa -j lasa -b lasa -f -o lasa_0827
+2018-08-29_08:31:37: ./cfiojobs -g lasa --fio-list
+2018-08-29_08:31:58: ./cfiojobs --fio -g lasa -j lasa -b lasa -f -s -o lasa_0827
+2018-08-29_08:51:56: ./cfiojobs --fio -g lasa -j lasa1 -b lasa -f -o lasa_0827
+2018-08-29_08:53:18: ./cfiojobs -g lasa --fio-stop
+2018-08-29_08:54:21: ./cfiojobs -g lasa --fio-list
+2018-08-29_08:54:45: ./cfiojobs -g lasa --fio-stop
+2018-08-29_08:55:36: ./cfiojobs -g lasa --fio-list
+2018-08-29_08:56:05: ./cfiojobs -g lasa --fio-stop
+2018-08-29_08:56:50: ./cfiojobs -g lasa --fio-list
+2018-08-29_08:58:38: ./cfiojobs -g lasa --fio-list
+2018-08-29_08:59:01: ./cfiojobs -g lasa --fio-stop
+2018-08-29_09:00:55: ./cfiojobs -g lasa --fio-list
+2018-08-29_09:01:21: ./cfiojobs --fio -g lasa -j lasa1 -b lasa -f -o lasa_0827
+2018-08-29_10:38:16: ./cfiojobs --fio -g lasa -j lasa -b lasa -f -s -o lasa_0828_single
+2018-08-29_13:26:26: ./cfiojobs -g lasa --fio-list
+2018-08-29_14:45:34: ./cfiojobs -g lasa --fio-list
+2018-08-29_15:33:10: ./cfiojobs -g lasa --fio-list
+2018-08-29_18:27:21: ./cfiojobs -g lasa --fio-list
+2018-08-30_10:07:54: ./cfiojobs -g lasa --fio-list
+2018-08-30_10:14:58: ./cfiojobs -g lasa --fio-stop
+2018-08-30_10:16:54: ./cfiojobs -g lasa --fio-list
+2018-08-30_10:17:06: ./cfiojobs -g lasa --fio-stop
+2018-08-30_10:18:00: ./cfiojobs -g lasa --fio-list
+2018-08-30_10:24:50: ./cfiojobs -g lasa9096 -b lasa9096 -j single -s -f -o single_9096
+2018-08-30_10:25:09: ./cfiojobs -g lasa9096 -b lasa9096 -j single -s -f -o single_9096 --fio
+2018-08-30_10:41:53: ./cfiojobs -g lasa9096 --fio-list
+2018-08-30_11:05:43: ./cfiojobs --fio -g lasa -x 10.216.0.90,10.216.0.96 -j single -b lasa -f -o lasa_single
+2018-08-30_13:46:48: ./cfiojobs -g lasa --fio-list
+2018-08-30_16:30:29: ./cfiojobs -g lasa9096 -b lasa9096 -j single -s -f -o single_9096 --fio
+2018-08-30_16:32:58: ./cfiojobs -g lasa --fio-list
+2018-08-30_16:33:35: ./cfiojobs -g lasa --fio-list
+2018-08-30_16:37:43: ./cfiojobs --fio -g lasa -x 10.216.0.90,10.216.0.96 -j single -s -b lasa -f -o lasa_single
+018-08-31_12:22:23: ./cfiojobs -g lasa --fio-list
+2018-08-31_12:29:18: ./cfiojobs --fio -g lasa -j single -s -b lasa -f -o lasa_single
+2018-08-31_12:31:02: ./cfiojobs --fio-list -g lasa
+2018-09-03_08:58:08: ./cfiojobs -g lasa --fio-list
+2018-09-03_09:20:33: ./cfiojobs --fio -g lasa -j lasa -b lasa -f -o lasa_parallel
+2018-09-03_13:47:49: ./cfiojobs -g lasa -b lasa -j durable --fio -f -o durable_test
+2018-09-03_13:59:14: ./cfiojobs -g lasa -b lasa -j durable --fio -f -o lasa_durable_0903
+2018-09-03_14:54:44: ./cfiojobs -g lasa --fio-list
+2018-09-03_14:55:45: ./cfiojobs -g lasa --fio-list
+2018-09-03_15:03:25: ./cfiojobs -g lasa cat /proc/scsi/scsi
+2018-09-03_15:12:29: ./cfiojobs -g lasa  dmesg |grep -i raid
+2018-09-03_16:14:36: ./cfiojobs -g lasa  modinfo aacraid |grep version
+2018-09-03_16:20:53: ./cfiojobs -g lasa  modinfo aacraid |grep version
+2018-09-03_16:36:37: ./cfiojobs -g lasa  rpm -qa|grep kmod
+2018-09-03_17:12:26: ./cfiojobs -g lasa --fio-list
+2018-09-04_13:00:16: ./cfiojobs -g lasa -b lasa -j durable --fio -f -o lasa_durable_0904
+2018-09-04_18:07:11: ./cfiojobs -g lasa --fio-list
+2018-09-05_09:17:13: ./cfiojobs -g lasa -b lasa -j durable --fio -f -o lasa_durable_0905
+2018-09-05_09:26:14: ./cfiojobs -g lasa --fio-list
+2018-09-05_09:26:44: ./cfiojobs -g lasa --fio-list -x 10.216.0.75
+2018-09-05_10:06:08: ./cfiojobs -g lasa --fio-list -x 10.216.0.75
+2018-09-05_10:08:43: ./cfiojobs -g lasa --fio-list -x 10.216.0.75
+2018-09-05_10:12:16: ./cfiojobs -g lasa --fio-list -x 10.216.0.75
+2018-09-05_10:31:02: ./cfiojobs -g lasa --fio-list -x 10.216.0.75
+2018-09-06_09:12:14: ./cfiojobs -g lasa lsblk
+2018-09-06_09:27:28: ./cfiojobs -g lasa lsblk
+2018-09-06_09:37:07: ./cfiojobs -g lasa lsblk
+2018-09-06_09:37:16: ./cfiojobs -g lasa lsblk -q
+2018-09-06_09:39:05: ./cfiojobs -g lasa -b lasa -j durable --fio -f -o lasa_durable_0906
+2018-09-06_09:42:52: ./cfiojobs -g lasa -b lasa -j durable --fio -f -o lasa_durable_0906
+2018-09-06_09:44:03: ./cfiojobs -g lasa -b lasa -j durable --fio -f -o lasa_durable_0906
+2018-09-06_10:06:03: ./cfiojobs -g lasa --fio-list
+2018-09-06_10:35:11: ./cfiojobs -g lasa --fio-list
+2018-09-06_10:44:22: ./cfiojobs -g lasa --fio-stop
+2018-09-06_10:45:32: ./cfiojobs -g lasa --fio-list
+2018-09-06_10:47:12: ./cfiojobs -g lasa --fio-list
+2018-09-06_10:47:53: ./cfiojobs -g lasa lsblk;sleep 3
+2018-09-06_10:48:22: ./cfiojobs -g lasa lsblk |wc -l
+2018-09-06_10:50:18: ./cfiojobs -g lasa lsblk ; sleep 3
+2018-09-06_10:51:44: ./cfiojobs -g lasaf5 lsblk ; sleep 3
+2018-09-06_12:27:37: ./cfiojobs -g lasaf5 lsblk
+2018-09-06_12:27:53: ./cfiojobs -g lasaf5 -p lsblk
+2018-09-06_12:28:28: ./cfiojobs -g lasaf5 -p -q lsblk
+2018-09-06_12:28:48: ./cfiojobs -g lasaf5 -p lsblk|wc -l
+2018-09-06_12:29:46: ./cfiojobs 
+2018-09-06_12:40:13: ./cfiojobs 
+2018-09-06_12:42:43: ./cfiojobs -g lasaf5 lsblk |wc -l
+2018-09-06_13:51:23: ./cfiojobs -g lasaf5 lsblk |wc -l
+2018-09-06_13:51:48: ./cfiojobs -g lasaf5 lsblk |wc -l -p
+2018-09-06_13:52:13: ./cfiojobs -g lasaf5 fio -v -p
+2018-09-06_13:52:29: ./cfiojobs -g lasa fio -v -p
+2018-09-06_13:55:10: ./cfiojobs -g lasa fio -v -p
+2018-09-06_19:03:06: ./cfiojobs -g lasa2 -b lasa -j durable --fio -f -o lasa_durable_0906
+2018-09-06_19:11:44: ./cfiojobs -g lasa2 --fio-list
+2018-09-06_19:19:35: ./cfiojobs -g lasa2 --fio-list
+2018-09-06_19:20:06: ./cfiojobs -g lasa2 --fio-stop
+2018-09-06_19:21:04: ./cfiojobs -g lasa2 --fio-list
+2018-09-06_19:21:27: ./cfiojobs -g lasa2 --fio-stop
+2018-09-06_19:22:55: ./cfiojobs -g lasa2 --fio-list
+2018-09-06_19:23:17: ./cfiojobs -g lasa2 --fio-stop
+2018-09-06_19:24:20: ./cfiojobs -g lasa2 --fio-stop
+2018-09-06_19:25:17: ./cfiojobs -g lasa2 --fio-stop
+2018-09-06_19:27:44: ./cfiojobs -g lasa2 --fio-stop
+2018-09-06_19:28:15: ./cfiojobs -g lasa2 --fio-stop
+2018-09-06_19:29:16: ./cfiojobs -g lasa2 ls
+2018-09-06_19:30:05: ./cfiojobs -g lasa2 ls
+2018-09-06_19:30:41: ./cfiojobs -g lasa2 rm -rf lasa_durable_0906
+2018-09-06_19:30:53: ./cfiojobs -g lasa2 ls
+2018-09-06_19:31:27: ./cfiojobs -g lasa2 -b lasa -j durable --fio -f -o lasa_durable_0906
+2018-09-07_09:01:10: ./cfiojobs -g lasa2 --fio-list
+2018-09-07_09:13:42: ./cfiojobs -g lasa2 --fio-list
+2018-09-07_09:14:13: ./cfiojobs -g lasa2 --fio-list
+2018-09-07_09:39:22: ./cfiojobs -g lasa2 lsblk |wc -l -p
+2018-09-07_10:52:05: ./cfiojobs -g lasa2 --fio-list
+2018-09-07_10:52:35: ./cfiojobs -g lasa2 --fio-stop
+2018-09-07_10:52:49: ./cfiojobs -g lasa2 --fio-list
+2018-09-07_10:53:12: ./cfiojobs -g lasa2 --fio-stop
+2018-09-07_10:53:17: ./cfiojobs -g lasa2 --fio-list
+2018-09-07_10:54:40: ./cfiojobs -g lasa2 ls
+2018-09-07_10:54:58: ./cfiojobs -g lasa poweroff
+2018-09-07_10:55:10: ./cfiojobs -g lasa ls
+2018-09-07_10:57:45: ./cfiojobs -g lasa ls
+2018-09-07_11:03:34: ./cfiojobs -g lasa ls
+2018-09-07_11:22:49: ./cfiojobs -g lasa ls -p
+2018-09-07_11:23:05: ./cfiojobs -g lasa ls -p
+2018-09-07_11:24:34: ./cfiojobs -g lasa ls -p
+2018-09-07_11:25:07: ./cfiojobs -g lasa ls -p
+2018-09-07_11:28:34: ./cfiojobs -g lasa ls -p
+2018-09-07_11:30:27: ./cfiojobs -g lasa ls -p
+2018-09-07_11:31:04: ./cfiojobs -g lasa ls -p
+2018-09-07_11:35:58: ./cfiojobs -g lasa2 lsblk |wc -l -p
+2018-09-07_11:37:00: ./cfiojobs -g lasa ls -p
+2018-09-07_11:40:53: ./cfiojobs -g lasa ls -p
+2018-09-07_13:04:41: ./cfiojobs -g lasa ls -p
+2018-09-07_13:07:03: ./cfiojobs -g lasa ls -p
+2018-09-07_13:07:59: ./cfiojobs -g lasa ls -p
+2018-09-07_13:08:11: ./cfiojobs -g lasa ls
+2018-09-07_13:11:59: ./cfiojobs -g lasa ls -p
+2018-09-07_13:13:42: ./cfiojobs -g lasa ls
+2018-09-07_13:51:41: ./cfiojobs -g lasa ls -p
+2018-09-07_14:00:43: ./cfiojobs -g lasa ls
+2018-09-07_14:02:50: ./cfiojobs -g lasa ls -p
+2018-09-07_14:25:27: ./cfiojobs -g lasa --fio-stop
+2018-09-07_15:54:00: ./cfiojobs -g lasa2 --fio-list
+2018-09-07_15:55:27: ./cfiojobs -g lasa2 --fio-list -x 10.216.0.103
+2018-09-07_15:55:51: ./cfiojobs -g lasa -x 10.216.0.103 ls -q
+2018-09-07_15:56:04: ./cfiojobs -g lasa -x 10.216.0.103 ls -q -p
+2018-09-07_15:56:12: ./cfiojobs -g lasa -x 10.216.0.103 ls -q -p -f
+2018-09-07_16:11:02: ./cfiojobs -g lasa -x 10.216.0.103 ls -q -p -f
+2018-09-07_16:11:13: ./cfiojobs -g lasa2 --fio-list -x 10.216.0.103 -p
+2018-09-07_16:11:23: ./cfiojobs -g lasa2 --fio-list -x 10.216.0.103 -p -q
+2018-09-07_16:15:17: ./cfiojobs -g lasa -x 10.216.0.103 ls -q -p -f
+2018-09-07_16:15:39: ./cfiojobs -g lasa -x 10.216.0.103 ls -q -f
+2018-09-07_16:27:15: ./cfiojobs -g lasa -x 10.216.0.103 --fio-list -p
+2018-09-07_16:27:53: ./cfiojobs -g lasa -x 10.216.0.103 --fio-list -p
+2018-09-07_16:28:01: ./cfiojobs -g lasa -x 10.216.0.103 --fio-list
+2018-09-07_17:00:51: ./cfiojobs 
+2018-09-07_17:07:02: ./cfiojobs -g lasa --fio-list -p
+2018-09-10_08:52:02: ./cfiojobs -g lasa -q ls
+2018-09-10_08:53:05: ./cfiojobs -g lasa -q -p ls
+2018-09-10_08:55:48: ./cfiojobs -g lasa -q -p ls -d
+2018-09-10_08:56:37: ./cfiojobs -g lasa -p ls -f
+2018-09-10_08:57:05: ./cfiojobs -g lasa -p ls
+2018-09-10_08:57:21: ./cfiojobs -g lasa -p -q ls
+2018-09-10_08:57:37: ./cfiojobs -g lasa -p -q ls -d
+2018-09-10_09:07:15: ./cfiojobs -g lasa2 -d ls -q
+2018-09-10_09:09:38: ./cfiojobs -g lasa2 -d ls -q
+2018-09-10_09:18:47: ./cfiojobs -g lasa2 --fio-list -p
+2018-09-10_09:20:13: ./cfiojobs -g lasa2 -b lasa -j durable --fio -f -o lasa_durable_1810
+2018-09-10_09:25:30: ./cfiojobs -g lasa2 --fio-list -p
+2018-09-10_09:27:22: ./cfiojobs -g lasa ls -p
+2018-09-10_09:27:42: ./cfiojobs -g lasa ls -p
+2018-09-10_09:38:42: ./cfiojobs -g lasa2 --fio-list
+2018-09-10_09:39:05: ./cfiojobs -g lasa2 --fio-list -p
+2018-09-10_09:44:03: ./cfiojobs -g lasa1 -q ls
+2018-09-10_09:48:03: ./cfiojobs -g lasa2 -q ls
+2018-09-10_10:41:42: ./cfiojobs -g lasa --fio-list
+2018-09-10_10:49:34: ./cfiojobs -g lasa -q ls -p
+2018-09-10_10:50:32: ./cfiojobs -g lasa --fio-list -p
+2018-09-10_11:00:12: ./cfiojobs -g lasa lsblk|wc -l -p
+2018-09-10_11:00:29: ./cfiojobs -g lasa lsblk|wc -l -p
+2018-09-10_11:01:00: ./cfiojobs -g lasa lsblk|wc -l
+2018-09-10_11:20:55: ./cfiojobs -g lasa -q ls -p
+2018-09-10_13:46:07: ./cfiojobs -g lasa ls -q -p
+2018-09-10_13:55:47: ./cfiojobs -g lasa blkid -q -p
+2018-09-10_13:56:24: ./cfiojobs -g lasa blkid -q
+2018-09-10_14:04:20: ./cfiojobs -g lasa --fio-list -p
+2018-09-10_14:08:23: ./cfiojobs -g lasa1 -b lasa -j durable --fio -f -o lasa_durable_1810
+2018-09-10_14:09:22: ./cfiojobs -g lasa --fio-list -p
+2018-09-10_14:15:27: ./cfiojobs -g lasa --fio-list -p
+2018-09-10_14:17:09: ./cfiojobs -g lasa --fio-list -p
+2018-09-10_14:23:33: ./cfiojobs -g lasa --fio-list -p
+2018-09-10_14:33:09: ./cfiojobs -g lasa ls -q -p
+2018-09-10_14:34:08: ./cfiojobs -g lasa blkid -q -p
+2018-09-10_14:38:38: ./cfiojobs -g lasa --fio-list
+2018-09-10_15:09:23: ./cfiojobs -g lasa --fio-list
+2018-09-10_16:16:42: ./cfiojobs -g lasa --fio-list
+2018-09-11_09:41:35: ./cfiojobs -g vm2 -j durable -b blk2 --fio -f -o D_0911
+2018-09-11_09:42:58: ./cfiojobs -g vm2 --fio-list -p
+2018-09-11_09:44:00: ./cfiojobs -g vm2 --fio-stop -p
+2018-09-11_09:44:07: ./cfiojobs -g vm2 --fio-list -p
+2018-09-11_11:09:51: ./cfiojobs -g vm2 --fio-list
+2018-09-11_12:32:25: ./cfiojobs -g grp2 --fio-list
+2018-09-11_12:33:33: ./cfiojobs -g grp2 -b durable -j short --fio -f -o D_0911
+2018-09-11_12:38:19: ./cfiojobs -g grp2 --fio-list
+2018-09-11_13:46:50: ./cfiojobs -g grp2 --fio-list
+2018-09-11_13:47:42: ./cfiojobs -g grp2 --fio -b durable -j short2 -f -o D_0911_2
+2018-09-11_13:48:15: ./cfiojobs -g grp2 --fio-list
+2018-09-11_13:51:24: ./cfiojobs -g grp2 --fio-list
+2018-09-11_14:01:32: ./cfiojobs -g grp2 --fio-list
+2018-09-11_14:04:45: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_14:05:26: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_14:07:22: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_14:09:48: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_15:46:03: ./cfiojobs -g grp2 --fio-list
+2018-09-11_15:55:42: ./cfiojobs -g grp2 -b durable -j short -o D_911 --fio -f
+2018-09-11_15:56:05: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_16:04:20: ./cfiojobs -g grp2 --fio-list
+2018-09-11_16:06:05: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_16:09:25: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_18:01:58: ./cfiojobs -g grp2 -b file8 -j short --fio -f
+2018-09-11_18:21:21: ./cfiojobs -g grp2 -b file8 -j short --fio -f
+2018-09-11_18:24:58: ./cfiojobs -g grp2 --fio-list
+2018-09-11_18:27:11: ./cfiojobs -g grp2 -b file8 -j short --fio -f
+2018-09-11_18:32:19: ./cfiojobs -g grp2 -b file8 -j short --fio -f
+2018-09-11_18:38:12: ./cfiojobs -g grp2 -b file8 -j short --fio -f
+2018-09-11_18:47:57: ./cfiojobs -g grp2 -b file8 -j short --fio -f
+2018-09-11_18:52:17: ./cfiojobs -g grp2 -b file8 -j short --fio -f
+2018-09-11_18:52:49: ./cfiojobs -g grp2 --fio-list
+2018-09-11_18:53:45: ./cfiojobs -g grp2 -b file8 -j short --fio -f -o abc
+2018-09-11_18:57:01: ./cfiojobs -g grp2 -b blk1 -j short --fio -f
+2018-09-11_18:57:21: ./cfiojobs -g grp2 --fio-list
+2018-09-11_19:05:48: ./cfiojobs -g grp2 --fio-list
+2018-09-11_19:09:18: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_19:12:02: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_19:13:22: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_19:14:07: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_19:14:49: ./cfiojobs -g grp2 --fio-list -p
+2018-09-11_19:30:35: ./cfiojobs -g --fio-list
+2018-09-11_19:31:01: ./cfiojobs -g lasa --fio-list
+2018-09-11_19:36:31: ./cfiojobs -g lasa --fio-list -p
+2018-09-11_19:50:46: ./cfiojobs -g lasa --fio-list -p
+2018-09-11_19:51:02: ./cfiojobs -g lasa --fio-list
+2018-09-11_20:24:05: ./cfiojobs -g lasa -q ls -p
+2018-09-11_20:24:39: ./cfiojobs -g lasa -q ls -p -f
+2018-09-11_20:31:38: ./cfiojobs -g lasa ls -p -f
+2018-09-11_20:32:54: ./cfiojobs -g lasa ls -p -f
+2018-09-11_20:33:27: ./cfiojobs -g lasa ls -f
+2018-09-11_20:34:22: ./cfiojobs -g lasa ls -p -f
+2018-09-11_20:37:11: ./cfiojobs -g lasa ls -p -f
+2018-09-11_20:37:25: ./cfiojobs -g lasa ls -p -f -q
+2018-09-11_20:38:11: ./cfiojobs -g lasa echo a -p -f -q
+2018-09-11_20:38:18: ./cfiojobs -g lasa echo a -p -f
+2018-09-11_20:39:10: ./cfiojobs -g lasa echo a -p -f
+2018-09-11_20:39:49: ./cfiojobs -g lasa lsblk |wc -l -p -f
+2018-09-11_20:41:15: ./cfiojobs -g lasa lsblk|grep T|grep -vE NAME
+2018-09-11_20:41:34: ./cfiojobs -g lasa lsblk|grep T|grep -vE 'NAME|sda' |wc -l -p -f
+2018-09-11_20:49:03: ./cfiojobs -g lasa lsblk|grep T|grep -vE 'NAME|sda' |wc -l -p -f
+2018-09-11_20:54:11: ./cfiojobs -g lasa lsblk|grep T|grep -vE 'NAME|sda' |wc -l -p -f
+2018-09-11_21:02:33: ./cfiojobs -g lasa lsblk|grep T|grep -vE 'NAME|sda' |wc -l -p -f
+2018-09-11_21:03:20: ./cfiojobs -g lasa lsblk|grep T|grep -vE 'NAME|sda' |wc -l -p -f
+2018-09-11_21:03:39: ./cfiojobs --fio -g lasa -b lasa -j 4m -s -f -o lasa_single_0911
+2018-09-11_21:04:09: ./cfiojobs -g lasa --fio-list
+2018-09-11_21:04:37: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_09:03:41: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_09:21:36: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_09:52:34: ./cfiojobs --fio -g poor -b poor -j 4k -s -f -o lasa_single_0912
+2018-09-12_09:53:54: ./cfiojobs -g poor --fio-list -p
+2018-09-12_10:27:18: ./cfiojobs -g poor --fio-list
+2018-09-12_10:29:49: ./cfiojobs -g poor --fio-list -p
+2018-09-12_10:47:02: ./cfiojobs -g poor --fio-list -p
+2018-09-12_10:57:50: ./cfiojobs -g poor --fio-list -p
+2018-09-12_11:14:30: ./cfiojobs --fio -g lasa -b lasa -j 4k normal -f -o lasa_single_09122
+2018-09-12_11:16:17: ./cfiojobs -g poor --fio-list -p
+2018-09-12_11:16:42: ./cfiojobs -g lasa ls
+2018-09-12_11:17:45: ./cfiojobs -g lasa rm -rf lasa_single_09122 -q -p
+2018-09-12_11:18:05: ./cfiojobs -g lasa --fio-stop
+2018-09-12_11:18:22: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_11:18:33: ./cfiojobs -g lasa --fio-stop
+2018-09-12_11:18:52: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_11:19:02: ./cfiojobs -g lasa ls
+2018-09-12_11:20:00: ./cfiojobs -g lasa rm -rf lasa_single_09122 -q -p
+2018-09-12_11:20:38: ./cfiojobs -g lasa ls lasa_single_09122 -q -p
+2018-09-12_11:22:18: ./cfiojobs --fio -g lasa -b lasa -j normal -f -o lasa_single_09122
+2018-09-12_12:34:47: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_13:45:13: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_13:55:11: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_14:31:03: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_14:37:41: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_15:03:14: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_16:12:53: ./cfiojobs -g lasa --fio-list
+2018-09-12_16:37:55: ./cfiojobs --fio-list -g poor
+2018-09-12_18:49:18: ./cfiojobs -g lasa --fio-list
+2018-09-12_18:49:41: ./cfiojobs --fio -g lasa -b lasa -j 0912 -s -f -o lasa_single_09123
+2018-09-12_19:02:21: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_19:11:27: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_19:13:40: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_19:27:15: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_19:29:34: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_19:50:29: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_20:01:46: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_20:02:48: ./cfiojobs --fio -g lasa -b lasa -j 0912 -s -f -o lasa_single_09123
+2018-09-12_20:13:52: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_20:20:46: ./cfiojobs -g lasa -p -q ls
+2018-09-12_20:23:45: ./cfiojobs --fio -g lasa -b lasa -j 0912 -s -f -o lasa_single_09123
+2018-09-12_20:24:01: ./cfiojobs -g lasa --fio-list
+2018-09-12_20:26:22: ./cfiojobs --fio -g lasa -b lasa -j 0912 -s -f -o lasa_single_09123
+2018-09-12_20:26:40: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_20:26:48: ./cfiojobs -g lasa --fio-stop
+2018-09-12_20:26:56: ./cfiojobs -g lasa --fio-list -p
+2018-09-12_20:29:01: ./cfiojobs -g lasa --fio-list -p
+2018-09-13_09:11:07: ./cfiojobs -g lasa --fio-list -p
+2018-09-13_12:40:39: ./cfiojobs -g lasa --fio-list -p
+2018-09-13_14:13:08: ./cfiojobs --fio -g lasa -b lasa6 -j 0913 -s -f -o lasa_single_0913
+2018-09-13_14:25:27: ./cfiojobs -g lasa --fio-list -p
+2018-09-13_16:02:57: ./cfiojobs -g lasa --fio-list
+2018-09-14_09:42:27: ./cfiojobs -g lasa modinfo aacraid |grep version
+2018-09-14_10:58:50: ./cfiojobs -g lasa --fio-list
+2018-09-14_11:00:19: ./cfiojobs -g lasa -b lasa -j normal -f -0 lasa_parallel_0914
+2018-09-14_11:01:29: ./cfiojobs --fio -g lasa -b lasa -j normal -f -0 lasa_parallel_0914
+2018-09-14_11:01:45: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_11:08:48: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_11:18:21: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_12:27:19: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_12:27:56: ./cfiojobs -g lasa ls -p
+2018-09-14_12:51:51: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_12:52:02: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_12:52:07: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_12:53:05: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_13:51:25: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_14:02:11: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_15:38:03: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_16:55:12: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_16:55:18: ./cfiojobs --fio -g lasa -b lasa6 -j seqr -f -0 lasa_parallel6_0914
+2018-09-14_16:56:20: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_17:02:41: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_17:12:29: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_17:22:58: ./cfiojobs --fio -g lasa -b lasa10 -j seqr -f -o lasa_parallel10_0914
+2018-09-14_17:23:28: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_17:23:35: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_17:25:58: ./cfiojobs --fio -g lasa -b lasa10 -j seqr -f -o lasa_parallel10_0914
+2018-09-14_17:26:19: ./cfiojobs -g lasa --fio-list -p
+2018-09-14_17:26:52: ./cfiojobs --fio -g lasa -b lasa10 -j seqr -f
+2018-09-14_17:27:29: ./cfiojobs --fio -g lasa -b lasa10 -j seqr -f
+2018-09-14_17:28:01: ./cfiojobs --fio -g lasa -b lasa10 -j seqr -d
+2018-09-14_17:30:05: ./cfiojobs --fio -g lasa -b lasa10 -j seqr -d
+2018-09-14_17:31:29: ./cfiojobs --fio -g lasa -b lasat -j seqr -d -o lasa_parallel10_0914
+2018-09-14_17:35:40: ./cfiojobs --fio -g lasa -b lasat -j seqr -o lasa_parallel10_0914
+2018-09-14_17:36:12: ./cfiojobs --fio -g lasa -b lasat -j seqr -d -o lasa_parallel10_0914
+2018-09-14_17:37:05: ./cfiojobs --fio -g lasa -b lasat -j seqr -d -o lasa_parallel10_0914
+2018-09-14_17:39:39: ./cfiojobs --fio -g lasa -b lasat -j seqr -d -o lasa_parallel10_0914
+2018-09-14_17:40:04: ./cfiojobs --fio -g lasa -b lasa6 -j seqr -d -o lasa_parallel10_0914
+2018-09-14_17:41:49: ./cfiojobs --fio-list -g lasa -p
+2018-09-14_17:41:58: ./cfiojobs --fio -g lasa -b lasa6 -j seqr f -o lasa_parallel10_0914
+2018-09-14_17:44:09: ./cfiojobs --fio-list -g lasa -p
+2018-09-14_17:50:22: ./cfiojobs --fio-list -g lasa -p
+2018-09-14_17:51:39: ./cfiojobs --fio-list -g lasa -p
+2018-09-14_17:59:11: ./cfiojobs --fio -g lasa -b lasa10 -j sseqr f -o test1
+2018-09-14_18:01:56: ./cfiojobs --fio -g lasa -b lasa10 -j sseqr f -o test1
+2018-09-14_18:02:48: ./cfiojobs --fio -g lasa -b lasa10 -j sseqr f -o test1
+2018-09-17_09:10:16: ./cfiojobs -g lasa --fio-list
+2018-09-17_09:15:34: ./cfiojobs -g lasa --fio-list -p
+2018-09-17_14:39:19: ./cfiojobs -g lasa --fio-list -p
+2018-09-19_13:42:47: ./cfiojobs -g last2 ls
+2018-09-19_13:46:20: ./cfiojobs -g last2 -F /home/meiwei/aacraid-1.2.1.56008-1dkms.noarch.rpm,~/dkms-2.6.1-1.el7.noarch.rpm
+2018-09-19_13:46:46: ./cfiojobs -g last2 -F /home/meiwei/aacraid-1.2.1.56008-1dkms.noarch.rpm,~/dkms-2.6.1-1.el7.noarch.rpm -D /root/
+2018-09-19_13:47:12: ./cfiojobs -g last2 -F ../aacraid-1.2.1.56008-1dkms.noarch.rpm,..//dkms-2.6.1-1.el7.noarch.rpm -D /root/
+2018-09-19_13:47:20: ./cfiojobs -g last2 ls
+2018-09-19_13:48:10: ./cfiojobs -g last2 rpm -Uvh dkms-2.6.1-1.el7.noarch.rpm ;echo 0
+2018-09-19_13:48:59: ./cfiojobs -g last2 yum -y install dkms-2.6.1-1.el7.noarch.rpm ;echo 130
+2018-09-19_13:50:41: ./cfiojobs -g last2 yum -y install dkms
+2018-09-19_13:51:09: ./cfiojobs -g last2 yum -y install aacraid-1.2.1.56008-1dkms.noarch.rpm 
+2018-09-19_13:51:49: ./cfiojobs -g last2 w
+2018-09-19_13:52:05: ./cfiojobs -g last2 reboot
+2018-09-19_13:55:21: ./cfiojobs -g last2 w
+2018-09-19_13:55:29: ./cfiojobs -g last2 lsblk
+2018-09-19_13:59:10: ./cfiojobs -g last2 -b lasa -j allmode -f --fio
+2018-09-19_14:00:07: ./cfiojobs -g last2 --fio-list
+2018-09-19_14:00:14: ./cfiojobs -g last2 --fio-list
+2018-09-19_14:00:59: ./cfiojobs -g last2 --fio-list
+2018-09-19_14:01:05: ./cfiojobs -g last2 --fio-stop
+2018-09-19_14:01:15: ./cfiojobs -g last2 ls
+2018-09-19_14:01:49: ./cfiojobs -g last2 rm -rf cfiojobs-test-201809191359 -q
+2018-09-19_14:02:12: ./cfiojobs -g last2 fio -v
+2018-09-19_14:02:56: ./cfiojobs -g last2 -b lasa -j allmode -f --fio
+2018-09-19_14:03:39: ./cfiojobs -g last2 --fio-list
+2018-09-19_14:11:55: ./cfiojobs -g last2 --fio-list
+2018-09-19_14:21:15: ./cfiojobs -g last2 --fio-list -p
+2018-09-19_15:26:24: ./cfiojobs -g last2 --fio-list -p
+2018-09-19_15:29:30: ./cfiojobs -g last2 --fio-list -p
+2018-09-19_15:47:28: ./cfiojobs -g last2 --fio-list -p
+2018-09-19_16:14:24: ./cfiojobs -g last2 -b lasa -j allmode -f -s --fio
+2018-09-19_16:15:52: ./cfiojobs -g last2 --fio-list -p
+2018-09-19_16:25:34: ./cfiojobs -g last2 --fio-list -p
+2018-09-19_16:31:28: ./cfiojobs -g last2 --fio-list -p
+2018-09-19_17:05:12: ./cfiojobs -g last2 --fio-list -p
+2018-09-19_18:21:06: ./cfiojobs -g last2 --fio-list -p
+2018-09-20_09:19:23: ./cfiojobs -g last2 --fio-list -p
+2018-09-20_09:52:24: ./cfiojobs -g last2 --fio-list -p
+2018-09-20_17:14:57: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_09:10:23: ./cfiojobs -g lasa --fio-list
+2018-09-21_09:10:32: ./cfiojobs -g lasa --fio-list -p
+2018-09-21_09:11:06: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_09:12:57: ./cfiojobs -g last2 -b lasa -j allmode --fio -f -o lasa_parallel14_180921
+2018-09-21_09:13:33: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_09:38:04: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_09:45:24: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_10:48:16: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_11:20:49: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_11:20:55: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_11:30:55: ./cfiojobs -g last2 -b one[C -j allmode --fio -f -o lasa_single_180921
+2018-09-21_11:31:12: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_12:30:54: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_13:53:05: ./cfiojobs -g last2 --fio-list -p
+2018-09-21_14:04:00: ./cfiojobs -g last2 -b lasa -j allmode --fio -f -o lasa_parallel_18092114
+2018-09-21_14:56:24: ./cfiojobs -g last2 --fio-list
+2018-09-21_15:00:47: ./cfiojobs -g last2 --fio-list
+2018-09-21_15:08:00: ./cfiojobs -g last2 --fio-list
+2018-09-21_15:08:49: ./cfiojobs -g last2 --fio-list
+2018-09-21_16:02:59: ./cfiojobs -g last2 --fio-list
+2018-09-21_16:09:47: ./cfiojobs -g last2 --fio-list
+2018-09-21_17:30:04: ./cfiojobs -g last2 --fio-list -p
+2018-09-26_01:33:08: ./cfiojobs -g gansumgr ls -q -p
+2018-09-26_01:33:28: ./cfiojobs -g gansumgr ls -q -p -f
+2018-09-26_01:35:13: ./cfiojobs -g gansumgr ls -q -p -f
+2018-09-26_01:36:04: ./cfiojobs -g gansumgr ls -q -p -f
+2018-09-26_01:36:20: ./cfiojobs -g gansumgr ls
+2018-09-26_01:36:35: ./cfiojobs -g gansumgr lsblk
+2018-09-26_01:40:52: ./cfiojobs -g gansumgr ls -q
+2018-09-26_01:45:49: ./cfiojobs -g gansumgr -b gansumgr -j normal -f -s --fio -o gansu_mgr_single_20180925
+2018-09-26_01:46:25: ./cfiojobs -g gansu mgr ls -p -q
+2018-09-26_01:46:35: ./cfiojobs -g gansumgr ls -p -q
+2018-09-26_01:47:18: ./cfiojobs -g gansumgr --fio-list
+2018-09-26_01:47:28: ./cfiojobs -g gansumgr --fio-stop
+2018-09-26_01:47:46: ./cfiojobs -g gansumgr --fio-stop
+2018-09-26_01:47:53: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_01:47:59: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_01:48:03: ./cfiojobs -g gansumgr --fio-stop
+2018-09-26_01:48:07: ./cfiojobs -g gansumgr --fio-stop
+2018-09-26_01:48:11: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_01:49:52: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_01:49:59: ./cfiojobs -g gansumgr --fio-stop
+2018-09-26_01:50:28: ./cfiojobs -f gansumgr fio -v
+2018-09-26_01:50:34: ./cfiojobs -g gansumgr fio -v
+2018-09-26_01:50:48: ./cfiojobs -g gansumgr ls
+2018-09-26_01:51:13: ./cfiojobs -g gansumgr rm -rf gansu_mgr_single_20180925
+2018-09-26_01:51:29: ./cfiojobs -g gansumgr -b gansumgr -j normal -f -s --fio -o gansu_mgr_single_20180925
+2018-09-26_01:51:47: ./cfiojobs -g gansumgr --fio-list
+2018-09-26_02:13:19: ./cfiojobs -g gansuapp -q -p ls
+2018-09-26_02:24:28: ./cfiojobs -g gansuapp1 lsblk -p
+2018-09-26_02:25:03: ./cfiojobs -g gansuapp1 ls -q -p -f
+2018-09-26_02:26:42: ./cfiojobs -g gansuapp2 ls -q -p -f
+2018-09-26_02:27:20: ./cfiojobs -g gansuapp3 ls -q -p -f
+2018-09-26_02:27:43: ./cfiojobs -g gansuapp4 ls -q -p -f
+2018-09-26_02:28:37: ./cfiojobs -g gansuapp1 lsblk
+2018-09-26_02:32:28: ./cfiojobs -g gansuapp1 yum install fio -y -p
+2018-09-26_02:33:10: ./cfiojobs -g gansuapp1 fio -v -p
+2018-09-26_02:37:23: ./cfiojobs -g gansuapp1 -b gansuapp1 -j normal -f -s --fio -o gansu_app1_single_20180925
+2018-09-26_02:38:05: ./cfiojobs -g gansuapp2 fio -v -p
+2018-09-26_02:38:47: ./cfiojobs -g gansuapp2 yum install -y fio  -p
+2018-09-26_02:39:43: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_02:40:43: ./cfiojobs -g gansuapp2 fio -v -p
+2018-09-26_02:41:20: ./cfiojobs -g gansuapp2 fio -v -p -f
+2018-09-26_02:42:59: ./cfiojobs -g gansuapp2 ls -p
+2018-09-26_02:43:14: ./cfiojobs -g gansuapp2 ls
+2018-09-26_02:44:37: ./cfiojobs -g gansuapp2 lsblk
+2018-09-26_02:49:59: ./cfiojobs -g gansuapp3 lsblk
+2018-09-26_02:53:37: ./cfiojobs -g gansuapp2 -b gansuapp2 -j normal -f -s --fio -o gansu_app2_single_20180925
+2018-09-26_02:54:44: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:54:48: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:54:51: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:54:55: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:55:05: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:55:09: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:55:13: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:55:18: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:55:34: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:55:39: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:56:08: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_02:57:07: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_02:57:33: ./cfiojobs -g gansuapp3 yum install -y fio -p
+2018-09-26_02:59:25: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_03:00:02: ./cfiojobs -g gansuapp3  fio -v -p
+2018-09-26_03:02:34: ./cfiojobs -g gansuapp3  lsblk
+2018-09-26_03:02:54: ./cfiojobs -g gansuapp3  lsblk|wc -l  -p
+2018-09-26_03:03:31: ./cfiojobs -g gansuapp3  lsblk|grep -v sda|wc -l  -p
+2018-09-26_03:03:53: ./cfiojobs -g gansuapp3  lsblk|grep -v sda  -p
+2018-09-26_03:04:27: ./cfiojobs -g gansuapp3  lsblk|grep -v sda 
+2018-09-26_03:06:51: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_03:14:54: ./cfiojobs -g gansuapp3 --fio-list
+2018-09-26_03:16:08: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:16:13: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_03:16:30: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_03:16:38: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_03:16:41: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_03:16:45: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_03:16:51: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_03:16:58: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_03:17:09: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_03:17:27: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_03:17:39: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_03:17:49: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_03:18:06: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:18:33: ./cfiojobs -g gansuapp3 -b gansuapp3 -j normal -f -s --fio -o gansu_app3_single_20180925
+2018-09-26_03:19:15: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:19:19: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:19:21: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:19:25: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:19:28: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:19:30: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:19:33: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:19:36: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:19:58: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-26_03:20:10: ./cfiojobs -g gansuapp4 fio -v -p
+2018-09-26_03:20:23: ./cfiojobs -g gansuapp4 yum -y install fio -p
+2018-09-26_03:23:13: ./cfiojobs -g gansuapp4  fio -v -p
+2018-09-26_03:23:34: ./cfiojobs -g gansuapp4  lsblk -p
+2018-09-26_03:23:42: ./cfiojobs -g gansuapp4  lsblk
+2018-09-26_03:26:26: ./cfiojobs -g gansuapp4 -b gansuapp4 -j normal -f -s --fio -o gansu_app4_single_20180926
+2018-09-26_03:27:03: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-26_03:27:06: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-26_03:27:49: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-26_03:29:06: ./cfiojobs -g gansuapp5  yum install -y fio -p
+2018-09-26_03:32:06: ./cfiojobs -g gansuapp5  fio -v -p
+2018-09-26_03:32:24: ./cfiojobs -g gansuapp5  lsblk
+2018-09-26_03:35:51: ./cfiojobs -g gansuapp5 -b gansuapp5 -j normal -f -s --fio -o gansu_app5_single_20180925
+2018-09-26_03:36:27: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-26_03:37:10: ./cfiojobs -g gansuapp6 yum install -y fio -p
+2018-09-26_03:37:54: ./cfiojobs -g gansuapp6  fio -v -p
+2018-09-26_03:38:07: ./cfiojobs -g gansuapp6  lsblk -p
+2018-09-26_03:38:24: ./cfiojobs -g gansuapp6  lsblk|grep -v sda -p
+2018-09-26_03:38:48: ./cfiojobs -g gansuapp6  lsblk|grep -v "sda|lvm|NAME" -p
+2018-09-26_03:39:15: ./cfiojobs -g gansuapp6  lsblk|grep -vE "sda|lvm|NAME"  -p
+2018-09-26_03:40:30: ./cfiojobs -g gansuapp6 -b gansuapp6 -j normal -f -s --fio -o gansu_app6_single_20180925
+2018-09-26_03:41:06: ./cfiojobs -g gansuapp6  ls  -p -q
+2018-09-26_03:41:29: ./cfiojobs -g gansuapp6 --fio-list
+2018-09-26_03:43:23: ./cfiojobs -g gansuapp7  lsblk|grep -vE "sda|lvm|NAME"  -p
+2018-09-26_03:44:04: ./cfiojobs -g gansuapp7  lsblk  -p
+2018-09-26_03:44:23: ./cfiojobs -g gansuapp7 yum install -y fio -p
+2018-09-26_03:44:51: ./cfiojobs -g gansuapp7  fio -v  -p
+2018-09-26_03:45:06: ./cfiojobs -g gansuapp7 -b gansuapp7 -j normal -f -s --fio -o gansu_app7_single_20180925
+2018-09-26_03:45:35: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_03:45:41: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_03:45:44: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_03:47:27: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_03:47:28: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_03:47:30: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_03:47:30: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-26_03:47:31: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-26_03:47:32: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-26_03:47:34: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_03:48:19: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_17:12:10: ./cfiojobs -g gansumgr --fio-list
+2018-09-26_17:12:27: ./cfiojobs -g gansuapp1 --fio-list
+2018-09-26_17:12:49: ./cfiojobs -g gansuapp2 --fio-list
+2018-09-26_17:14:02: ./cfiojobs -g gansuapp3 --fio-list
+2018-09-26_17:14:33: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-26_17:14:43: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-26_17:14:49: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-26_17:14:57: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_17:15:03: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_17:15:08: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_17:15:14: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_17:35:27: ./cfiojobs -g gansumgr
+2018-09-26_17:36:26: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_17:36:36: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_17:36:43: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_17:36:56: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-26_17:37:02: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-26_17:38:48: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-26_17:39:20: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-26_17:39:42: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-26_17:39:51: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_17:39:56: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_18:12:13: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_18:20:11: ./cfiojobs -g gansuapp1 --fio-list
+2018-09-26_18:20:46: ./cfiojobs -g gansuapp6 ls
+2018-09-26_18:50:11: ./cfiojobs -g gansuapp1
+2018-09-26_18:50:30: ./cfiojobs -g gansuapp1 --fio-list
+2018-09-26_18:50:58: ./cfiojobs -g gansuapp2 --fio-list
+2018-09-26_18:54:37: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_18:54:48: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_20:30:13: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_20:30:19: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_20:30:40: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_20:30:49: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_20:30:56: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_20:34:36: ./cfiojobs -g gansumgr --fio-list
+2018-09-26_20:35:44: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_21:33:45: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_21:34:07: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_21:38:30: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_21:39:14: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_21:39:22: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_21:44:20: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-26_21:44:33: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-26_21:44:45: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_22:00:48: ./cfiojobs 
+2018-09-26_22:05:48: ./cfiojobs -g gansu_app1_single_20180925.log
+2018-09-26_22:06:26: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_22:06:40: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_22:06:55: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-26_23:25:45: ./cfiojobs -g gansuapp1 --fio-list
+2018-09-26_23:26:22: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_23:26:35: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-26_23:26:54: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-27_00:18:20: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-27_00:18:26: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-27_02:00:39: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-27_02:00:52: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-27_06:20:59: ./cfiojobs -g gansumgr --fio-list
+2018-09-27_06:21:13: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-27_06:21:20: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-27_07:10:13: ./cfiojobs -g gansumgr --fio-list
+2018-09-27_07:10:25: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-27_07:17:13: ./cfiojobs -g gansumgr -b gansumgr -j normal -f --fio -o gansu_mgr_parallel_20180926
+2018-09-27_07:17:23: ./cfiojobs -g gansuapp1 -b gansuapp1 -j normal -f --fio -o gansu_app1_parallel_20180926
+2018-09-27_07:17:26: ./cfiojobs -g gansuapp2 -b gansuapp2 -j normal -f --fio -o gansu_app2_parallel_20180926
+2018-09-27_07:17:29: ./cfiojobs -g gansuapp3 -b gansuapp3 -j normal -f --fio -o gansu_app3_parallel_20180926
+2018-09-27_07:17:32: ./cfiojobs -g gansuapp4 -b gansuapp4 -j normal -f --fio -o gansu_app4_parallel_20180926
+2018-09-27_07:17:35: ./cfiojobs -g gansuapp5 -b gansuapp5 -j normal -f --fio -o gansu_app5_parallel_20180926
+2018-09-27_07:17:40: ./cfiojobs -g gansuapp6 -b gansuapp6 -j normal -f --fio -o gansu_app6_parallel_20180926
+2018-09-27_07:17:43: ./cfiojobs -g gansuapp7 -b gansuapp7 -j normal -f --fio -o gansu_app7_parallel_20180926
+2018-09-27_07:18:41: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-27_07:18:42: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_07:18:47: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_07:18:48: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-27_07:18:49: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-27_07:18:49: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-27_07:18:52: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-27_07:19:43: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_07:19:52: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_07:20:11: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-27_07:20:17: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_07:49:46: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-27_07:49:46: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_07:49:51: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_07:49:52: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-27_07:49:53: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-27_07:49:54: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-27_07:49:56: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-27_07:51:37: ./cfiojobs -g gansumgr --fio-list
+2018-09-27_08:53:05: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-27_08:53:05: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_08:53:10: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_08:53:11: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-27_08:53:12: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-27_08:53:13: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-27_08:53:15: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-27_16:55:17: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-27_16:55:18: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_16:55:23: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_16:55:24: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-27_16:55:25: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-27_16:55:26: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-27_16:55:28: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-27_17:07:48: ./cfiojobs -g gansuapp3 ls
+2018-09-27_17:08:42: ./cfiojobs -g gansuapp3 ls -p
+2018-09-27_17:10:35: ./cfiojobs -g gansuapp3 ls -p
+2018-09-27_17:10:50: ./cfiojobs -g gansuapp3 ls -p
+2018-09-27_17:11:26: ./cfiojobs -g gansuapp3 ls -p -f
+2018-09-27_17:22:14: ./cfiojobs -g gansuapp3 -b gansuapp3 -j normal -f --fio -o gansu_app3_parallel_20180927
+2018-09-27_17:22:35: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:22:41: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:25:16: ./cfiojobs -g gansuapp3 --fio-list
+2018-09-27_17:37:01: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:37:53: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:38:31: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:40:05: ./cfiojobs -g gansuapp3 --fio-stop
+2018-09-27_17:47:43: ./cfiojobs -g gansuapp3 -b gansuapp3 -j normal -f --fio -o gansu_app3_parallel_20180927
+2018-09-27_17:48:02: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:48:09: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:48:14: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:48:18: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:48:46: ./cfiojobs -g gansuapp3 --fio-stop
+2018-09-27_17:48:51: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:49:13: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:49:17: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:49:20: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:49:28: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:49:46: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_17:52:06: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_18:49:04: ./cfiojobs -g gansuapp2 --fio-list
+2018-09-27_18:50:19: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-27_18:50:32: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_20:30:05: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_20:31:51: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_20:33:26: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_20:33:31: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_20:33:34: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_20:40:25: ./cfiojobs -g gansuapp3 -b gansuapp3 -j normal -f --fio -o gansu_app3_parallel_20180927
+2018-09-27_20:40:36: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_20:41:24: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-27_22:32:36: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:33:41: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:38:17: ./cfiojobs -g gansuapp2 -b gansuapp2 -j normal -f --fio -o gansu_app2_single_20180925
+2018-09-27_22:39:20: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:39:24: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:39:28: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:39:31: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:40:09: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:40:12: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:40:15: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:40:26: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:49:14: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:49:21: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:49:25: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:50:00: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_22:50:09: ./cfiojobs -g gansuapp2 --fio-list
+2018-09-27_23:07:21: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:08:47: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:08:52: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:09:53: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:10:35: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:11:04: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:11:36: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:13:24: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:13:29: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:13:32: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:15:24: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-27_23:23:10: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_01:17:59: ./cfiojobs -g gansuapp2 -b gansuapp2 -j normal -f --fio -o gansu_app2_single_20180925
+2018-09-28_01:23:54: ./cfiojobs -g gansumgr -b gansumgr -j normal -f -s --fio -o gansu_mgr_single_20180925
+2018-09-28_01:29:32: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-28_01:30:57: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:31:25: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:33:26: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-28_02:34:18: ./cfiojobs -g gansuapp2 -b gansuapp2 -j sseqr -f -s -o test01
+2018-09-28_02:38:31: ./cfiojobs -g gansuapp2 -b gansuapp2 -j sseqr -f -s -o test01
+2018-09-28_02:39:20: ./cfiojobs -g gansuapp2 -b gansuapp2 -j sseqr -f -s -o test01
+2018-09-28_02:39:57: ./cfiojobs -g gansuapp2 -b gansuapp2 -j sseqr -f -s -o test01
+2018-09-28_02:40:24: ./cfiojobs -g gansuapp2 -b gansuapp2 -j sseqr -f -s -o test01 --fio
+2018-09-28_02:40:49: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:41:03: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:41:09: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:41:17: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:41:32: ./cfiojobs -g gansuapp2 --fio-list
+2018-09-28_02:42:42: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:42:48: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:43:38: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:44:58: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:53:24: ./cfiojobs -g gansuapp2 -b gansuapp2 -j sseqr -f -s -o test01 --fio
+2018-09-28_02:53:35: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:53:46: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:54:08: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:54:12: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_02:54:19: ./cfiojobs -g gansuapp2 --fio-list
+2018-09-28_03:00:02: ./cfiojobs -g gansuapp2 -b gansuapp2 -j sseqr -f -s -o test01 --fio
+2018-09-28_03:00:47: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_03:01:03: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_03:01:16: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_03:01:28: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_03:01:33: ./cfiojobs -g gansuapp2 --fio-list
+2018-09-28_03:04:50: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_03:05:13: ./cfiojobs -g gansuapp3 -b gansuapp3 -j sseqr -f -s -o test01 --fio
+2018-09-28_03:05:37: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:05:43: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:05:46: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:05:49: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:05:55: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:05:58: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:06:02: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:06:05: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:06:08: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:06:10: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:06:14: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:06:16: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:07:10: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:11:07: ./cfiojobs -g gansuapp2 --fio-list
+2018-09-28_03:11:38: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_03:12:05: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_03:12:29: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:12:33: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:12:36: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:12:40: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:12:44: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:13:19: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:13:33: ./cfiojobs -g gansuapp3 -b gansuapp3 -j sseqr -f -s -o test02 --fio
+2018-09-28_03:14:00: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:14:03: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:14:07: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:14:11: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:14:14: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:14:16: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:14:42: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:18:37: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:18:42: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:19:03: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:19:15: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:19:48: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:20:27: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:22:02: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:22:08: ./cfiojobs -g gansuapp3 ls
+2018-09-28_03:23:10: ./cfiojobs -g gansuapp3 ls gansu_app3_parallel_20180926
+2018-09-28_03:23:29: ./cfiojobs -g gansuapp3 ls gansu_app3_parallel_20180926 -R
+2018-09-28_03:43:39: ./cfiojobs -g gansuapp3 -b gansuapp3 -j sseqr -f -o test03 --fio
+2018-09-28_03:44:04: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:56:28: ./cfiojobs -g gansuapp3 -b gansuapp3 -j sseqr -f -o test03 --fio
+2018-09-28_03:56:58: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:57:14: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:57:19: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:57:31: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:58:30: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:58:58: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:59:03: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_03:59:13: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_04:00:30: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_04:10:41: ./cfiojobs -g gansuapp3 -b gansuapp3 -j sseqr -f -o test04 --fio
+2018-09-28_19:18:42: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-28_19:18:50: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-28_19:19:31: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-28_19:19:37: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_19:20:01: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_19:20:07: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-28_19:20:34: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-28_19:20:39: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-28_19:21:28: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-28_21:50:51: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-28_21:54:41: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-28_21:54:54: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-28_22:05:50: ./cfiojobs -g gansuapp1 -b gansuapp1 -j durable --fio -f -o gansu_app1_durable_20180928
+2018-09-28_22:05:50: ./cfiojobs -g gansuapp5 -b gansuapp5 -j durable --fio -f -o gansu_app5_durable_20180928
+2018-09-28_22:05:50: ./cfiojobs -g gansumgr -b gansumgr -j durable --fio -f -o gansu_mgr_durable_20180928
+2018-09-28_22:05:50: ./cfiojobs -g gansuapp6 -b gansuapp6 -j durable --fio -f -o gansu_app6_durable_20180928
+2018-09-28_22:05:50: ./cfiojobs -g gansuapp3 -b gansuapp3 -j durable --fio -f -o gansu_app3_durable_20180928
+2018-09-28_22:05:50: ./cfiojobs -g gansuapp7 -b gansuapp7 -j durable --fio -f -o gansu_app7_durable_20180928
+2018-09-28_22:05:50: ./cfiojobs -g gansuapp2 -b gansuapp2 -j durable --fio -f -o gansu_app2_durable_20180928
+2018-09-28_22:05:50: ./cfiojobs -g gansuapp4 -b gansuapp4 -j durable --fio -f -o gansu_app4_durable_20180928
+2018-09-28_23:29:00: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-28_23:29:10: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-28_23:29:22: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-28_23:29:34: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-28_23:29:42: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-28_23:29:49: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-28_23:29:57: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-28_23:30:09: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_00:36:11: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-29_00:36:11: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_00:36:12: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_00:36:15: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_00:36:16: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_00:36:17: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_00:36:17: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_00:36:20: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_00:50:55: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-29_00:50:56: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_00:50:56: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_00:50:59: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_00:51:00: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_00:51:01: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_00:51:02: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_00:51:04: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_00:55:55: ./cfiojobs 
+2018-09-29_01:16:04: ./cfiojobs -l
+2018-09-29_01:16:04: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_01:16:05: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_01:16:15: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_01:16:16: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_01:16:17: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_01:16:17: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_01:16:20: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_01:17:21: ./cfiojobs -l
+2018-09-29_01:17:22: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_01:17:22: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_01:17:25: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_01:17:26: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_01:17:27: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_01:17:28: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_01:17:30: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_01:24:13: ./cfiojobs -l
+2018-09-29_01:24:13: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_01:24:14: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_01:24:17: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_01:24:18: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_01:24:19: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_01:24:19: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_01:24:22: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_01:25:20: ./cfiojobs 
+2018-09-29_01:31:52: ./cfiojobs -l
+2018-09-29_01:31:52: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_01:31:53: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_01:31:56: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_01:31:57: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_01:31:58: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_01:31:59: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_01:32:01: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_02:24:28: ./cfiojobs -l
+2018-09-29_02:24:28: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_02:24:29: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_02:24:32: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_02:24:33: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_02:24:34: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_02:24:35: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_02:24:37: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_06:14:58: ./cfiojobs -l
+2018-09-29_06:14:58: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_06:14:59: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_06:15:02: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_06:15:03: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_06:15:04: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_06:15:05: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_06:15:07: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_06:17:23: ./cfiojobs -l
+2018-09-29_06:17:23: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_06:17:24: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_06:17:27: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_06:17:28: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_06:17:28: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_06:17:29: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_06:17:32: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_17:05:53: ./cfiojobs -l
+2018-09-29_17:05:53: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_17:05:54: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_17:05:57: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_17:05:58: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_17:05:58: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_17:05:59: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_17:06:02: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_17:09:17: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-29_17:33:58: ./cfiojobs -l
+2018-09-29_17:33:58: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_17:33:59: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_17:34:00: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_17:34:01: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_17:34:02: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_17:34:02: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_17:34:05: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_18:44:19: ./cfiojobs -l
+2018-09-29_18:44:19: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_18:44:19: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_18:44:21: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_18:44:22: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_18:44:22: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_18:44:23: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_18:44:26: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_18:46:10: ./cfiojobs -l
+2018-09-29_18:46:10: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_18:46:11: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_18:46:13: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_18:46:13: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_18:46:14: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_18:46:15: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_18:46:18: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_18:49:01: ./cfiojobs -l
+2018-09-29_18:49:01: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_18:49:02: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_18:49:03: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_18:49:04: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_18:49:05: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_18:49:06: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_18:49:08: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_18:52:28: ./cfiojobs -l
+2018-09-29_18:52:28: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_18:52:29: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_18:52:30: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_18:52:31: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_18:52:32: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_18:52:33: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_18:52:35: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-29_18:53:40: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_18:55:26: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_18:58:50: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_18:59:11: ./cfiojobs -g gansuapp6 --fio-list
+2018-09-29_23:17:07: ./cfiojobs -l
+2018-09-29_23:17:07: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-29_23:17:08: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-29_23:17:09: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-29_23:17:10: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-29_23:17:11: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-29_23:17:11: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-29_23:17:14: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-30_00:18:55: ./cfiojobs -l
+2018-09-30_00:18:55: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-30_00:18:56: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-30_00:18:58: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-30_00:18:58: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-30_00:18:59: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-30_00:19:00: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-30_00:19:02: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-30_01:31:34: ./cfiojobs -l
+2018-09-30_01:31:34: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-30_01:31:35: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-30_01:31:36: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-30_01:31:37: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-30_01:31:38: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-30_01:31:38: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-30_01:31:41: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-30_17:56:19: ./cfiojobs -l
+2018-09-30_17:56:19: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-30_17:56:20: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-30_17:56:21: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-30_17:56:22: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-30_17:56:23: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-30_17:56:24: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-30_17:56:26: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-30_18:03:32: ./cfiojobs -g gansumgr --fio-list -p
+2018-09-30_18:05:09: ./cfiojobs -g gansuapp7 -F ../inspur_disk_tools/hugo-3.0.1-1.x86_64.rpm
+2018-09-30_18:05:28: ./cfiojobs -g gansuapp7 ls
+2018-09-30_18:08:01: ./cfiojobs -g gansuapp1 -p -F ../inspur_disk_tools/hugo-3.0.1-1.x86_64.rpm
+2018-09-30_18:08:51: ./cfiojobs -g gansuapp2 -p -F ../inspur_disk_tools/hugo-3.0.1-1.x86_64.rpm
+2018-09-30_18:09:23: ./cfiojobs -g gansuapp3 -p -F ../inspur_disk_tools/hugo-3.0.1-1.x86_64.rpm
+2018-09-30_18:11:26: ./cfiojobs -g gansuapp4 -p -F ../inspur_disk_tools/hugo-3.0.1-1.x86_64.rpm
+2018-09-30_18:11:39: ./cfiojobs -g gansuapp5 -p -F ../inspur_disk_tools/hugo-3.0.1-1.x86_64.rpm
+2018-09-30_18:11:48: ./cfiojobs -g gansuapp6 -p -F ../inspur_disk_tools/hugo-3.0.1-1.x86_64.rpm
+2018-09-30_18:12:07: ./cfiojobs -g gansuapp6 ls -p
+2018-09-30_18:13:10: ./cfiojobs -g gansuapp1 rpm -ivh hugo-3.0.1-1.x86_64.rpm -p
+2018-09-30_18:13:11: ./cfiojobs -g gansuapp2 rpm -ivh hugo-3.0.1-1.x86_64.rpm -p
+2018-09-30_18:13:13: ./cfiojobs -g gansuapp3 rpm -ivh hugo-3.0.1-1.x86_64.rpm -p
+2018-09-30_18:13:14: ./cfiojobs -g gansuapp4 rpm -ivh hugo-3.0.1-1.x86_64.rpm -p
+2018-09-30_18:13:16: ./cfiojobs -g gansuapp5 rpm -ivh hugo-3.0.1-1.x86_64.rpm -p
+2018-09-30_18:13:17: ./cfiojobs -g gansuapp6 rpm -ivh hugo-3.0.1-1.x86_64.rpm -p
+2018-09-30_18:13:19: ./cfiojobs -g gansuapp7 rpm -ivh hugo-3.0.1-1.x86_64.rpm -p
+2018-09-30_18:49:06: ../cfiojobs0.11/cfiojobs -g gansuapp1 ls
+2018-09-30_18:49:58: ../cfiojobs0.11/cfiojobs -g gansuapp1 -F ./hugo-6.1.1-1.x86_64.rpm -p
+2018-09-30_18:50:17: ../cfiojobs0.11/cfiojobs -g gansuapp1 rpm -ivh ./hugo-6.1.1-1.x86_64.rpm 
+2018-09-30_18:52:43: ../cfiojobs0.11/cfiojobs -g gansuapp2 -F ./hugo-6.1.1-1.x86_64.rpm -p
+2018-09-30_18:52:47: ../cfiojobs0.11/cfiojobs -g gansuapp2 rpm -ivh ./hugo-6.1.1-1.x86_64.rpm
+2018-09-30_18:55:58: ../cfiojobs0.11/cfiojobs -g gansuapp3 -F ./hugo-6.1.1-1.x86_64.rpm -p
+2018-09-30_18:56:00: ../cfiojobs0.11/cfiojobs -g gansuapp3 rpm -ivh ./hugo-6.1.1-1.x86_64.rpm
+2018-09-30_18:57:02: ../cfiojobs0.11/cfiojobs -g gansuapp4 -F ./hugo-6.1.1-1.x86_64.rpm -p
+2018-09-30_18:57:04: ../cfiojobs0.11/cfiojobs -g gansuapp4 rpm -ivh ./hugo-6.1.1-1.x86_64.rpm
+2018-09-30_18:58:00: ../cfiojobs0.11/cfiojobs -g gansuapp5 -F ./hugo-6.1.1-1.x86_64.rpm -p
+2018-09-30_18:58:02: ../cfiojobs0.11/cfiojobs -g gansuapp5 rpm -ivh ./hugo-6.1.1-1.x86_64.rpm
+2018-09-30_18:58:21: ../cfiojobs0.11/cfiojobs -g gansuapp6 -F ./hugo-6.1.1-1.x86_64.rpm -p
+2018-09-30_18:58:24: ../cfiojobs0.11/cfiojobs -g gansuapp6 rpm -ivh ./hugo-6.1.1-1.x86_64.rpm
+2018-09-30_19:00:18: ../cfiojobs0.11/cfiojobs -g gansuapp7 -F ./hugo-6.1.1-1.x86_64.rpm -p
+2018-09-30_19:00:20: ../cfiojobs0.11/cfiojobs -g gansuapp7 rpm -ivh ./hugo-6.1.1-1.x86_64.rpm
+2018-09-30_19:05:52: ./cfiojobs -l
+2018-09-30_19:05:52: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-30_19:05:53: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-30_19:05:54: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-30_19:05:55: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-30_19:05:56: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-30_19:05:57: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-30_19:05:59: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-30_19:15:44: ../cfiojobs0.11/cfiojobs -g gansuapp1 -p yum -y install expect
+2018-09-30_19:15:54: ../cfiojobs0.11/cfiojobs -g gansuapp2 -p yum -y install expect
+2018-09-30_19:16:11: ../cfiojobs0.11/cfiojobs -g gansuapp3 -p yum -y install expect
+2018-09-30_19:16:19: ../cfiojobs0.11/cfiojobs -g gansuapp4 -p yum -y install expect
+2018-09-30_19:16:38: ../cfiojobs0.11/cfiojobs -g gansuapp5 -p yum -y install expect
+2018-09-30_19:16:47: ../cfiojobs0.11/cfiojobs -g gansuapp6 -p yum -y install expect
+2018-09-30_19:17:00: ../cfiojobs0.11/cfiojobs -g gansuapp7 -p yum -y install expect
+2018-09-30_20:44:49: ./cfiojobs -g gansuapp1 -F tmp/hugo.exp
+2018-09-30_20:45:18: ./cfiojobs -g gansuapp2 -F tmp/hugo.exp
+2018-09-30_20:45:53: ../cfiojobs0.11/cfiojobs 
+2018-09-30_20:47:14: ./cfiojobs -g gansuapp3 -F tmp/hugo.exp
+2018-09-30_20:47:54: ./cfiojobs -g gansuapp4 -F tmp/hugo.exp
+2018-09-30_20:48:33: ./cfiojobs -g gansuapp5 -F tmp/hugo.exp
+2018-09-30_20:48:45: ./cfiojobs -g gansuapp6 -F tmp/hugo.exp
+2018-09-30_20:49:52: ./cfiojobs -g gansuapp7 -F tmp/hugo.exp
+2018-09-30_20:50:57: ./cfiojobs -g gansuapp1 -f -p  chmod +x ./hugo.exp; ./hugo.exp
+2018-09-30_20:51:14: ./cfiojobs -g gansuapp2 -f -p  chmod +x ./hugo.exp; ./hugo.exp
+2018-09-30_20:51:32: ./cfiojobs -g gansuapp3 -f -p  chmod +x ./hugo.exp; ./hugo.exp
+2018-09-30_20:51:49: ./cfiojobs -g gansuapp4 -f -p  chmod +x ./hugo.exp; ./hugo.exp
+2018-09-30_20:52:09: ./cfiojobs -g gansuapp5 -f -p  chmod +x ./hugo.exp; ./hugo.exp
+2018-09-30_20:52:26: ./cfiojobs -g gansuapp6 -f -p  chmod +x ./hugo.exp; ./hugo.exp
+2018-09-30_20:52:44: ./cfiojobs -g gansuapp7 -f -p  chmod +x ./hugo.exp; ./hugo.exp
+2018-09-30_20:53:24: ./cfiojobs -g gansuapp1 -f -p  ./hugo.exp
+2018-09-30_20:53:41: ./cfiojobs -g gansuapp2 -f -p  ./hugo.exp
+2018-09-30_20:53:58: ./cfiojobs -l
+2018-09-30_20:53:58: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-30_20:53:59: ./cfiojobs -g gansuapp3 -f -p  ./hugo.exp
+2018-09-30_20:53:59: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-30_20:54:00: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-30_20:54:02: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-30_20:54:05: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-30_20:54:06: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-30_20:54:08: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-30_20:54:16: ./cfiojobs -g gansuapp4 -f -p  ./hugo.exp
+2018-09-30_20:54:34: ./cfiojobs -g gansuapp5 -f -p  ./hugo.exp
+2018-09-30_20:54:51: ./cfiojobs -g gansuapp6 -f -p  ./hugo.exp
+2018-09-30_20:55:09: ./cfiojobs -g gansuapp7 -f -p  ./hugo.exp
+2018-09-30_20:55:37: ./cfiojobs -g gansuapp1 -f  ./hugo.exp
+2018-09-30_20:56:10: ./cfiojobs -g gansuapp2 -f  ./hugo.exp
+2018-09-30_20:58:23: ./cfiojobs -g gansuapp3 -f  ./hugo.exp
+2018-09-30_20:59:08: ./cfiojobs -g gansuapp4 -f  ./hugo.exp
+2018-09-30_20:59:52: ./cfiojobs -g gansuapp5 -f  ./hugo.exp
+2018-09-30_21:00:05: ./cfiojobs -g gansuapp6 -f  ./hugo.exp
+2018-09-30_21:01:25: ./cfiojobs -g gansuapp7 -f  ./hugo.exp
+2018-09-30_21:38:43: ./cfiojobs -g gansuapp1 -f  hug s
+2018-09-30_21:38:48: ./cfiojobs -g gansuapp2 -f  hug s
+2018-09-30_21:38:52: ./cfiojobs -g gansuapp3 -f  hug s
+2018-09-30_21:38:53: ./cfiojobs -g gansuapp4 -f  hug s
+2018-09-30_21:38:54: ./cfiojobs -g gansuapp5 -f  hug s
+2018-09-30_21:38:55: ./cfiojobs -g gansuapp6 -f  hug s
+2018-09-30_21:38:56: ./cfiojobs -g gansuapp7 -f  hug s
+2018-09-30_21:39:02: ./cfiojobs -g gansuapp1 -f  hugo s
+2018-09-30_21:39:23: ./cfiojobs -l
+2018-09-30_21:39:24: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-30_21:39:24: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-30_21:39:27: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-30_21:39:30: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-30_21:39:34: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-30_21:39:34: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-30_21:39:37: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-30_21:51:23: ./cfiojobs -g gansuapp2 -f  hugo s
+2018-09-30_21:58:02: ./cfiojobs -g gansuapp3 -f  hugo s
+2018-09-30_22:00:02: ./cfiojobs -l
+2018-09-30_22:00:02: ./cfiojobs -g gansuapp1 --fio-list -p
+2018-09-30_22:00:03: ./cfiojobs -g gansuapp2 --fio-list -p
+2018-09-30_22:00:06: ./cfiojobs -g gansuapp3 --fio-list -p
+2018-09-30_22:00:06: ./cfiojobs -g gansuapp4 -f  hugo s
+2018-09-30_22:00:09: ./cfiojobs -g gansuapp4 --fio-list -p
+2018-09-30_22:00:12: ./cfiojobs -g gansuapp5 --fio-list -p
+2018-09-30_22:00:13: ./cfiojobs -g gansuapp6 --fio-list -p
+2018-09-30_22:00:15: ./cfiojobs -g gansuapp7 --fio-list -p
+2018-09-30_22:01:56: ./cfiojobs -g gansuapp5 -f  hugo s
+2018-09-30_22:02:36: ./cfiojobs -g gansuapp6 -f  hugo s
+2018-09-30_22:08:22: ./cfiojobs -g gansuapp7 -f  hugo s
+2018-09-30_22:08:44: ../cfiojobs0.11/cfiojobs -g gansuapp1 mkdir inspur_hugo_log_20180930_$HOSTNAME
+2018-09-30_22:09:16: ../cfiojobs0.11/cfiojobs -g gansuapp2 mkdir inspur_hugo_log_20180930_$HOSTNAME
+2018-09-30_22:09:42: ./cfiojobs -g gansuapp1 -f  ls
+2018-09-30_22:10:14: ./cfiojobs -g gansuapp2 -f  ls
+2018-09-30_22:10:48: ./cfiojobs -l
+2018-09-30_22:11:28: ../cfiojobs0.11/cfiojobs -g gansuapp3 mkdir inspur_hugo_log_20180930_$HOSTNAME
+2018-09-30_22:12:12: ../cfiojobs0.11/cfiojobs -g gansuapp4 mkdir inspur_hugo_log_20180930_$HOSTNAME
+2018-09-30_22:12:26: ./cfiojobs -g gansuapp3 -f  ls
+2018-09-30_22:12:54: ../cfiojobs0.11/cfiojobs -g gansuapp5 mkdir inspur_hugo_log_20180930_$HOSTNAME
+2018-09-30_22:13:08: ../cfiojobs0.11/cfiojobs -g gansuapp7 mkdir inspur_hugo_log_20180930_$HOSTNAME
+2018-09-30_22:13:10: ./cfiojobs -g gansuapp4 -f  ls
+2018-09-30_22:13:53: ./cfiojobs -g gansuapp5 -f  ls
+2018-09-30_22:14:06: ./cfiojobs -g gansuapp6 -f  ls
+2018-09-30_22:15:23: ./cfiojobs -g gansuapp7 -f  ls
+2018-09-30_22:18:45: ./cfiojobs -g gansumgr ls  -p
+2018-09-30_22:18:46: ./cfiojobs -g gansuapp1 ls  -p
+2018-09-30_22:18:48: ./cfiojobs -g gansuapp2 ls  -p
+2018-09-30_22:18:51: ./cfiojobs -g gansuapp3 ls  -p
+2018-09-30_22:18:54: ./cfiojobs -g gansuapp4 ls  -p
+2018-09-30_22:18:57: ./cfiojobs -g gansuapp5 ls  -p
+2018-09-30_22:18:58: ./cfiojobs -g gansuapp6 ls  -p
+2018-09-30_22:19:01: ./cfiojobs -g gansuapp7 ls  -p
+2018-09-30_22:19:34: ./cfiojobs -g gansumgr echo inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:19:35: ./cfiojobs -g gansuapp1 echo inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:19:36: ./cfiojobs -g gansuapp2 echo inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:19:39: ./cfiojobs -g gansuapp3 echo inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:19:42: ./cfiojobs -g gansuapp4 echo inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:19:45: ./cfiojobs -g gansuapp5 echo inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:19:47: ./cfiojobs -g gansuapp6 echo inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:19:49: ./cfiojobs -g gansuapp7 echo inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:09: ./cfiojobs -g gansumgr -F mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:10: ./cfiojobs -g gansuapp1 -F mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:11: ./cfiojobs -g gansuapp2 -F mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:14: ./cfiojobs -g gansuapp3 -F mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:17: ./cfiojobs -g gansuapp4 -F mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:20: ./cfiojobs -g gansuapp5 -F mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:22: ./cfiojobs -g gansuapp6 -F mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:24: ./cfiojobs -g gansuapp7 -F mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:46: ./cfiojobs -g gansumgr -f mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:48: ./cfiojobs -g gansuapp1 -f mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:49: ./cfiojobs -g gansuapp2 -f mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:52: ./cfiojobs -g gansuapp3 -f mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:55: ./cfiojobs -g gansuapp4 -f mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:58: ./cfiojobs -g gansuapp5 -f mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:20:59: ./cfiojobs -g gansuapp6 -f mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:21:02: ./cfiojobs -g gansuapp7 -f mkdir inspur_hugo_log_20180930_$HOSTNAME -p
+2018-09-30_22:21:33: ./cfiojobs -g gansumgr -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/  -p
+2018-09-30_22:21:34: ./cfiojobs -g gansuapp1 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/  -p
+2018-09-30_22:21:37: ./cfiojobs -g gansuapp2 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/  -p
+2018-09-30_22:21:40: ./cfiojobs -g gansuapp3 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/  -p
+2018-09-30_22:21:43: ./cfiojobs -g gansuapp4 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/  -p
+2018-09-30_22:21:46: ./cfiojobs -g gansuapp5 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/  -p
+2018-09-30_22:21:48: ./cfiojobs -g gansuapp6 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/  -p
+2018-09-30_22:21:50: ./cfiojobs -g gansuapp7 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/  -p
+2018-09-30_22:22:10: ./cfiojobs -g gansumgr -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/ 
+2018-09-30_22:22:11: ./cfiojobs -g gansuapp1 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/ 
+2018-09-30_22:23:08: ./cfiojobs -g gansuapp2 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/ 
+2018-09-30_22:26:54: ./cfiojobs -g gansuapp3 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/ 
+2018-09-30_22:28:08: ./cfiojobs -g gansuapp4 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/ 
+2018-09-30_22:29:16: ./cfiojobs -g gansuapp5 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/ 
+2018-09-30_22:29:38: ./cfiojobs -g gansuapp6 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/ 
+2018-09-30_22:29:58: ./cfiojobs -g gansumgr ls inspur_hugo_log_20180930_$HOSTNAME/ -f -p
+2018-09-30_22:29:59: ./cfiojobs -g gansuapp1 ls inspur_hugo_log_20180930_$HOSTNAME/ -f -p
+2018-09-30_22:30:01: ./cfiojobs -g gansuapp2 ls inspur_hugo_log_20180930_$HOSTNAME/ -f -p
+2018-09-30_22:30:02: ./cfiojobs -g gansuapp3 ls inspur_hugo_log_20180930_$HOSTNAME/ -f -p
+2018-09-30_22:30:05: ./cfiojobs -g gansuapp4 ls inspur_hugo_log_20180930_$HOSTNAME/ -f -p
+2018-09-30_22:30:09: ./cfiojobs -g gansuapp5 ls inspur_hugo_log_20180930_$HOSTNAME/ -f -p
+2018-09-30_22:30:10: ./cfiojobs -g gansuapp6 ls inspur_hugo_log_20180930_$HOSTNAME/ -f -p
+2018-09-30_22:30:12: ./cfiojobs -g gansuapp7 ls inspur_hugo_log_20180930_$HOSTNAME/ -f -p
+2018-09-30_22:31:01: ./cfiojobs -g gansuapp7 -f hugo l -a -p  inspur_hugo_log_20180930_$HOSTNAME/ 
+2018-09-30_22:31:08: ./cfiojobs -g gansuapp1 ls inspur_hugo_log_20180930_$HOSTNAME/ -f
+2018-09-30_22:31:51: ./cfiojobs -g gansuapp7 ls inspur_hugo_log_20180930_$HOSTNAME/ -f
+2018-09-30_22:32:14: ./cfiojobs -g gansuapp5 ls inspur_hugo_log_20180930_$HOSTNAME/ -f
+2018-09-30_22:32:50: ./cfiojobs -g gansuapp1 ls inspur_hugo_log_20180930_$HOSTNAME/ -f -q
+2018-09-30_22:33:35: ./cfiojobs -g gansuapp1 ls inspur_hugo_log_20180930_$HOSTNAME/ -f -q -p
