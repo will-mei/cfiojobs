@@ -26,5 +26,9 @@ sequntial   500     100%        4k,256k,4m          read,randread,write,randwrit
 4m          900     100%        4m                  read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
 4k          900     100%        4k                  read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
 0912        500     100%        4k,4m               read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
+<<<<<<< HEAD
 seqr        500     100%        4m                  read                            True            "-iodepth=32 -numjobs=1"
+=======
+seqr        500     100%        4m                  read                            True            "-iodepth=32 -numjobs=2"
+>>>>>>> a7699ea49a4019b2808870c984284179bfe0f5ca
 sseqr       100     100%        4m                  read                            True            "-iodepth=8  -numjobs=1"
