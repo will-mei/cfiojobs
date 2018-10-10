@@ -9,13 +9,14 @@ reference_report_name=${reference_report_dir##*/}
 # usage
 if [[ -z $2 ]] ;then
 	echo "Usage: $0 <source_report_dir> <reference_report_dir>"
+    exit 1
 fi
 
 # contrast
 for i in $(ls "$source_report_dir/_report/$source_report_name"*_all_host.csv) ;do
 	csv_name=${i##*/}
 	# nvme or hdd
-	if [[ ${csv_name//hdd/} != ${csv_name} ;then
+	if [[ ${csv_name//hdd/} != ${csv_name} ]] ;then
 		type=hdd
 	else
 		type=nvme
