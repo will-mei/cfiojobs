@@ -6,8 +6,11 @@ Remanber, you need passwordless ssh access permitions to all hosts, and use a co
 
 usage :
 1. Edit your own host group, block group and fio job type settings in config files.
+
    (1)     hosts  list conf:   ./cfiojobs.grp
+   
    (2)     blocks list conf:   ./cfiojobs.blk
+   
    (3)     jobs   list conf:   ./cfiojobs.job
 
    tips: './cfiojobs -e' will generate example configure files for you
