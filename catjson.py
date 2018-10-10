@@ -12,6 +12,7 @@ try:
     import pyexcel as p
 except ImportError:
     print("\npyexcel is not installed or the env is not yet activated.\n")
+    os.system('[[ ! -d vpy2 ]] && [[ -f vpy2.tar.xz ]] && echo "extract vpy2 files.." && tar xfJ vpy2.tar.xz ')
     os.system('[[ -d vpy2 ]] && bash vpy2/bin/update_path_on_new_host.sh && echo -e "please run:\v\e[1;32m source vpy2/bin/activate\e[0m\n"')
     exit()
 #finally:
