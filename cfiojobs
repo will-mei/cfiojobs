@@ -1,7 +1,7 @@
 #!/bin/bash
 ###########################################################
 # Author  : william mei
-# Date    : 20180709
+# Date    : 20181010
 # Test platform:
 #               kernel     : 3.10.0-514.26.2.el7.x86_64
 #               OS release : CentOS 7.3.1611
@@ -9,7 +9,8 @@
 # description  :
 #               send command to multy host 
 #               parallel fio test on clusters 
-# last edit :   20180723
+# last edit :   20181010
+# version   :   cfiojobs0.12
 ###########################################################
 
 STATUS=0
@@ -1097,7 +1098,7 @@ function _send_fio(){
                     elif [[ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ]] ;then
                         # if smartmontools installed, check status.
                         blk_stats=$(_ssh_send "smartctl -H $BLK |grep 'SMART Health Status:' |awk '{print\$NF}' ")
-                        [[ $blk_stats == "OK" ]] || echo "\"$BLK\" smartmontools check failed."
+                        [[ $blk_stats == "OK" ]] || _unquiet "info: $host_ip \"$BLK\" smartmontools check failed."
                     fi
                 else
                     _red "blk or file : \"$BLK\" is not available on host!"
@@ -1442,7 +1443,8 @@ function _group_pre_check(){
         done && wait
         [[ $check_stat -eq 2 ]] || check_stat=$(cat $tmpfile_precheck)
         rm -rf $tmpfile_precheck
-        [[ $check_stat -eq 1 ]] && echo 'pre check partially failed.' && _timeout 15 && _error_interrupt
+        # if fio failed, no need to continue
+        [[ $check_stat -eq 1 ]] && echo 'pre check partially failed.' && exit 1
     _unquiet "check action done." || echo " group stat : $check_stat" 
 }
 function round_report(){
