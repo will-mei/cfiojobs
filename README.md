@@ -43,9 +43,11 @@ usage :
            -p            send command and copy files execute in parallel
            
 
-   example: ./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.18.211.105
+   example: 
+
+      ./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.18.211.105
    
-      tips:
+   tips:
       
       say you want run the command:
       
@@ -64,24 +66,30 @@ usage :
 
 3. Example of Some more complex situation. (how to use double/single quote to pass the complete cmd to script):
 
-   (1). with multy command a time:  ./cfiojobs "command1 ;  command2 ;  command3 "
+   (1). with multy command a time:  
+            ./cfiojobs "command1 ;  command2 ;  command3 "
    
-        with command list to run :  ./cfiojobs "command1 && command2 || command3 "
+   (-1) with command list to run :  
+            ./cfiojobs "command1 && command2 || command3 "
         
-   (2). with pipe thing or some  :  ./cfiojobs "your command |pipe |pipe "
+   (2). with pipe thing or some  :  
+            ./cfiojobs "your command |pipe |pipe "
    
-   (3). with local bash variable :  ./cfiojobs "your command $local_variable "
+   (3). with local bash variable :  
+            ./cfiojobs "your command $local_variable "
    
-   (4). with remote env variable :  ./cfiojobs "your command '$remote_env_viriable' " 
+   (4). with remote env variable :  
+            ./cfiojobs "your command '$remote_env_viriable' " 
    
 
-   example: ./cfiojobs -g grp1 "ls -l |awk '{print\$2}'"
+   example: 
+           ./cfiojobs -g grp1 "ls -l |awk '{print\$2}'"
    
-         or ./cfiojobs -g grp1 "ls -l |awk \"{print\\\$2}\""
+   or: 
+           ./cfiojobs -g grp1 "ls -l |awk \"{print\\\$2}\""
          
-      tips: awk variable is not shell variable, so there were three antislash inside curly braces,
-      
-            first two antislash passed an '\' to remote bash, and then the third is for the translating of the '$'.
+   tips: awk variable is not shell variable, so there were three antislash inside curly braces,
+         first two antislash passed an '\' to remote bash, and then the third is for the translating of the '$'.
             
 
 4. FIO jobs control
@@ -109,9 +117,10 @@ usage :
            -l            list all running fio jobs info.
            
 
-   example: ./cfiojobs --fio-list -g group1 -q
+   example: 
+          ./cfiojobs --fio-list -g group1 -q
    
-            ./cfiojobs --fio -g grp1 -b vd5 -j rand1,mix1 -A "umount /dev/vdb"
+          ./cfiojobs --fio -g grp1 -b vd5 -j rand1,mix1 -A "umount /dev/vdb"
             
       tips:
       
@@ -131,7 +140,9 @@ usage :
            -D dir        specify destination directory on remote host
            
 
-   example: ./cfiojobs -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
+   example: 
+   
+      ./cfiojobs -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
    
 
 6. Help info
