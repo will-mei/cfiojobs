@@ -8,11 +8,11 @@ Remanber, you need passwordless ssh access permitions to all hosts, and use a co
 usage :
 1. Edit your own host group, block group and fio job type settings in config files.
 
-   (1)     hosts  list conf:   ./cfiojobs.grp
+   (1)     hosts  list conf:     ./cfiojobs.grp
    
-   (2)     blocks list conf:   ./cfiojobs.blk
+   (2)     blocks list conf:     ./cfiojobs.blk
    
-   (3)     jobs   list conf:   ./cfiojobs.job
+   (3)     jobs   list conf:     ./cfiojobs.job
    
 
    tips: './cfiojobs -e' will generate example configure files for you
@@ -20,7 +20,7 @@ usage :
 
 2. Run a short single cmd: 
 
-   ./cfiojobs <options> [commands]
+       ./cfiojobs <options> [commands]
    
    options: 
    
@@ -45,7 +45,7 @@ usage :
 
    example: 
 
-           ./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.18.211.105
+           ./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.16.0.105
    
    tips:
       
@@ -150,7 +150,7 @@ usage :
 
    example: 
    
-          ./cfiojobs -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
+          ./cfiojobs -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.16.0.137
    
 
 6. Help info
