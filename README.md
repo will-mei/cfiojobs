@@ -45,7 +45,7 @@ usage :
 
    example: 
 
-      ./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.18.211.105
+           ./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.18.211.105
    
    tips:
       
@@ -150,7 +150,7 @@ usage :
 
    example: 
    
-      ./cfiojobs -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
+          ./cfiojobs -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
    
 
 6. Help info
