@@ -9,7 +9,7 @@
 # description  :
 #               send command to multy host 
 #               parallel fio test on clusters 
-# last edit :   20181010
+# last edit :   20181011
 # version   :   cfiojobs0.12
 ###########################################################
 
@@ -776,9 +776,11 @@ function _blk_group_check(){
        fi
     else
     #empty list
-        blk_stat="2"
-        _red "no blk group name recived."
-        exit 1
+        #if [[ $no_sys_blk != "True" ]] ;then
+            blk_stat="2"
+            _red "no blk group name recived."
+            exit 1
+        #fi
     fi
 }
 
@@ -1501,6 +1503,7 @@ file_group_list=""
 file_group_destination=""
 tolerate="False"
 p_exec="False"
+#no_sys_blk="False"
 
 }
 
@@ -1531,6 +1534,7 @@ info:
     printdebug: $pdebug
       tolerate: $tolerate
 ##################################"
+    #no_sys_blk: $no_sys_blk
 _waiting "read info" 10
     [[ -z $host_group_list ]] && _red group empty
                 [[ -z $CMD ]] && _red cmd empty
@@ -1652,6 +1656,9 @@ while [ $# -gt 0 ] ;do
         "-A" )
             execute_mode="After"
             ;;
+        #"--no-sys" )
+        #    no_sys_blk="True"
+        #    ;;
         "-F" )
             if [ $# -lt 2 ]
             then
