@@ -89,10 +89,12 @@ usage :
    options:
    
            --fio         launch a fio test
-           
+
+           --test-stop   stop test on given host groups(stop all test and all jobs)
+
+           --fio-stop    stop all existinging fio jobs on given host groups (stop a round of jobs of a test)
+
            --fio-list    output summary info of fio jobs on given host groups
-           
-           --fio-stop    stop all existinging fio jobs on given host groups
            
            -b            send fio job with given blk group in ./cfiojobs.blk
            
@@ -123,7 +125,9 @@ usage :
    options:
    
            -F file       copy files to remote host
-           
+
+           -C file       collect files from remote to local host
+
            -D dir        specify destination directory on remote host
            
 
