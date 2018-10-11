@@ -1,4 +1,4 @@
 #grp 	user 	port	tcmu_bknd          		ceph_bknd           	conf_file/ip_addr_list(use coma ',' as ip list delimiter)
 grp0	root	22      none		    		none        		    --
 grp1	root	22      none		    		none        			172.18.211.133,172.18.211.134,172.18.211.137
-grp2    root    22      none					none			        172.18.211.133,172.18.211.134
+ceph3   root    22      none					none			        ceph1,ceph2,ceph3

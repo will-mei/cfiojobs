@@ -1510,3 +1510,23 @@
 >>>>>>> a7699ea49a4019b2808870c984284179bfe0f5ca
 2018-10-10_21:39:32: ./cfiojobs -g grp0 ls
 2018-10-10_21:40:15: ./cfiojobs -g grp0 ls
+2018-10-11_01:39:28: ./cfiojobs 
+2018-10-11_02:13:07: ./cfiojobs -g grp0 --fio-stop
+2018-10-11_02:14:29: ./cfiojobs -g grp0 --fio-stop
+2018-10-11_02:14:35: ./cfiojobs -g grp0 ls
+2018-10-11_02:15:01: ./cfiojobs -g grp0 ls
+2018-10-11_02:15:04: ./cfiojobs -g grp0 ls
+2018-10-11_02:15:55: ./cfiojobs -g grp0 ls
+2018-10-11_02:17:15: ./cfiojobs -g grp0 ls
+2018-10-11_02:18:00: ./cfiojobs -g grp0 --test-stop
+2018-10-11_02:18:57: ./cfiojobs -g grp0 --test-stop
+2018-10-11_02:20:28: ./cfiojobs -g grp0 --test-stop -f
+2018-10-11_02:21:35: ./cfiojobs -g grp0 --test-stop -f
+2018-10-11_02:22:01: ./cfiojobs -g grp0 --fio-stop -f
+2018-10-11_03:31:36: ./cfiojobs -g ceph3 ls
+2018-10-11_03:47:09: ./cfiojobs -g ceph3 -C tmp -o collect_a
+2018-10-11_03:48:32: ./cfiojobs -g ceph3 -C tmp,tmp2 -o collect_a
+2018-10-11_03:49:06: ./cfiojobs -g ceph3 -C tmp -o collect_a
+2018-10-11_03:57:17: ./cfiojobs -g ceph3 -C tmp -o collect_a
+2018-10-11_03:57:29: ./cfiojobs -g ceph3 -C tmp,tmp2 -o collect_a
+2018-10-11_03:58:11: ./cfiojobs -g ceph3 -C tmp,tmp2 -o collect_a -q

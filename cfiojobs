@@ -141,6 +141,7 @@ usage :
 5. File distribution
    options:
            -F file       copy files to remote host
+           -C file       collect files from remote to local host
            -D dir        specify destination directory on remote host
 
    example: $0 -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
@@ -610,7 +611,7 @@ function _host_group_check(){
                     if [[ -f conf/$host_group_name".grp" ]] ;then
                       HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(cat conf/$host_group_name".grp"))
                     else
-                        echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list \"file conf/$host_group_name".grp"\" is missing "
+                        echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list file: \"conf/$host_group_name".grp"\" is missing "
                     fi
                 else
                       HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list ${group_info[5]//,/ })
@@ -941,15 +942,43 @@ function _send_file(){
 if [[ -n $file_group_list ]] ;then
     _unquiet "  $host_ip copy files..."
     if [[ $quiet_mode == "True" ]] ;then
-        scp -q -o ConnectTimeout=10 -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
+        scp -r -q -o ConnectTimeout=10 -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
         echo "  $host_ip stat: $?"
     else
-        scp -q -o ConnectTimeout=10 -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
+        scp -r -q -o ConnectTimeout=10 -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
     fi
 #else
 #    [[ $send_fio == "True" ]] && _unquiet "    no files to copy."
 fi
 }
+function _harvest_file(){
+if [[ -n ${harvest_file_group_list//,/} ]] ;then
+    _check_output_dir
+    local harvest_dir=$output_dir/$host_ip
+    [[ -d $harvest_dir ]] || mkdir -p $harvest_dir &>/dev/null
+    _unquiet "  $host_ip harvest files..."
+    # one file or dir to harvest
+    if [[ ${harvest_file_group_list//,/} == ${harvest_file_group_list} ]] ;then
+        if [[ $quiet_mode == "True" ]] ;then
+            eval scp -r -q -o ConnectTimeout=10 -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir/ &>/dev/null                                                        
+            echo "  $host_ip stat: $?"
+        else
+            eval scp -r -q -o ConnectTimeout=10 -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir && echo "  $host_ip done"
+        fi
+    # multy files
+    else
+        if [[ $quiet_mode == "True" ]] ;then
+            eval scp -r -q -o ConnectTimeout=10 -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir/ &>/dev/null                                                        
+            echo "  $host_ip stat: $?"
+        else
+            eval scp -r -q -o ConnectTimeout=10 -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir && echo "  $host_ip done"
+        fi
+    fi
+#else
+#    [[ $send_fio == "True" ]] && _unquiet "    no files to copy."
+fi
+}
+
 function _send_cmd(){
 #send cmd to host and format output.
 if [[ -n $CMD ]] ;then
@@ -1110,7 +1139,7 @@ function _send_fio(){
                     elif [[ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ]] ;then
                         # if smartmontools installed, check status.
                         blk_stats=$(_ssh_send "smartctl -H $BLK |grep 'SMART Health Status:' |awk '{print\$NF}' ")
-                        [[ $blk_stats == "OK" ]] || _unquiet "info: $host_ip \"$BLK\" smartmontools check failed."
+                        [[ $blk_stats != "OK" ]] && _verbose &&"info: $host_ip \"$BLK\" smartmontools check failed."
                     fi
                 else
                     _red "blk or file : \"$BLK\" is not available on host!"
@@ -1215,12 +1244,12 @@ function _exec_oth(){
 # file , cmd 
 # exec in parallel too
     if [[ $p_exec == "True" ]] ;then
-        _send_file & 
-        _send_cmd &
+        _send_file && _send_cmd && _harvest_file & 
     else
     #send cmd sequentially
         _send_file
         _send_cmd
+        _harvest_file
     fi
 }
 # host
@@ -1376,14 +1405,14 @@ function _group_fio_stop(){
 
 # stop test on a group
 function _group_test_stop(){
-# stop all background test process on local host
     _yellow "test stop:"
-    echo "stop main test process..."
-    local main_pid=$(ps aux |grep '\-\-'fio'\ ' |grep "$1" |grep -v grep |awk '{print$2}')
-    [[ -n $main_pid ]] && kill $main_pid || echo "main process was ended already."
     _parse_host_info "$1"
+# stop all background test process on local host
+    echo "  stop main test process..."
+    local main_pid=$(ps aux |grep '\-\-'fio'\ ' |grep "$1" |grep -v grep |awk '{print$2}')
+    [[ -n $main_pid ]] && kill $main_pid || echo "  main process was ended already."
 #stop fio jobs
-        echo "stop fio jobs on hosts..."
+        echo "  stop fio jobs on hosts..."
         tmpfile_stop=$(mktemp)
         echo 0 >$tmpfile_stop
         for host_ip in $ip_list ;do
@@ -1544,6 +1573,8 @@ file_group_list=""
 file_group_destination=""
 tolerate="False"
 p_exec="False"
+file_group_list=""
+harvest_file_group_list=""
 #no_sys_blk="False"
 
 }
@@ -1564,6 +1595,7 @@ info:
       blk_list: $blk_group_list
       job_list: $job_group_list
      file list: $file_group_list
+ harvest_files: $harvest_file_group_list
    destination: $file_group_destination
   execute_mode: $execute_mode
        g group: $host_group_list
@@ -1586,7 +1618,20 @@ _waiting "read info" 10
     sleep 2
     fi
 }
-
+function _check_output_dir(){
+        #check output directory, set default to a datatime stamp.
+        if [[ -z $output_dir ]] ;then
+            [[ $send_fio == "True" ]] && output_dir="${0#*/}-test-$date" || output_dir="${0#*/}-file-$date"
+            _yellow "no output dir name specified, \"$output_dir\" will be the default name."
+        elif [[ -d $output_dir ]] || mkdir -p $output_dir ;then
+            :
+        else
+            [[ $send_fio == "True" ]] && output_dir="${0#*/}-test-$date" || output_dir="${0#*/}-file-$date"
+            _red "the output dir creation failed !" 
+            _yellow "now use \"$output_dir\" as the new output directory, is this ok?"
+            _timeout "15"
+        fi
+}
 
 #options check 
 [[ -z $1 ]] &&  _show_help_info && exit 0
@@ -1647,10 +1692,10 @@ while [ $# -gt 0 ] ;do
             list_fio="True"
             ;;
         "--fio-stop" )
-            stop_test="True"
+            stop_fio="True"
             ;;
         "--test-stop" )
-            stop_fio="True"
+            stop_test="True"
             ;;
         "--fio" )
             send_fio="True"
@@ -1712,6 +1757,16 @@ while [ $# -gt 0 ] ;do
                 exit
             fi
             file_group_list+=" ${2//,/ }"
+            shift
+            ;;
+        "-C" )
+            if [ $# -lt 2 ]
+            then
+                echo "$0: -C requires a file list.  multi names separated by comma."
+                STATUS=1
+                exit
+            fi
+            harvest_file_group_list+="${2}"
             shift
             ;;
         "-D" )
@@ -1797,7 +1852,7 @@ done
             _group_fio_stop $host_group_name
         done
 # stop test.
-    if [[ $stop_test == "True" ]] ;then
+    elif [[ $stop_test == "True" ]] ;then
         echo "stop fio test ..."
         for host_group_name in $host_group_list ;do
             _group_test_stop $host_group_name
@@ -1811,10 +1866,7 @@ done
 # send files, jobs and cmd
     elif [[ $send_fio == "True" ]] ;then
         #check output directory, set default to a datatime stamp.
-        if [[ -z $output_dir ]] ;then
-            output_dir="${0#*/}-test-$date"
-            _yellow "no output dir name specified, \"$output_dir\" will be the default name."
-        fi
+        _check_output_dir
         #network check, software check
         _yellow "$(date) FIO TEST PRE CHECK  ..."
         #set blk_group_name empty skip some parse job
@@ -1884,10 +1936,11 @@ done
         _yellow "\n$(date "+%Y-%m-%d_%H:%M:%S") FIO TEST FINISHED."
 
 # send files and cmd
-    elif [[ -n $CMD ]] || [[ -n $file_group_list ]] ;then
+    elif [[ -n $CMD ]] || [[ -n $file_group_list ]] || [[ -n $harvest_file_group_list ]] ;then
         for host_group_name in $host_group_list ;do
-            [[ -n $file_group_list ]] && _yellow "  files: \"$file_group_list\""
-            _yellow "command: \"$CMD\"\n"
+            [[ -n $CMD ]] && _yellow "command: \"$CMD\"\n"
+            [[ -n $file_group_list ]] && _yellow "  send files: \"$file_group_list\""
+            [[ -n $harvest_file_group_list ]] && _yellow "  harvest files: \"$harvest_file_group_list\""
             _group_execute $host_group_name
         done
     else 
