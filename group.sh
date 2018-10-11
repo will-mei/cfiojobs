@@ -1,7 +1,9 @@
 #!/bin/bash
+
+timestamp=$(date +%Y%m%d)
 function single_test(){
 for i in $(cat grouplist);do
-    nohup ./cfiojobs -g $i -b $i -j allmode -f -s --fio -o $i"_"single"_"$(date +%Y%m%d) &> $i"_"single"_"$(date +%Y%m%d).log &
+    nohup ./cfiojobs -g $i -b $i -j allmode -f -s --fio -o $i"_"single"_"$timestamp &> $i"_"single"_"$timestamp.log &
 done
 }
 
@@ -13,7 +15,7 @@ done
 
 function parallel_test(){
 for i in $(cat grouplist);do
-    nohup ./cfiojobs -g $i -b $i -j allmode -f --fio -o $i"_"parallel"_"$(date +%Y%m%d) &> $i"_"parallel"_"$(date +%Y%m%d).log &
+    nohup ./cfiojobs -g $i -b $i -j allmode -f --fio -o $i"_"parallel"_"$timestamp &> $i"_"parallel"_"$timestamp.log &
 done
 }
 
@@ -25,4 +27,6 @@ elif [[ $1 == "-all" ]]
     single_test
     wait_test
     parallel_test
+    wait_test
+    ./cfiojobs.contrast2.sh $i"_"parallel"_"$timestamp $i"_"single"_"$timestamp
 fi
