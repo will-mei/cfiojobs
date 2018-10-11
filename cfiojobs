@@ -604,13 +604,22 @@ function _host_group_check(){
                          HOST_GROUP_PORT_ARRAY[$host_group_name]=${group_info[2]}
                          HOST_GROUP_TCMU_ARRAY[$host_group_name]=${group_info[3]}
                          HOST_GROUP_CEPH_ARRAY[$host_group_name]=${group_info[4]}
+                # find ip list in config dir "conf/xxx.grp"
+                if [[ ${group_info[5]} == '--' ]] ;then
+                    if [[ -f conf/$host_group_name".grp" ]] ;then
+                      HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(cat conf/$host_group_name".grp"))
+                    else
+                        echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list \"file conf/$host_group_name".grp"\" is missing "
+                    fi
+                else
                       HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list ${group_info[5]//,/ })
+                fi
 #echo ${HOST_GROUP_IP_LIST_ARRAY[$host_group_name]}
             else
             # if group info lost, skip or exit
             # 3. check from last, find last missing info index, and print its name.
                 for index in {1..5} ;do
-                   [[ -z ${group_info[$index]} ]] && echo "Warning: host group config file: $j_conf, $group: ${index_name_array[$index]} info missing!"
+                   [[ -z ${group_info[$index]} ]] && echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ${index_name_array[$index]} info missing!"
                 done
                 grp_stat=1
                 # remove from host_group_list

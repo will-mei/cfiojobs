@@ -34,10 +34,13 @@ with open(source_csv,'r') as f:
 for i in range(len(source)) :
     row          = source[i]
     if i == 0 :
-        row.insert(7,  u'对照带宽(MiB/s)'.encode('GB2312'))
-        row.insert(8,  u'对照比值'.encode('GB2312'))
+        #row.insert(7,  u'对照带宽(MiB/s)'.encode('GB2312'))
+        row.insert(7,  u'单盘测试平均带宽(MiB/s) (同一时间同一主机上，只测试一块磁盘，最后计算得出的所有磁盘的带宽平均值)'.encode('GB2312'))
+        #row.insert(8,  u'对照比值'.encode('GB2312'))
+        row.insert(8,  u'满盘并发时该盘带宽/单盘并发时带宽平均值的百分比(%)'.encode('GB2312'))
         #row.insert(9,  u'对照筛选状态'.encode('GB2312'))
-        row.insert(9,  u'是否合格(性能对比值不低于90%)'.encode('GB2312'))
+        #row.insert(9,  u'是否合格(性能对比值不低于90%)'.encode('GB2312'))
+        row.insert(9,  u'满盘并发时该盘带宽/单盘并发时带宽平均值的筛选状态(低于90%标为●，否则记为○)'.encode('GB2312'))
         row.insert(12, u'对照测试的每秒读写(iops)平均值'.encode('GB2312'))
         row.insert(15, u'对照测试的延迟平均值(ms)'.encode('GB2312'))
         result.append(row)
