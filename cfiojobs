@@ -122,8 +122,9 @@ usage :
 4. FIO jobs control
    options:
            --fio         launch a fio test
+           --test-stop   stop test on given host groups(stop all test and all jobs)
+           --fio-stop    stop all existinging fio jobs on given host groups (stop a round of jobs of a test)
            --fio-list    output summary info of fio jobs on given host groups
-           --fio-stop    stop all existinging fio jobs on given host groups
            -b            send fio job with given blk group in $b_conf
            -j            send fio job with given job group in $j_conf
            -A            fio task 'After' commands that you give
@@ -1346,11 +1347,50 @@ function _group_fio_list(){
 
 function _group_fio_stop(){
 # stop all existing fio jobs on host group
-    _yellow "job stop:"
+    _yellow "fio stop:"
     _parse_host_info "$1"
         tmpfile_stop=$(mktemp)
         echo 0 >$tmpfile_stop
         for host_ip in $ip_list ;do
+            if ping -c2 $host_ip &>/dev/null ;then
+                if _ssh_send 'echo ssh ok' &>/dev/null ;then
+                    if _ssh_send 'ps aux |grep fio|grep filename |grep -v grep' &>/dev/null ;then
+                        _ssh_send 'kill $(ps aux |grep fio|grep filename |grep -v grep|awk "{print\$2}") ' \
+                        && _unquiet " $(_blue "host: $host_ip") fio process killed successfully."
+                    else
+                        _unquiet " $(_blue "host: $host_ip") no fio running"
+                    fi
+                else
+                    _red "\t $host_ip: ssh connection failed!"
+                fi
+            else
+                _red "\t $host_ip is unreachable!"
+                echo 1 >$tmpfile_stop
+            fi &
+# if run in backgroud return will always be 0
+        done && wait
+        check_stat=$(cat $tmpfile_stop)
+        [[ $check_stat -eq 1 ]] && _error_interrupt
+    _unquiet "round stop action done." || echo "stop stat: $check_stat" 
+}
+
+# stop test on a group
+function _group_test_stop(){
+# stop all background test process on local host
+    _yellow "test stop:"
+    echo "stop main test process..."
+    local main_pid=$(ps aux |grep '\-\-'fio'\ ' |grep "$1" |grep -v grep |awk '{print$2}')
+    [[ -n $main_pid ]] && kill $main_pid || echo "main process was ended already."
+    _parse_host_info "$1"
+#stop fio jobs
+        echo "stop fio jobs on hosts..."
+        tmpfile_stop=$(mktemp)
+        echo 0 >$tmpfile_stop
+        for host_ip in $ip_list ;do
+            # stop local process
+            local host_pid=$(ps aux |grep $host_ip|grep ssh |grep -v grep |awk '{print$2}')
+            [[ -n $host_pid ]] && kill $host_pid 
+            # stop fio on host
             if ping -c2 $host_ip &>/dev/null ;then
                 if _ssh_send 'echo ssh ok' &>/dev/null ;then
                     if _ssh_send 'ps aux |grep fio|grep filename |grep -v grep' &>/dev/null ;then
@@ -1492,6 +1532,7 @@ conf_check="False"
 quiet_mode="False"
 list_fio="False"
 stop_fio="False"
+stop_test="False"
 send_fio="False"
 host_group_list=""
 blk_group_list=""
@@ -1533,6 +1574,7 @@ info:
      test_mode: $test_mode
     printdebug: $pdebug
       tolerate: $tolerate
+     stop_test: $stop_test
 ##################################"
     #no_sys_blk: $no_sys_blk
 _waiting "read info" 10
@@ -1605,6 +1647,9 @@ while [ $# -gt 0 ] ;do
             list_fio="True"
             ;;
         "--fio-stop" )
+            stop_test="True"
+            ;;
+        "--test-stop" )
             stop_fio="True"
             ;;
         "--fio" )
@@ -1745,11 +1790,17 @@ done
 
 
 
-# stop jobs.
+# stop jobs of job round running.
     if [[ $stop_fio == "True" ]] ;then
         echo "stop fio jobs ..."
         for host_group_name in $host_group_list ;do
             _group_fio_stop $host_group_name
+        done
+# stop test.
+    if [[ $stop_test == "True" ]] ;then
+        echo "stop fio test ..."
+        for host_group_name in $host_group_list ;do
+            _group_test_stop $host_group_name
         done
 # list jobs
     elif [[ $list_fio == "True" ]] ;then
