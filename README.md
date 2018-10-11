@@ -67,26 +67,33 @@ usage :
 3. Example of Some more complex situation. (how to use double/single quote to pass the complete cmd to script):
 
    (1). with multy command a time:  
-            ./cfiojobs "command1 ;  command2 ;  command3 "
+   
+               ./cfiojobs "command1 ;  command2 ;  command3 "
    
    (-1) with command list to run :  
-            ./cfiojobs "command1 && command2 || command3 "
+   
+               ./cfiojobs "command1 && command2 || command3 "
         
    (2). with pipe thing or some  :  
-            ./cfiojobs "your command |pipe |pipe "
+   
+               ./cfiojobs "your command |pipe |pipe "
    
    (3). with local bash variable :  
-            ./cfiojobs "your command $local_variable "
+   
+               ./cfiojobs "your command $local_variable "
    
    (4). with remote env variable :  
-            ./cfiojobs "your command '$remote_env_viriable' " 
+   
+               ./cfiojobs "your command '$remote_env_viriable' " 
    
 
    example: 
-           ./cfiojobs -g grp1 "ls -l |awk '{print\$2}'"
+   
+               ./cfiojobs -g grp1 "ls -l |awk '{print\$2}'"
    
    or: 
-           ./cfiojobs -g grp1 "ls -l |awk \"{print\\\$2}\""
+   
+               ./cfiojobs -g grp1 "ls -l |awk \"{print\\\$2}\""
          
    tips: awk variable is not shell variable, so there were three antislash inside curly braces,
          first two antislash passed an '\' to remote bash, and then the third is for the translating of the '$'.
@@ -118,6 +125,7 @@ usage :
            
 
    example: 
+   
           ./cfiojobs --fio-list -g group1 -q
    
           ./cfiojobs --fio -g grp1 -b vd5 -j rand1,mix1 -A "umount /dev/vdb"
