@@ -1,5 +1,8 @@
 #!/bin/bash
 
+if [[ -z $1 ]] ;then
+    echo "Usage: $0  <-s|-p|-all>" && exit 1
+fi
 timestamp=$(date +%Y%m%d)
 function single_test(){
 for i in $(cat grouplist);do
@@ -8,7 +11,7 @@ done
 }
 
 function wait_test(){
-while ps aux |grep cfiojobs |grep '\-\-'fio |grep -vq grep ;do
+while ps aux |grep cfiojobs |grep '\-\-'fio'\ ' |grep -vq grep ;do
     sleep 60
 done
 }
