@@ -609,7 +609,7 @@ function _host_group_check(){
                 # find ip list in config dir "conf/xxx.grp"
                 if [[ ${group_info[5]} == '--' ]] ;then
                     if [[ -f conf/$host_group_name".grp" ]] ;then
-                      HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(cat conf/$host_group_name".grp"))
+                      HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf conf/$host_group_name".grp"))
                     else
                         echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list file: \"conf/$host_group_name".grp"\" is missing "
                     fi
