@@ -102,7 +102,7 @@ usage :
                ./cfiojobs -g grp1 "ls -l |awk \"{print\\\$2}\""
          
    tips: awk variable is not shell variable, so there were three antislash inside curly braces,
-         first two antislash passed an '\' to remote bash, and then the third is for the translating of the '$'.
+         first two antislash passed an '\\' to remote bash, and then the third is for the translating of the '$'.
             
 
 4. FIO jobs control
