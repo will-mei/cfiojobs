@@ -943,10 +943,10 @@ function _send_file(){
 if [[ -n $file_group_list ]] ;then
     _unquiet "  $host_ip copy files..."
     if [[ $quiet_mode == "True" ]] ;then
-        scp -r -q -o ConnectTimeout=10 -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
+        scp -r -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
         echo "  $host_ip stat: $?"
     else
-        scp -r -q -o ConnectTimeout=10 -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
+        scp -r -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
     fi
 #else
 #    [[ $send_fio == "True" ]] && _unquiet "    no files to copy."
@@ -964,15 +964,15 @@ if [[ -n ${harvest_file_group_list//,/} ]] ;then
             eval scp -r -q -o ConnectTimeout=10 -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir/ &>/dev/null                                                        
             echo "  $host_ip stat: $?"
         else
-            eval scp -r -q -o ConnectTimeout=10 -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir && echo "  $host_ip done"
+            eval scp -r -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir && echo "  $host_ip done"
         fi
     # multy files
     else
         if [[ $quiet_mode == "True" ]] ;then
-            eval scp -r -q -o ConnectTimeout=10 -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir/ &>/dev/null                                                        
+            eval scp -r -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir/ &>/dev/null                                                        
             echo "  $host_ip stat: $?"
         else
-            eval scp -r -q -o ConnectTimeout=10 -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir && echo "  $host_ip done"
+            eval scp -r -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir && echo "  $host_ip done"
         fi
     fi
 #else
@@ -991,13 +991,22 @@ if [[ -n $CMD ]] ;then
          [[ $p_exec == "True" ]] || _segline "$host_ip stdout"
          #use virtual terminal and recive tty input.
          # echo "$host_ip :"
-         ssh -t -q -o ConnectTimeout=10 -l $host_user $host_ip -p $host_port "$CMD"
+         ssh -t -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD"
          [[ $p_exec == "True" ]] || _segline "$host_ip ending"
          [[ $p_exec == "True" ]] ||echo ""
      fi
 #else
 #    _unquiet "    no command to run."
 fi
+}
+function _ssh_send_bknd(){
+    if [[ $# -lt 1 ]] ;then
+        echo "${FUNCNAME[@]} warning: no command to send!" 
+        continue
+    else
+        #ssh -t -q -n -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $bknd_user $bknd_ip -p $bknd_port "$@" 
+        ssh -T -q -n -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $bknd_user $bknd_ip -p $bknd_port "$@" 
+    fi 
 }
 function _ssh_bknd(){
 # input :
@@ -1035,12 +1044,12 @@ function _ssh_bknd(){
             _unquiet "    send cmd/file to backend $bknd_ip ..."
             # network and ssh connection test.
             if ping -c2 $bknd_ip  &>/dev/null ;then
-                if ssh -T -q -n -o ConnectTimeout=10 -l $bknd_user $bknd_ip -p $bknd_port "echo ssh ok" &>/dev/null ;then
+                if _ssh_send_bknd "echo ssh ok" &>/dev/null ;then
                     # copy file and run command after net and ssh test.
-                    file_stat=$(ssh -T -q -n -o ConnectTimeout=10 -l $bknd_user $bknd_ip -p $bknd_port "test -f ${2#*[ ]}/${2%[ ]*}; echo $?")
+                    file_stat=$(_ssh_send_bknd "test -f ${2#*[ ]}/${2%[ ]*}; echo $?")
                     [[ $file_stat -eq 0 ]] || scp -P $bknd_port ${2%[ ]*} $bknd_user@$bknd_ip:${2#*[ ]} 
                     #
-                    ssh -t -q -n -o ConnectTimeout=10 -l $bknd_user $bknd_ip -p $bknd_port "${3}" &>"$4" &
+                    _ssh_send_bknd "${3}" &>"$4" &
                     _unquiet "    task pid $! in background..." || echo "    task pid:$!"
                 else
                     _red "bknd server $bknd_ip ssh connection failed!"
@@ -1203,7 +1212,7 @@ function _fio_log_harvest(){
 #sleep 30
                     # stop scp from coping "/" from remote, when output dir missing
                     if [[ -n $output_dir ]] && [[ $output_dir != '/' ]] ;then
-                        scp -q -r -o ConnectTimeout=10 -P $host_port $host_user@$host_ip:$output_dir/* $output_dir/ && wait &&  _ssh_send "rm -rf $output_dir/" &
+                        scp -q -r -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:$output_dir/* $output_dir/ && wait &&  _ssh_send "rm -rf $output_dir/" &
                     else
                         _red "output directory err!" && _verbose "jobinfo"
                     fi
@@ -1302,16 +1311,16 @@ function _group_execute(){
     _unquiet "execute action done." || echo " group stat : $check_stat"
 }
 function _host_fio_list(){
-        if ping -c1 $host_ip &>/dev/null && ssh -T -q -n -o ConnectTimeout=10 -l $host_user $host_ip 'echo ok' &>/dev/null ;then
+        if ping -c1 $host_ip &>/dev/null && _ssh_send 'echo ok' &>/dev/null ;then
             tmpfile=$(mktemp)
             tmpfile2=$(mktemp)
             host_stat=0
             host_name=$(_ssh_send 'echo $HOSTNAME')
             [[ ${#host_name} -gt 18 ]] && host_name="${host_name:0:18}.."
             # get args info
-            ssh -t -q -n -o ConnectTimeout=10 -l $host_user $host_ip 'ps aux|grep fio|grep filename|grep -v grep' > $tmpfile
+            _ssh_send 'ps aux|grep fio|grep filename|grep -v grep' > $tmpfile
             # get time info
-            ssh -t -q -n -o ConnectTimeout=10 -l $host_user $host_ip "ps -aeo user,pid,etimes,args|grep fio|grep filename=|grep -v grep |awk '{for(i=3;i<4;i=i+1){printf \$i\" \"};printf \"\n\"}'|sort -u"  > $tmpfile2
+            _ssh_send "ps -aeo user,pid,etimes,args|grep fio|grep filename=|grep -v grep |awk '{for(i=3;i<4;i=i+1){printf \$i\" \"};printf \"\n\"}'|sort -u"  > $tmpfile2
             no_job=$(wc -l < $tmpfile) 
             job_pattern=$(awk -F "rw=" '{print$2}' $tmpfile |awk '{print$1}'|sort -u |sed ':label;N;s/\n/\ /;t label')
             job_bs=$(awk -F " -bs=" '{print$2}' $tmpfile |awk '{print$1}'|sort -u |sed ':label;N;s/\n/\ /;t label')
