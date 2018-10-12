@@ -1,24 +1,8 @@
 #Please got your list writen in one line(There is no space at the head of the line).
 #list_name  lbk_list
-example     /dev/sda5,/dev/sdb,/dev/sdc,/dev/sdd
 file4       /mnt/sdb/data,/mnt/sdc/data,/mnt/sdd/data,/mnt/sde/data   #esxi vm iscsi driver
 
-vd5         /dev/vdb,  #abcd
-            /dev/vdc,
-            /dev/vdd,
-            /dev/vde,
-            /dev/vdf  #for kvm vm virtio driver
-
-blk1	/dev/sdb,
-		/dev/sdc,
-		/dev/sdd,
-		/dev/sde,
-		/dev/sdf,
-		/dev/sdg,
-		/dev/sdh,
-		/dev/sdi
-
-file8    /mnt/sdb/data,
+file8   /mnt/sdb/data,
 		/mnt/sdc/data,
 		/mnt/sdd/data,
 		/mnt/sde/data,
@@ -26,4 +10,10 @@ file8    /mnt/sdb/data,
 		/mnt/sdg/data,
 		/mnt/sdh/data,
 		/mnt/sdi/data
+
+vd5     /dev/vdb,  #abcd
+        /dev/vdc,
+        /dev/vdd,
+        /dev/vde,
+        /dev/vdf  #for kvm vm virtio driver
 
