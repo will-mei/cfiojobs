@@ -936,6 +936,7 @@ function _ssh_send(){
     else
         #ssh -n -t -q -o ConnectTimeout=10 -l $host_user $host_ip -p $host_port "$@"
         ssh -n -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$@"
+        #expect -v &>/dev/null && expect bin/expect_ssh2vm.exp $host_user $host_ip $host_port $host_pwd "$@"
     fi
 }
 function _send_file(){
