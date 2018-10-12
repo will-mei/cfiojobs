@@ -904,7 +904,7 @@ function _parse_host_info(){
    job_group_name="${JOB_BATCH_NAME_ARRAY[$job_batch_index]%%-*}"
          job_name="${JOB_BATCH_NAME_ARRAY[$job_batch_index]#*-}"
         # give info
-        [[ -n $blk_group_name ]] && _unquiet " blk group:\"$blk_group_name\",job batch:\"$job_batch_index\",job group:\"$job_group_name\",job pattern:\"$job_name\""
+        [[ -n $blk_group_name ]] && _unquiet " blk group:\"$blk_group_name\",job batch num:\"$job_batch_index\",job group name:\"$job_group_name\",job pattern:\"$job_name\""
         if [[ -z ${host_user// /} ]] || [[ -z ${host_port// /} ]] || [[ -z ${ip_list// /} ]] ;then
             echo "${FUNCNAME[@]}: group: \"$1\", ssh login info is missing."
             continue || exit 1
@@ -1447,7 +1447,7 @@ function _group_fio_check(){
     _yellow "job conflicts check:"
     _parse_host_info "$1"
         #check_stat=0
-       echo "check and wait previous fio jobs."
+       echo "check and wait running fio jobs."
         for host_ip in $ip_list ;do
             if ping -c1 $host_ip &>/dev/null ;then
                 :
@@ -1521,10 +1521,15 @@ function _group_pre_check(){
                 echo 1 > $tmpfile_precheck
             fi &
         done && wait
-        [[ $check_stat -eq 2 ]] || check_stat=$(cat $tmpfile_precheck)
+        if [[ $check_stat -eq 2 ]] ;then 
+            _yellow "host group $1 fio installation is done, recheck fio ..."
+            _group_pre_check "$1"
+        else
+            check_stat=$(cat $tmpfile_precheck)
+        fi
         rm -rf $tmpfile_precheck
         # if fio failed, no need to continue
-        [[ $check_stat -eq 1 ]] && echo 'pre check partially failed.' && exit 1
+        [[ $check_stat -eq 1 ]] && echo 'pre check partially failed.' && _timeout 15 && _error_interrupt
     _unquiet "check action done." || echo " group stat : $check_stat" 
 }
 function round_report(){
