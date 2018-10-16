@@ -1920,7 +1920,7 @@ done
                 for host_group_name in $host_group_list ;do
                     _group_execute $host_group_name
                 done && wait && _blue "\
-###############| Round $job_batch_index All Jobs Were Sent |################
+###############| Round $job_batch_index Jobs Sent |################
 "
             done
             #blk group
