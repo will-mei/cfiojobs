@@ -2,10 +2,10 @@
 # "DEFAULT" job should be set, if any job with an empty customized_options exists.
 #
 #job_name   runtime data_size   block_size_range    read_write_pattern              inherit_args    "customized_options_args"
-DEFAULT     900     100%        4k,256k,4m          randread,randwrite              True            "-ramp_time=30 -iodepth=32 -numjobs=2 -direct=1 -ioengine=libaio -time_based -group_reporting --output-format=json"
+DEFAULT     900     100%        4k,256k,4m          randread,randwrite              True            "-ramp_time=30 -iodepth=32 -numjobs=1 -direct=1 -ioengine=libaio -time_based -group_reporting --output-format=json"
 
 # 2 day
-durable     172800  100%        none                randrw                          False           "-direct=1  -iodepth=16 -numjobs=4 -bssplit=4k/50:256k/40:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
+durable     172800  100%        none                randrw                          False           "-direct=1  -iodepth=8  -numjobs=2 -bssplit=4k/50:256k/40:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
 
 # 10 min
 readonly    600     100%        4k,256k,4m          read,randread                   True
@@ -13,20 +13,21 @@ writeonly   600     100%        4k,256k,4m          write,randwrite             
 sequntial   600     100%        4k,256k,4m          read,write                      True
 random      600     100%        4k,256k,4m          randread,randwrite              True
 allmode     600     100%        4k,256k,4m          read,randread,write,randwrite   True
-4k          600     100%        4k                  read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
-4m          600     100%        4m                  read,randread,write,randwrite   True            "-iodepth=16 -numjobs=1"
+4k          600     100%        4k                  read,randread,write,randwrite   True            "-iodepth=32 -numjobs=1"
+4m          600     100%        4m                  read,randread,write,randwrite   True            "-iodepth=32 -numjobs=1"
 
 # 8 min
-small       500     100%        4k,16k,32k,64k,256k read,randread,write,randwrite   True            "-iodepth=32 -numjobs=2"
+small       500     100%        4k,16k,32k,64k,256k read,randread,write,randwrite   True            "-iodepth=32 -numjobs=1"
 normal      500     100%        4k,64k,256k,4m      read,randread,write,randwrite   True            "-iodepth=32 -numjobs=1"
 
 # 5 min
 quick       300     100%        4k,4m               read,randread,write,randwrite   True            "-iodepth=32 -numjobs=1"
 quicknormal 300     100%        4k,256k,4m          read,randread,write,randwrite   True            "-iodepth=32 -numjobs=1"
-allbs       300     100% 4k,8k,16k,32k,64k,128k,256k,512k,1m,4m randread,randwrite  True            "-iodepth=32 -numjobs=2"
+allbs       300     100% 4k,8k,16k,32k,64k,128k,256k,512k,1m,4m randread,randwrite  True            "-iodepth=32 -numjobs=1"
 
 
 # 2 min
 short       120     100%        4k,256k,4m          read,randread,write,randwrite   True            "-iodepth=32 -numjobs=1"
-seqr        120     100%        4m                  read                            True            "-iodepth=16 -numjobs=1"
-sseqr       80      100%        4m                  read                            True            "-iodepth=8  -numjobs=1"
+# test
+seqr        120     100%        4m                  read                            True            "-iodepth=8  -numjobs=1"
+sseqr       80      100%        4m                  read                            True            "-iodepth=4  -numjobs=1"
