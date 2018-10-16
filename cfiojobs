@@ -1910,7 +1910,7 @@ done
                 for host_group_name in $host_group_list ;do
                     _group_fio_check $host_group_name
                    [[ $job_batch_index -ge 2 ]] && _fio_log_harvest $host_group_name && wait && _blue "\
-###############| Round $[job_batch_index -1] is ended |################
+###############| Round $[job_batch_index -1] is end |################
 "
                 done
                 # check fio log stat of last round
