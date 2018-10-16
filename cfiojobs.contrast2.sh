@@ -24,11 +24,11 @@ for i in $(ls "$source_report_dir/_report/$source_report_name"*_all_host.csv) ;d
 	# check reference_report_json and contrast
 	reference_report_json="$reference_report_dir/_report/$reference_report_name"_"$type".json
 	if [[ -f $reference_report_json ]] ;then
-		./cfiojobs.contrast.py $i $reference_report_json
+        $(dirname $0)/cfiojobs.contrast.py $i $reference_report_json
 	else
 		echo "$reference_report_name missing or mismatch."
 		echo "please check content in dir: $reference_report_dir/_report/ ."
-		echo "you can try to rebuild json report with cmd: ./cfiojobs.log2.sh $$reference_report_dir"
+        echo "you can try to rebuild json report with cmd: $(dirname $0)/cfiojobs.log2.sh $reference_report_dir"
 		continue
 	fi
 done
