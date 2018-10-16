@@ -1,15 +1,6 @@
 #list_name  lbk_list
 file4       /mnt/sdb/data,/mnt/sdc/data,/mnt/sdd/data,/mnt/sde/data   #esxi vm iscsi driver
 
-file8       /mnt/sdb/data,
-            /mnt/sdc/data,
-            /mnt/sdd/data,
-            /mnt/sde/data,
-            /mnt/sdf/data,
-            /mnt/sdg/data,
-            /mnt/sdh/data,
-            /mnt/sdi/data
-
 vd5     /dev/vdb,  #abcd
         /dev/vdc,
         /dev/vdd,
