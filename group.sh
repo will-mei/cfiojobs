@@ -1,8 +1,10 @@
 #!/bin/bash
 
 if [[ -z $1 ]] ;then
+    echo "test the group in grouplist single and/or parallel (default jobs: allmode)."
     echo "Usage: $0  <-s|-p|-all>" && exit 1
 fi
+
 timestamp=$(date +%Y%m%d)
 function single_test(){
 for i in $(cat grouplist);do
