@@ -14,7 +14,7 @@ OUTPUT_DIR="$LOGDIR"
 mkdir -p $OUTPUT_DIR
 grep ^fio: $OUTPUT_DIR/*.json >> $OUTPUT_DIR/fio-err.log
 
-json_script="./cfiojobs.json.py"
+json_script="$(dirname $0)/cfiojobs.json.py"
 
 
 # analyse test logs

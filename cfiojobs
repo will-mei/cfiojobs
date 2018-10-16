@@ -1909,7 +1909,9 @@ done
                 #check previous
                 for host_group_name in $host_group_list ;do
                     _group_fio_check $host_group_name
-                   [[ $job_batch_index -ge 2 ]] && _fio_log_harvest $host_group_name
+                   [[ $job_batch_index -ge 2 ]] && _fio_log_harvest $host_group_name && wait && _blue "\
+###############| Round $[job_batch_index -1] is ended |################
+"
                 done
                 # check fio log stat of last round
                 round_report
@@ -1917,7 +1919,7 @@ done
                 _yellow "\n$(date "+%Y-%m-%d_%H:%M:%S"): BLK ROUND $bround/$btotal, JOB ROUND $job_batch_index/$total_round EXECUTING ..."
                 for host_group_name in $host_group_list ;do
                     _group_execute $host_group_name
-                done && wait && echo "\
+                done && wait && _blue "\
 ###############| Round $job_batch_index All Jobs Were Sent |################
 "
             done

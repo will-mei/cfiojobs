@@ -19,7 +19,7 @@ for  i in $(ls $LOGDIR) ;do
     [[ -f "$LOGDIR/$i" ]] && continue
     [[ $i == "_report" ]] && continue
     rm -rf $LOGDIR/$i/*.csv 
-    bash cfiojobs.log.sh  $LOGDIR/$i &
+    bash $(dirname $0)/cfiojobs.log.sh  $LOGDIR/$i &
     #bash ./catcsv.sh $LOGDIR/$i/*.csv
 done && wait
 
@@ -31,7 +31,7 @@ for i in $(ls $LOGDIR) ;do
 done
 
 # report of the whole test.
-if python2 cfiojobs.log.py $LOGDIR ;then
+if python2 $(dirname $0)/cfiojobs.log.py $LOGDIR ;then
     # remove empty csv
     for i in $(ls "${LOGDIR##*/}"*.csv) ;do
         [[ $(wc -l < $i) -le 1 ]] && rm -rf $i
@@ -49,7 +49,7 @@ function _host_excel_report(){
 # generate excel format report for single host.
 if python3 -V &>/dev/null ;then
     for  i in $(ls $LOGDIR) ;do
-        python3 ./cfiojobs.excel.py  $LOGDIR/$i
+        python3 $(dirname $0)/cfiojobs.excel.py  $LOGDIR/$i
     done  || echo "python3 module pyexcel need to be installed"
 else
     # show test report on stdout
@@ -62,7 +62,7 @@ else
     echo -e "\e[34m 1. after pyexcel(python3) installed,
             \r    to generate an excel report of the logs. you can use command:\n\e[0m
             \rfor i  in \$(ls $LOGDIR); do
-            \r\tpython3 ./cfiojobs.excel.py $LOGDIR/\$i
+            \r\tpython3 $(dirname $0)/cfiojobs.excel.py $LOGDIR/\$i
             \rdone\n"
     # catcsv.sh 
     echo -e "\e[34m 2. if no python3 enviroment on host,
