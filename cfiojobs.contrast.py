@@ -34,15 +34,34 @@ with open(source_csv,'r') as f:
 for i in range(len(source)) :
     row          = source[i]
     if i == 0 :
+        # 7+0
         #row.insert(7,  u'对照带宽(MiB/s)'.encode('GB2312'))
         row.insert(7,  u'单盘测试平均带宽(MiB/s) (同一时间同一主机上，只测试一块磁盘，最后计算得出的所有磁盘的带宽平均值)'.encode('GB2312'))
+        # 7+1
         #row.insert(8,  u'对照比值'.encode('GB2312'))
         row.insert(8,  u'主机满盘并发时该盘带宽/单盘并发时带宽平均值的百分比(%)'.encode('GB2312'))
+        # 7+2
         #row.insert(9,  u'对照筛选状态'.encode('GB2312'))
         #row.insert(9,  u'是否合格(性能对比值不低于90%)'.encode('GB2312'))
         row.insert(9,  u'满盘并发时该盘带宽/单盘并发时带宽平均值的筛选状态(低于90%标为●，否则记为○)'.encode('GB2312'))
+        # 9+3
         row.insert(12, u'对照测试的每秒读写(iops)平均值'.encode('GB2312'))
-        row.insert(15, u'对照测试的延迟平均值(ms)'.encode('GB2312'))
+        # 11+4
+        row.insert(15, u'对照测试的平均延迟平均值(ms)'.encode('GB2312'))
+        # 12+5
+        row.insert(17, u'对照测试的最大延迟平均值(ms)'.encode('GB2312'))
+        # 13+6
+        row.insert(19, u'对照测试的最低延迟平均值(ms)'.encode('GB2312'))
+        # 14+7
+        row.insert(21, u'对照测试的读写队列深度'.encode('GB2312'))
+        # 15+8
+        row.insert(23, u'对照测试的作业并发进程数'.encode('GB2312'))
+        # 16+9
+        row.insert(25, u'对照测试的设备使用率'.encode('GB2312'))
+        # 17+10
+        row.insert(27, u'对照测试的测试数据量'.encode('GB2312'))
+        # 18+11
+        row.insert(29, u'对照测试的测试时长'.encode('GB2312'))
         result.append(row)
         continue
 # check pattern
@@ -63,13 +82,30 @@ for i in range(len(source)) :
         row.insert(9,stat)
         row.insert(12,stat)
         row.insert(15,stat)
+        row.insert(17,stat)
+        row.insert(19,stat)
+        row.insert(21,stat)
+        row.insert(23,stat)
+        row.insert(25,stat)
+        row.insert(27,stat)
+        row.insert(29,stat)
         result.append(row)
         continue
     index_iops   = json_report[pattern_name]['iops']
-    index_lat    = json_report[pattern_name]['latency_avg']
-    avg_bw       = index_bw['sum']   / index_bw['sample']
-    avg_iops     = index_iops['sum'] / index_iops['sample']
-    avg_lat      = index_lat['sum']  / index_lat['sample']
+    index_lat_avg= json_report[pattern_name]['latency_avg']
+    index_lat_max= json_report[pattern_name]['latency_max']
+    index_lat_min= json_report[pattern_name]['latency_min']
+    avg_bw       = index_bw['sum']      / index_bw['sample']
+    avg_iops     = index_iops['sum']    / index_iops['sample']
+    avg_lat_avg  = index_lat_avg['sum'] / index_lat_avg['sample']
+    avg_lat_max  = index_lat_max['sum'] / index_lat_max['sample']
+    avg_lat_min  = index_lat_min['sum'] / index_lat_min['sample']
+    #
+    _iodepth     = json_report[pattern_name]['iodepth']
+    _numjobs     = json_report[pattern_name]['numjobs']
+    _util        = json_report[pattern_name]['util']
+    _size        = json_report[pattern_name]['size']
+    _runtime     = json_report[pattern_name]['runtime']
 # calculate and compare
     ratio        = round(float(row[3]) / avg_bw * 100 ,2)
     str_ratio    = str(ratio) + '%'
@@ -87,7 +123,17 @@ for i in range(len(source)) :
     row.insert(9,stat)
     #
     row.insert(12,avg_iops)
-    row.insert(15,avg_lat)
+    row.insert(15,avg_lat_avg)
+    row.insert(17,avg_lat_max)
+    row.insert(19,avg_lat_min)
+    #
+    row.insert(21,_iodepth)
+    row.insert(23,_numjobs)
+    row.insert(25,_util)
+    row.insert(27,_size)
+    row.insert(29,_runtime)
+    #
+    index_iops   = json_report[pattern_name]['iops']
     result.append(row)
     
 # save as csv

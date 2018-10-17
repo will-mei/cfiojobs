@@ -9,7 +9,7 @@
 # description  :
 #               send command to multy host 
 #               parallel fio test on clusters 
-# last edit :   20181011
+# last edit :   20181017
 # version   :   cfiojobs0.12
 ###########################################################
 
@@ -159,20 +159,14 @@ function _make_conf_example(){
 # The IP address delimiter is a coma ','
 # tcmu/ceph backend can be an ip address or 'none' 
 #
-#grp    user    port    tcmu_bknd               ceph_bknd               ip_addr
+#grp        user    port    tcmu_bknd               ceph_bknd               ip_addr
+grp0        root    5000    root,22,172.18.211.132  root,22,172.18.211.62   --     # use conf/grp0.grp as ip list 
+grp1        root    22      172.18.211.132          none                    172.18.211.133,172.18.211.134  #running on esxi 
 
-# example 1:
-g01     root    5000    root,22,172.18.211.132  root,22,172.18.211.62   192.168.56.113
-
-# example 2:
-g02     root    22      none                    none                    192.168.56.110,  #some comment
-grp1    root    22      172.18.211.132          172.18.211.62           172.18.211.133,172.18.211.134  #running on esxi 
-                                                                        192.168.56.111,  #web server
 EOF
 [[ -f $b_conf ]] && echo "blk group config file exist."  \
  || cat  >$b_conf <<EOF
 # 1. Device delimiter is comma ','.
-# 
 #list_name  lbk_list/file_list 
 
 # example 1:
@@ -192,16 +186,15 @@ EOF
 #    If your are using space as delimiter of fio job args, the "fio I/O job arguments" must be double quoted!
 #    Don't use double quote on the field 1~6. 
 #
-# 2. "DEFAULT" job should be set before any job group with an empty customized options to execute.
+# 2. "DEFAULT" job should be set before any job group with an empty customized options were writen.
 #    If 'inherit_DEFAULT' is 'True' all omitted args will get from the 'DEFAULT' job set.
 #    If 'inherit_DEFAULT' is 'False' this group will only use its own fio arguments.
 # 3. 'json' format log is recommended
 #
-#job_name  runtime data_size block_size_range read_write_pattern inherit_DEFAULT "fio I/O job arguments"
-DEFAULT    600     60G       4k,256k,4m       randread,randwrite True        "-group_reporting -direct=1 -iodepth=4  -ioengine=libaio -time_based -numjobs=16 --output-format=json"    
-256kread   600     60G       256k             read,randread      False       "-iodepth=8 -numjobs=1 -time_based ioengine=rbd --output-format=normal"
-test       600     100%      4k,256k,4m       randread,randwrite True        -group_reporting,-direct=1,-iodepth=4,-ioengine=libaio,-time_based,-numjobs=16,--output-format=json
-durable    172800  100%      none             randrw             False       "-direct=1  -iodepth=32 -numjobs=4 -bssplit=4k/50:256k/40:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
+#job_name   runtime data_size block_size_range read_write_pattern             inherit_DEFAULT  "fio I/O job arguments"
+DEFAULT     600     100%      4k,256k,4m       read,randread,write,randwrite  True             "-group_reporting -direct=1 -iodepth=4  -ioengine=libaio -time_based -numjobs=16 --output-format=json"    
+test        600     60G       4k,256k,4m       randread,randwrite             True
+durable     172800  100%      none             randrw                         False            "-direct=1  -iodepth=32 -numjobs=4 -bssplit=4k/50:256k/40:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
 EOF
 [[ -f $0".iodepth_bs_pattern.csv" ]] && echo $0".iodepth_bs_pattern.csv" exist. \
  ||cat >$0".iodepth_bs_pattern.csv" <<EOF
@@ -863,7 +856,7 @@ ${JOB_ARGS_ARRAY[$job_group_name]} "
             done
         done
     done
-    if _verbose ;then 
+    if _unquiet ;then 
         _yellow "job time caculation:"
         echo -e "\tall job group will lunch $total_round fio jobs, and costs $(($runtime_sum / 60)) minites at least."
         for job_group_name in $job_group_list ;do
@@ -901,6 +894,8 @@ function _parse_host_info(){
           ip_list="${HOST_GROUP_IP_LIST_ARRAY[$current_host_group]}"
 #echo $ip_list
           fio_cmd="${job_batch}"
+         num_jobs=$(echo $fio_cmd |awk -F'-numjobs=' '{print$2}' |awk '{print$1}')
+         [[ -z $num_jobs ]] && num_jobs=x
    job_group_name="${JOB_BATCH_NAME_ARRAY[$job_batch_index]%%-*}"
          job_name="${JOB_BATCH_NAME_ARRAY[$job_batch_index]#*-}"
         # give info
@@ -1161,9 +1156,11 @@ function _send_fio(){
                     #_ssh_send "$fio_cmd -filename=$BLK -name=$log_name " &>$log_dir/$log_name
                     # wait previous 
                     _host_fio_check
-                    _ssh_send "$fio_cmd -filename=$BLK -name=$log_name  &>$log_dir/$log_name &"
+                    _ssh_send "$fio_cmd -filename=$BLK -name=$num_jobs-$log_name  &>$log_dir/$log_name &"
+                    echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$num_jobs-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                 else
-                    _ssh_send "$fio_cmd -filename=$BLK -name=$log_name  &>$log_dir/$log_name &"
+                    _ssh_send "$fio_cmd -filename=$BLK -name=$num_jobs-$log_name  &>$log_dir/$log_name &"
+                    echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$num_jobs-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                 fi
                 #record job bs, pattern, blk
                 #bs info
@@ -1178,7 +1175,7 @@ function _send_fio(){
                 grep "^blk:.*$" $log_dir/fio-batch".log" \
                 |grep -q ",${BLK//\//}"  \
                 || sed -i "s/^blk:.*$/&\,${BLK//\//}/g" $log_dir/fio-batch".log"
-           
+            #
             done
             if [[ $tcmu_bknd != "none" ]] || [[ $ceph_bknd != "none" ]] ;then
                 _unquiet "  connect bknd server ..."
@@ -1510,9 +1507,9 @@ function _group_pre_check(){
                     if _ssh_send 'yum makecache fast' ;then
                         version=$(_ssh_send "yum list fio|grep fio|tail -1|awk '{print \$2}'|cut -d'.' -f1")
                         if [[ $version -ge 3 ]] ;then 
-                           echo "host:$host_ip, fio installing.."
-                           _ssh_send 'fio -v || yum -y install librbd1 fio &' &
+                           _blue "host:$host_ip, fio installing.."
                            check_stat=2
+                           _ssh_send 'fio -v || yum -y install librbd1 fio &' &
                         else 
                            echo "host:$host_ip, fio check failed. (not installed and fio version: $version in available repo is lower than 3)"
                            echo 1 > $tmpfile_precheck
@@ -1530,7 +1527,8 @@ function _group_pre_check(){
                 _red "\t $host_ip is unreachable!"
                 echo 1 > $tmpfile_precheck
             fi &
-        done && wait
+        done
+        wait
         if [[ $check_stat -eq 2 ]] ;then 
             _yellow "host group $1 fio installation is done, recheck fio ..."
             _group_pre_check "$1"
@@ -1910,7 +1908,7 @@ done
                 for host_group_name in $host_group_list ;do
                     _group_fio_check $host_group_name
                    [[ $job_batch_index -ge 2 ]] && _fio_log_harvest $host_group_name && wait && _blue "\
-###############| Round $[job_batch_index -1] is end |################
+###############| Round $[job_batch_index -1] jobs ended |################
 "
                 done
                 # check fio log stat of last round
