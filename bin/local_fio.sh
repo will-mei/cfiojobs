@@ -1,6 +1,6 @@
 #!/bin/bash
 
-yum -y install fio || exit 1
+fio -v || yum -y install fio || exit 1
 mkdir -p $0-test
 [[ $1 == "-p"  ]] && mode="&"
 
