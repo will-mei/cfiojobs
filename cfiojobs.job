@@ -29,5 +29,5 @@ allbs       300     100% 4k,8k,16k,32k,64k,128k,256k,512k,1m,4m randread,randwri
 # 2 min
 short       120     100%        4k,256k,4m          read,randread,write,randwrite   True            "-iodepth=32 -numjobs=1"
 # test
-seqr        120     100%        4m                  read                            True            "-iodepth=8  -numjobs=1"
-sseqr       80      100%        4k,4m               read,randread                   True            "-iodepth=4  -numjobs=1"
+seqr        120     100%        4k,256k,4m          read,randread                   True            "-iodepth=8  -numjobs=1"
+sseqr       80      100%        4k,4m               read                            True            "-iodepth=2  -numjobs=1"

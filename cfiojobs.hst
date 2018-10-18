@@ -28,3 +28,9 @@
 2018-10-17_05:51:00: ./cfiojobs -g ceph3 yum remove fio -y
 2018-10-17_05:51:31: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio -o test02
 2018-10-17_05:56:42: ./cfiojobs -l
+2018-10-17_23:20:15: ./cfiojobs -g ceph3 fio -v
+2018-10-17_23:20:39: ./cfiojobs -g ceph3 yum remove -y fio -p
+2018-10-17_23:22:23: ./cfiojobs -g ceph3 -b ceph3 -j sseqr --fio -o test03
+2018-10-18_02:43:13: ./cfiojobs -g ceph3 yum -y remove fio
+2018-10-18_04:07:52: ./cfiojobs -g ceph3 -b ceph3 -j sseqr --fio -o test04
+2018-10-18_04:20:15: ./cfiojobs -g ceph3 -b ceph3 -j sseqr --fio -o test05
