@@ -1981,7 +1981,7 @@ done
 
 # send files and cmd
     elif [[ -n $CMD ]] || [[ -n $file_group_list ]] || [[ -n $harvest_file_group_list ]] ;then
-        _check_output_dir
+        [[ -n $harvest_file_group_list  ]] &&  _check_output_dir 
         for host_group_name in $host_group_list ;do
             [[ -n $CMD ]] && _yellow "command: \"$CMD\"\n"
             [[ -n $file_group_list ]] && _yellow "  send files: \"$file_group_list\""
