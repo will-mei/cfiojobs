@@ -1,8 +1,10 @@
 #!/bin/bash
 
+[[ ${1:0-1:1} == "/" ]] && $1=${1%/*}
 source_report_dir=$1
 source_report_name=${source_report_csv##*/}
 
+[[ ${2:0-1:1} == "/" ]] && $2=${2%/*}
 reference_report_dir=$2
 reference_report_name=${reference_report_dir##*/}
 
