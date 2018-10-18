@@ -1570,7 +1570,7 @@ function round_report(){
     fi
 }
 function _list_all_running_jobs(){
-    local groups_to_list=$(ps aux |grep '\-\-'fio'\ ' |grep -v grep |awk -F'-g' '{print$2}' |awk '{print$1}' |sort -u)
+    local groups_to_list=$(ps aux |grep $(whoami) |grep '\-\-'fio'\ ' |grep -v grep |awk -F'-g' '{print$2}' |awk '{print$1}' |sort -u)
     if [[ -n $groups_to_list ]] ;then
         for i in $groups_to_list ;do
             bash $0 -g $i --fio-list -p 

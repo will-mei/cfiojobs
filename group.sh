@@ -1,37 +1,34 @@
 #!/bin/bash
 
+job_group=quicknormal
 if [[ -z $1 ]] ;then
-    echo "test the group in grouplist single and/or parallel (default jobs: allmode)."
+    echo "test the group in grouplist single and/or parallel (default jobs: $job_group)."
     echo "Usage: $0  <-s|-p|-all>" && exit 1
 fi
 
 timestamp=$(date +%Y%m%d)
-function single_test(){
+function group_test(){
+mode=$1
+[[ $mode == "single" ]] && mode_arg="-s"
 for i in $(cat grouplist);do
-    nohup ./cfiojobs -g $i -b $i -j allmode -f -s --fio -o $i"_"single"_"$timestamp &> $i"_"single"_"$timestamp.log &
+    nohup ./cfiojobs -g $i -b $i -j $job_group -f $mode_arg --fio -o $i"_"$mode"_"$timestamp &> $i"_"$mode"_"$timestamp.log &
 done
 }
 
 function wait_test(){
-while ps aux |grep cfiojobs |grep '\-\-'fio'\ ' |grep -vq grep ;do
+while ps aux |grep $(whoami) |grep cfiojobs |grep '\-\-'fio'\ ' |grep -vq grep ;do
     sleep 60
 done
 }
 
-function parallel_test(){
-for i in $(cat grouplist);do
-    nohup ./cfiojobs -g $i -b $i -j allmode -f --fio -o $i"_"parallel"_"$timestamp &> $i"_"parallel"_"$timestamp.log &
-done
-}
-
 if [[ $1 == "-s" ]] ;then
-    single_test
-elif [[ $1 == "-p" ]]
-    parallel_test
-elif [[ $1 == "-all" ]]
-    single_test
+    group_test "single"
+elif [[ $1 == "-p" ]] ;then
+    group_test "parallel"
+elif [[ $1 == "-all" ]] ;then
+    group_test "parallel"
     wait_test
-    parallel_test
+    group_test "single"
     wait_test
     ./cfiojobs.contrast2.sh $i"_"parallel"_"$timestamp $i"_"single"_"$timestamp
 fi
