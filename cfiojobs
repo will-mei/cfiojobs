@@ -224,19 +224,27 @@ function _blink(){
 function _waiting(){
 # wait info $1
 # sleep time $2
-    echo -n "  waiting $1 ...    " 
+    # head title 
+    echo -en "\n  waiting $1 ...    " 
     t=$2
     until [[ $t -le 1 ]] ;do
+        # bar of second 
         for i in '---' ' \ ' ' | ' ' / ' ;do
+            # update bar 
             echo -en "\b\b\b$i" 
             sleep 0.25 
         done
+        # sec update 
         t=$(($t -1))
         printf  "%-10s" "$t"
+        #clean time info 
         printf  "\b\b\b\b\b\b\b\b\b\b"
     done
-    echo -en "\b\b\b\b\b\b"
-    printf  "\b\b\b\b\b\b\b\b\b\b\n"
+    # clean waiting 
+    echo -en "\r"
+    #sleep 5
+    #for ((integer = 1; integer <= 5; integer++));do echo -en "\b\b\b" ;done 
+    #echo ""
 }
 function _segline(){
     segment="$@"
@@ -437,6 +445,22 @@ if [[ -n $1 ]] ;then
 else
     _red "no fifo name recived!"
 fi
+}
+
+function _update_check_stat(){
+    # add new value to file
+    # $1 STAT
+    # $2 stat_file
+    if [[ -n $2 ]] ;then
+        if [[ -f $2 ]] ;then 
+            grep -q $1 $2 || echo $1 >>$2
+        else
+            _verbose "stat file is missing. ${FUNCNAME[@]}"
+        fi 
+    else
+        _verbose "stat file is needed, now it's empty. ${FUNCNAME[@]}"
+        # _error_interrupt 
+    fi
 }
 
 ##############################################################################################
@@ -871,7 +895,7 @@ ${JOB_ARGS_ARRAY[$job_group_name]} "
             done
         done
     done
-    if _unquiet ;then 
+    if _verbose ;then 
         _yellow "job time caculation:"
         echo -e "\tall job group will lunch $total_round fio jobs, and costs $(($runtime_sum / 60)) minites at least."
         for job_group_name in $job_group_list ;do
@@ -915,7 +939,8 @@ function _parse_host_info(){
          job_name="${JOB_BATCH_NAME_ARRAY[$job_batch_index]#*-}"
         # give info
         #[[ -n $blk_group_name ]] && _unquiet " blk group:\"$blk_group_name\",job batch num:\"$job_batch_index\",job group name:\"$job_group_name\",job pattern:\"$job_name\""
-        [[ -n $blk_group_name ]] && _local_unquiet " blk group:\"$blk_group_name\",job batch num:\"$job_batch_index\",job group name:\"$job_group_name\",job pattern:\"$job_name\""
+        [[ -n $blk_group_name ]] && _local_unquiet " job batch:\"$job_batch_index\", test mode:\"$test_mode\", host amount:\"$(echo $ip_list |wc -w)\""
+        [[ -n $blk_group_name ]] && _local_unquiet " blk group:\"$blk_group_name\", blk amount:\"$(echo ${BLK_DEV_ARRAY[$blk_group_name]} |wc -w )\", job group:\"$job_group_name\",job pattern:\"$job_name\""
         if [[ -z ${host_user// /} ]] || [[ -z ${host_port// /} ]] || [[ -z ${ip_list// /} ]] ;then
             echo "${FUNCNAME[@]}: group: \"$1\", ssh login info is missing."
             continue || exit 1
@@ -955,9 +980,13 @@ if [[ -n $file_group_list ]] ;then
     _unquiet "  $host_ip copy files..."
     if [[ $quiet_mode == "True" ]] ;then
         scp -r -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
-        echo "  $host_ip stat: $?"
+        local scp_stat=$?
+        echo "  $host_ip stat: $scp_stat"
+        _update_check_stat $scp_stat $tmpfile_exec 
     else
         scp -r -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
+        local scp_stat=$?
+        _update_check_stat $scp_stat $tmpfile_exec 
     fi
 #else
 #    [[ $send_fio == "True" ]] && _unquiet "    no files to copy."
@@ -973,17 +1002,25 @@ if [[ -n ${harvest_file_group_list//,/} ]] ;then
     if [[ ${harvest_file_group_list//,/} == ${harvest_file_group_list} ]] ;then
         if [[ $quiet_mode == "True" ]] ;then
             eval scp -r -q -o ConnectTimeout=10 -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir/ &>/dev/null                                                        
-            echo "  $host_ip stat: $?"
+            local hvst_stat=$?
+            echo "  $host_ip stat: $hvst_stat"
+            _update_check_stat $hvst_stat $tmpfile_exec 
         else
             eval scp -r -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir && echo "  $host_ip done"
+            local hvst_stat=$?
+            _update_check_stat $hvst_stat $tmpfile_exec 
         fi
     # multy files
     else
         if [[ $quiet_mode == "True" ]] ;then
             eval scp -r -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir/ &>/dev/null                                                        
-            echo "  $host_ip stat: $?"
+            local hvst_stat=$?
+            echo "  $host_ip stat: $hvst_stat"
+            _update_check_stat $hvst_stat $tmpfile_exec 
         else
             eval scp -r -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir && echo "  $host_ip done"
+            local hvst_stat=$?
+            _update_check_stat $hvst_stat $tmpfile_exec 
         fi
     fi
 #else
@@ -994,18 +1031,20 @@ fi
 function _send_cmd(){
 #send cmd to host and format output.
 if [[ -n $CMD ]] ;then
-     if [[ $quiet_mode == "True" ]] ;then
-         _ssh_send "$CMD " &>/dev/null 
-         echo "  $host_ip stat: $?"
-     else
-         [[ $p_exec == "True" ]] || _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
-         [[ $p_exec == "True" ]] || _segline "$host_ip stdout"
-         #use virtual terminal and recive tty input.
-         # echo "$host_ip :"
-         ssh -t -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD"
-         [[ $p_exec == "True" ]] || _segline "$host_ip ending"
-         [[ $p_exec == "True" ]] ||echo ""
-     fi
+    if [[ $quiet_mode == "True" ]] ;then
+        _ssh_send "$CMD " &>/dev/null 
+        echo "  $host_ip stat: $?"
+    else
+        [[ $p_exec == "True" ]] || _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
+        [[ $p_exec == "True" ]] || _segline "$host_ip stdout"
+        #use virtual terminal and recive tty input.
+        # echo "$host_ip :"
+        ssh -t -q -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD"
+        local cmd_stat=$?
+        _update_check_stat $cmd_stat $tmpfile_exec 
+        [[ $p_exec == "True" ]] || _segline "$host_ip ending"
+        [[ $p_exec == "True" ]] ||echo ""
+    fi
 #else
 #    _unquiet "    no command to run."
 fi
@@ -1198,7 +1237,7 @@ function _send_fio(){
                 _record_backend
             fi
         else
-            check_stat=1
+            _update_check_stat 1 $tmpfile_exec
             _red "   $host_ip, fio is not ready !"
         fi 
     fi
@@ -1226,21 +1265,26 @@ function _fio_log_harvest(){
                     # stop scp from coping "/" from remote, when output dir missing
                     if [[ -n $output_dir ]] && [[ $output_dir != '/' ]] ;then
                         scp -q -r -o ConnectTimeout=10 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:$output_dir/* $output_dir/ && wait &&  _ssh_send "rm -rf $output_dir/" &
+                        _update_check_stat $? $tmpfile_hvst 
                     else
                         _red "output directory err!" && _verbose "jobinfo"
+                        _update_check_stat 1 $tmpfile_hvst 
                     fi
                 else
                     _red "\t $host_ip ssh connection failed."
-                     echo 1 > $tmpfile_hvst
+                    _update_check_stat 1 $tmpfile_hvst 
                 fi
             else
                 _red "\t $host_ip unreachable."
-                echo 1 > $tmpfile_hvst
+                _update_check_stat 1 $tmpfile_hvst 
             fi &
         done && wait
-    check_stat=$(cat $tmpfile_hvst)
+    check_stat=$(sort -nr $tmpfile_hvst |head -1)
     rm -rf $tmpfile_hvst
-    [[ $check_stat -eq 1 ]] && echo "log harvest partially failed." && _error_interrupt
+#    if [[ -f $tmpfile_exec ]] && [[ $check_stat == 1 ]] ;then
+#        _update_check_stat 1 $tmpfile_exec
+#    fi
+    [[ $check_stat -ne 0 ]] && echo "log harvest partially failed." && _error_interrupt
     _unquiet "log harvest done." || echo " group stat : $check_stat"
 }
 #function _fio_scale_watch(){}
@@ -1277,28 +1321,28 @@ function _exec_oth(){
 }
 # host
 function _exec_all(){
-             # put exec in bg
-             if ping -c2 $host_ip &>/dev/null ;then
-                 #
-                 if _ssh_send " echo \$(whoami) " &>/dev/null ;then
-                     # file , cmd , fio
-                     if [[ $send_fio == "True" ]] ;then
-                         _exec_job &
-                     else
-                         # file , cmd 
-                         _exec_oth
-                     fi
-                 else
-                     _red "\t $host_ip ssh connection failed."
-                     #check_stat=1
-                     echo 1 >$tmpfile_exec
-                 fi
-                 wait
-             else
-                 _red "\t $host_ip unreachable."
-                 #check_stat=1
-                 echo 1 >$tmpfile_exec
-             fi
+# put exec in bg
+    if ping -c2 $host_ip &>/dev/null ;then
+        #
+        if _ssh_send " echo \$(whoami) " &>/dev/null ;then
+        # file , cmd , fio
+            if [[ $send_fio == "True" ]] ;then
+                _exec_job &
+            else
+            # file , cmd 
+                _exec_oth
+            fi
+        else
+            _red "\t $host_ip ssh connection failed."
+            #check_stat=1
+            _update_check_stat 1 $tmpfile_exec
+        fi
+        wait
+    else
+        _red "\t $host_ip unreachable."
+        #check_stat=1
+        _update_check_stat 1 $tmpfile_exec
+    fi
 }
 function _group_execute(){
 # files/command/jobs was set
@@ -1317,7 +1361,7 @@ function _group_execute(){
              fi
          done && wait 
          # read stat after all exec done
-         check_stat=$(cat $tmpfile_exec)  
+         check_stat=$(sort -nr $tmpfile_exec |head -1)
          rm -rf $tmpfile_exec
          #if some failed, read done, show status
          [[ $check_stat -eq 1 ]] && echo "command executition partially failed." && _error_interrupt
@@ -1508,6 +1552,7 @@ function _group_pre_check(){
             if ping -c 2 $host_ip &>/dev/null && _ssh_send 'whoami' &>/dev/null ;then
                 #check fio installation
                 if _ssh_send 'fio -v' &>/dev/null ;then
+                    _update_check_stat 0  $tmpfile_precheck
                     version=$(_ssh_send "rpm -q fio |awk -F[-.] '{print\$2}'")
                     if [[ -z $version ]] ;then
                         _verbose && _blue "host:$host_ip fio was not installed through rpm/yum."
@@ -1522,17 +1567,18 @@ function _group_pre_check(){
                 else
                     if _ssh_send 'yum makecache fast' ;then
                         version=$(_ssh_send "yum list fio|grep fio|tail -1|awk '{print \$2}'|cut -d'.' -f1")
-                        if [[ $version -ge 3 ]] ;then 
+                       if [[ $version -ge 3 ]] ;then 
+                           _update_check_stat 2  $tmpfile_precheck
                            _blue "host:$host_ip, fio installing.."
-                           check_stat=2
-                           _ssh_send 'fio -v || yum -y install librbd1 fio &'
-                        else 
+                           # fio installing in background 
+                           _ssh_send 'fio -v || yum -y install librbd1 fio &>/dev/null &'
+                       else 
                            echo "host:$host_ip, fio check failed. (not installed and fio version: $version in available repo is lower than 3)"
-                           echo 1 > $tmpfile_precheck
-                        fi
+                           _update_check_stat 1 $tmpfile_precheck
+                       fi
                     else
                         _red "host:$host_ip: fio installation, makecache failed"
-                        echo 1 > $tmpfile_precheck
+                        _update_check_stat 1 $tmpfile_precheck
                     fi
                 fi
                 # get smartmontools installed
@@ -1541,17 +1587,44 @@ function _group_pre_check(){
                 #_ssh_send 'rsync --version || yum -y install rsync' &>/dev/null &
             else
                 _red "\t $host_ip is unreachable!"
-                echo 1 > $tmpfile_precheck
+                _update_check_stat 1 $tmpfile_precheck
             fi &
-        done
-        wait
-        if [[ $check_stat -eq 2 ]] ;then 
-            _yellow "host group $1 fio installation is done, recheck fio ..."
+        done && wait
+        # abckend process parameters lost  
+        check_stat=$(sort -nr $tmpfile_precheck |head -1)
+        if grep -q 2 $tmpfile_precheck ;then 
+            # if recheck , count number abort at 5
+            if [[ -n $recheck ]] ;then 
+                # stop recheck after 5 round recheck
+                if [[ $recheck -eq 5 ]] ;then 
+                    if grep -q 0 $tmpfile_precheck ;then 
+                        _red "host group \"$1\" fio installation failed after $recheck round recheck!!"
+                        # skip this group 
+                        _error_interrupt && continue 
+                        return 1
+                    else
+                        _red "ERROR: NO successfull fio installation fonund on \"$1\" ! it is not possible to continue on this group !!"
+                        _red "test abort!"
+                        exit 1
+                    fi
+                else
+                    recheck=$[recheck +1] 
+                    _yellow "host group $1, fio installation recheck Round_No: $recheck "
+                fi
+            else
+                # first round 
+                recheck=1
+                _yellow "check status abnormal, start fio installation recheck ..."
+            fi
+            # clean tmpfile and recheck 
+            rm -rf $tmpfile_precheck
+            _yellow "waiting fio installation ... "
+            sleep 20
             _group_pre_check "$1"
-        else
-            check_stat=$(cat $tmpfile_precheck)
+        elif grep -q 1 $tmpfile_precheck ;then
+            echo check stat : $check_stat 
         fi
-        rm -rf $tmpfile_precheck
+        [[ -f $$tmpfile_precheck ]] && rm -rf $tmpfile_precheck &>/dev/null 
         # if fio failed, no need to continue
         [[ $check_stat -eq 1 ]] && echo 'pre check partially failed.' && _timeout 15 && _error_interrupt
     _unquiet "host group pre check action done. group stat : $check_stat " || echo " group stat : $check_stat" 
@@ -1906,7 +1979,7 @@ done
         #check output directory, set default to a datatime stamp.
         _check_output_dir
         #network check, software check
-        _yellow "$(date) FIO TEST PRE CHECK  ..."
+        _yellow "\n$(date) FIO TEST PRE CHECK  ..."
         #set blk_group_name empty skip some parse job
         blk_group_name=""
         for host_group_name in $host_group_list;do

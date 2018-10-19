@@ -36,3 +36,50 @@
 2018-10-18_04:20:15: ./cfiojobs -g ceph3 -b ceph3 -j sseqr --fio -o test05
 2018-10-18_06:36:48: ./cfiojobs -g ceph3 ls
 2018-10-18_06:37:26: ./cfiojobs -g ceph3 -C anaconda-ks.cfg
+2018-10-18_08:12:43: ./cfiojobs -g ceph3 fio -v
+2018-10-18_08:14:01: ./cfiojobs -g ceph3 cat /etc/resolv.conf
+2018-10-18_08:15:09: ./cfiojobs -g ceph3 yum remove -y fio 
+2018-10-18_08:16:17: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-18_08:19:17: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-18_08:19:43: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-18_08:21:07: ./cfiojobs -l
+2018-10-18_08:21:16: ./cfiojobs -l
+2018-10-18_08:23:49: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-18_08:26:30: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-18_08:27:07: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-18_08:44:16: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-18_08:57:18: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-18_09:17:49: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-18_09:31:23: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-18_09:31:42: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_01:35:52: ./cfiojobs -g ceph3 ls -p
+2018-10-19_01:37:44: ./cfiojobs -g ceph3 ls
+2018-10-19_01:42:07: ./cfiojobs -g ceph3 ls
+2018-10-19_01:42:24: ./cfiojobs -g ceph3 ls -f
+2018-10-19_01:43:18: ./cfiojobs -g ceph3 ls -f -p -q
+2018-10-19_01:56:11: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_02:03:56: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_02:08:26: ./cfiojobs -l
+2018-10-19_02:08:38: ./cfiojobs -g ceph3 --fio-list
+2018-10-19_02:12:29: ./cfiojobs -g ceph3 --fio-list -p
+2018-10-19_02:15:37: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_02:19:23: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_02:33:26: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_02:35:55: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_02:44:57: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_03:03:28: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_03:08:21: ./cfiojobs -g ceph3 --fio-list -p
+2018-10-19_03:08:28: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_03:14:58: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_03:30:58: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_03:38:49: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_03:40:43: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_03:41:31: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_03:47:26: ./cfiojobs -l
+2018-10-19_03:47:54: ./cfiojobs -g ceph3 --fio-list -p
+2018-10-19_03:48:07: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_03:49:10: ./cfiojobs -g ceph3 yum install fio -y -p
+2018-10-19_03:50:16: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_04:04:27: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_04:34:12: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_04:36:38: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
