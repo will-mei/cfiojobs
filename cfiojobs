@@ -644,7 +644,7 @@ function _host_group_check(){
                     if [[ -f $host_conf ]] ;then
                         HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ))
                     else
-                        echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf"\" is missing "
+                        echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf\" is missing "
                     fi
                 else
                       HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list ${group_info[5]//,/ })

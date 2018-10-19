@@ -83,3 +83,8 @@
 2018-10-19_04:04:27: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
 2018-10-19_04:34:12: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
 2018-10-19_04:36:38: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_07:12:05: ./cfiojobs -g ceph3 -j sseqr --fio -f
+2018-10-19_07:12:26: ./cfiojobs -g ceph3 -b ceph3 -j sseqr --fio -f
+2018-10-19_07:15:13: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_07:15:19: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-19_07:22:22: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
