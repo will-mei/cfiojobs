@@ -2020,9 +2020,7 @@ done
                 done && wait && _blue "round $job_batch_index all jobs distributed."
             done
             #blk group
-        done && _blue "\
-###############| Round $job_batch_index ended |################
-"
+        done
         #fio jobs distribution done
 
         # wait fio test finish
@@ -2033,7 +2031,11 @@ done
             # collecting fio log files to localhost
             _yellow "\n$(date "+%Y-%m-%d_%H:%M:%S") FIO TEST , LOG COLLECTING ..."
             _fio_log_harvest $host_group_name
-        done && wait && echo "\
+        done && wait && _blue "\
+###############| Round $job_batch_index ended |################
+"
+        # collect logs 
+        echo "\
 ===============| collecting logs  |===============
 "
 # scp in background, log harvest in background, check again here
