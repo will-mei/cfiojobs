@@ -160,7 +160,7 @@ function _make_conf_example(){
 # tcmu/ceph backend can be an ip address or 'none' 
 #
 #grp        user    port    tcmu_bknd               ceph_bknd               ip_addr
-grp0        root    5000    root,22,172.18.211.132  root,22,172.18.211.62   --     # use conf/grp0.grp as ip list 
+grp0        root    5000    root,22,172.18.211.132  root,22,172.18.211.62   --     # use $(dirname $0)/conf/grp0.grp as ip list 
 grp1        root    22      172.18.211.132          none                    172.18.211.133,172.18.211.134  #running on esxi 
 
 EOF
@@ -640,10 +640,11 @@ function _host_group_check(){
                          HOST_GROUP_CEPH_ARRAY[$host_group_name]=${group_info[4]}
                 # find ip list in config dir "conf/xxx.grp"
                 if [[ ${group_info[5]} == '--' ]] ;then
-                    if [[ -f conf/$host_group_name".grp" ]] ;then
-                      HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf conf/$host_group_name".grp"))
+                    local host_conf=$(dirname $0)/conf/$host_group_name".grp"
+                    if [[ -f $host_conf ]] ;then
+                        HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ))
                     else
-                        echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list file: \"conf/$host_group_name".grp"\" is missing "
+                        echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf"\" is missing "
                     fi
                 else
                       HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list ${group_info[5]//,/ })
@@ -939,8 +940,11 @@ function _parse_host_info(){
          job_name="${JOB_BATCH_NAME_ARRAY[$job_batch_index]#*-}"
         # give info
         #[[ -n $blk_group_name ]] && _unquiet " blk group:\"$blk_group_name\",job batch num:\"$job_batch_index\",job group name:\"$job_group_name\",job pattern:\"$job_name\""
-        [[ -n $blk_group_name ]] && _local_unquiet " job batch:\"$job_batch_index\", test mode:\"$test_mode\", host amount:\"$(echo $ip_list |wc -w)\""
-        [[ -n $blk_group_name ]] && _local_unquiet " blk group:\"$blk_group_name\", blk amount:\"$(echo ${BLK_DEV_ARRAY[$blk_group_name]} |wc -w )\", job group:\"$job_group_name\",job pattern:\"$job_name\""
+        if [[ -n $blk_group_name ]] ;then 
+            _local_unquiet " test mode:\"$test_mode\",  host amount:\"$(echo $ip_list |wc -w)\""
+            _local_unquiet " blk group:\"$blk_group_name\",  blk amount:\"$(echo ${BLK_DEV_ARRAY[$blk_group_name]} |wc -w )\""
+            _local_unquiet " job group:\"$job_group_name\",  job pattern:\"$job_name\""
+        fi
         if [[ -z ${host_user// /} ]] || [[ -z ${host_port// /} ]] || [[ -z ${ip_list// /} ]] ;then
             echo "${FUNCNAME[@]}: group: \"$1\", ssh login info is missing."
             continue || exit 1
