@@ -90,3 +90,5 @@
 2018-10-19_07:22:22: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
 2018-10-19_07:33:37: ./cfiojobs -h
 2018-10-19_07:36:43: ./cfiojobs -h
+2018-10-19_10:18:36: ./cfiojobs -g ceph3 -j sseqr -f --fio
+2018-10-22_02:09:38: ./cfiojobs -g ceph3 -j sseqr -f --fio

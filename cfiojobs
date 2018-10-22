@@ -811,6 +811,7 @@ function _blk_group_check(){
        fi
     else
     #empty list
+    #[[ -f $(dirname $0)/conf/ ]]
         #if [[ $no_sys_blk != "True" ]] ;then
             blk_stat="2"
             _red "no blk group name recived."

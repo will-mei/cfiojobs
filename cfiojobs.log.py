@@ -400,6 +400,7 @@ for blk_type in ['hdd','nvme']:
     perf_list = compare_with_global(perf_list)
     # set out put keys and title
     sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值,"该盘带宽/同组所有磁盘带宽平均值筛选状态 *低于90%标为●，否则记为○",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
+    #sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值,"该盘带宽/同组所有磁盘带宽平均值筛选状态 *低于90%标为●，否则记为○",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
     #sheet_title = u'主机名,测试设备,块大小/模式,测试带宽(MiB/s),总样本带宽平均值(MiB/s),测试带宽/总样本平均值,同组筛选状态,每秒读写,总样本每秒读写平均值,平均延迟(ms),总样本延迟平均值(ms),该测试最大延迟(ms),读写队列深度,测试设备使用率,数据量,测试时长,读写数据引擎\n'.encode('GB2312')
     #title_utf8 = 'hostname,device,bw_pattern,bw(MiB/s),bw_avg,deviation(%),stat,iops,iops_avg,lat_avg(ms),lat_max(ms),lat_avg_global(ms),util,util\n'
     sheet_keys  = ['hostname','filename','pattern_name','bw','bw_avg','deviation','stat','iops','iops_avg','lat_avg','lat_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
