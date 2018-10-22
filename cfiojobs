@@ -1554,7 +1554,10 @@ function _group_pre_check(){
         for host_ip in $ip_list ;do
             _verbose "hostinfo" && _waiting "reading" 5
            # network check
-            if ping -c 2 $host_ip &>/dev/null && _ssh_send 'whoami' &>/dev/null ;then
+            if ping -c 2 $host_ip &>/dev/null ;then
+                if !_ssh_send 'whoami' &>/dev/null ;then
+                    _red "\t $host_ip ssh connection failed."
+                fi
                 #check fio installation
                 if _ssh_send 'fio -v' &>/dev/null ;then
                     _update_check_stat 0  $tmpfile_precheck
@@ -1633,6 +1636,49 @@ function _group_pre_check(){
         # if fio failed, no need to continue
         [[ $check_stat -eq 1 ]] && echo 'pre check partially failed.' && _timeout 15 && _error_interrupt
     _unquiet "host group pre check action done. group stat : $check_stat " || echo " group stat : $check_stat" 
+}
+function _host_blk_detect(){
+}
+function _group_blk_detect(){
+# detected possible target blk on a given host group
+    _yellow "group blk detecting:"
+    _parse_host_info "$1"
+        tmpfile_grp_blk_detected=$(mktemp)
+        for host_ip in $ip_list ;do
+            _verbose "hostinfo" && _waiting "reading" 5
+            # network check
+            if ping -c 1 $host_ip &>/dev/null ;then
+                # ssh check 
+                if _ssh_send 'whoami' &>/dev/null ;then
+                    tmpfile_host_blk_detected=$(mktemp)
+                    _ssh_send "lsblk -ps" >$tmpfile_host_blk_detected
+                    #check blk device 
+                    local host_blk_detected=$(grep disk $tmpfile_host_blk_detected |grep -v "─" |awk '{print$1}')
+                    local host_root_disk=$(grep /$ $tmpfile_host_blk_detected |awk '{print$1}' )
+                    local host_root_size=$(grep $host_root_disk'\ ' $tmpfile_host_blk_detected |sort -u |awk '{if(NR==1)print$4}' )
+                    for i in $host_blk_detected ;do
+                        if ! grep $i $tmpfile_grp_blk_detected ;then 
+                            local tmp_blk_size=$(grep $i'\ ' $tmpfile_host_blk_detected |sort -u |awk '{if(NR==1)print$4}')
+                            [[ $tmp_blk_size == $host_root_size ]] && local disk_note=" # same size as root"
+                            echo $i"," "$disk_note" >> $tmpfile_grp_blk_detected
+                        fi
+                    done
+                    rm -f $tmpfile_host_blk_detected
+                else 
+                    _red "\t $host_ip ssh connection failed."
+                fi
+            else
+                _red "\t $host_ip is unreachable!"
+            fi &
+        done && wait 
+        #output blk list to group blk configfile 
+        if grep -q $1 $b_conf && [[ -f $(dirname $0)/conf/$1".blk" ]] ;then 
+            cat $tmpfile_grp_blk_detected > $(dirname $0)/conf/$1".blk" 
+            echo "new blk config file: $(dirname $0)/conf/$1'.blk'"
+        fi
+        _yellow "possible blk list of $1 for fio test:\n$(cat $tmpfile_grp_blk_detected)"
+        #
+        rm -f $tmpfile_grp_blk_detected
 }
 function round_report(){
     if [[ $job_batch_index -gt 1 ]]; then
@@ -1760,6 +1806,9 @@ while [ $# -gt 0 ] ;do
             ;;
         "-a" )
             _get_all_host_group
+            ;;
+        "-c" )
+            pre_check="True"
             ;;
         "-g" )
             if [ $# -lt 2 ]
@@ -1962,7 +2011,14 @@ done
 
 
 # stop jobs of job round running.
-    if [[ $stop_fio == "True" ]] ;then
+    if [[ $pre_check == "True" ]] ;then
+        echo "start env precheck ..."
+        for host_group_name in $host_group_list ;do
+            _group_pre_check $host_group_name
+            _group_blk_detect $host_group_name
+        done
+# stop jobs of job round running.
+    elif [[ $stop_fio == "True" ]] ;then
         echo "stop fio jobs ..."
         for host_group_name in $host_group_list ;do
             _group_fio_stop $host_group_name
