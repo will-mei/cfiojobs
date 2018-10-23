@@ -1,6 +1,6 @@
 <br>
-This script is a simple fio jobs and file distributer, you can also run commands on multy hosts with it.<br>
-Remanber, you need passwordless ssh access permitions to all hosts, and use a comma as a delimiter when you have multiple group units.<br>
+This script is a simple fio jobs and file distributor. You can also run commands on multiple hosts with it.<br>
+Remember, you need passwordless SSH access permissions for all hosts, and use a comma as a delimiter when you have multiple group units.<br>
 <br>
 usage :<br>
 1. Edit your own host group, block group and fio job type settings in config files.<br>
@@ -23,7 +23,7 @@ usage :<br>
 >>-f            skip failure and try to continue, if possible<br>
 >>-p            send commands and copy files execute in parallel<br>
 <br>
->example: ./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.18.211.105<br>
+> Example: ./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.18.211.105<br>
 >   tips:<br>
 >   say you want run the command:<br>
 >>   'ls -i' <br>
@@ -40,7 +40,7 @@ usage :<br>
 >(3). with local bash variable :  ./cfiojobs "your command $local_variable "<br>
 >(4). with remote env variable :  ./cfiojobs "your command '$remote_env_viriable' " <br>
 <br>
->example: ./cfiojobs -g grp1 "ls -l |awk '{print\$2}'"<br>
+> Example: ./cfiojobs -g grp1 "ls -l |awk '{print\$2}'"<br>
 >      or ./cfiojobs -g grp1 "ls -l |awk \"{print\\\$2}\""<br>
 >   tips: awk variable is not shell variable, so there were three antislash inside curly braces,<br>
 >> first two antislash passed an '\' to remote bash, and then the third is for the translating of the '$'.<br>
@@ -77,4 +77,3 @@ usage :<br>
 >>-h            show this help info<br>
 >>-e            make examples of config file (when they do not exist)<br>
 <br>
-

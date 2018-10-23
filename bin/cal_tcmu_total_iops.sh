@@ -4,7 +4,7 @@ echo "$$" >>cal_tcmu_total_iops.sh.pid
 
 if [[ -z "$1" ]] ;then
     echo "usag: bash $0 <time of seconds> "
-    sed -i "/$$/d" cal_tcmu_total_iops.sh.pid 
+    sed -i "/$$/d" cal_tcmu_total_iops.sh.pid
     exit 1
 fi
 
@@ -21,4 +21,4 @@ end_read_value=`pminfo lio.summary -f |grep -A 1 lio.summary.total_read_mb |tail
 
 echo "iops of write : `expr $end_write_value - $start_write_value`"
 echo "iops of read : `expr $end_read_value - $start_read_value` "
-sed -i "/$$/d" cal_tcmu_total_iops.sh.pid 
+sed -i "/$$/d" cal_tcmu_total_iops.sh.pid

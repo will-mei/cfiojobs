@@ -91,7 +91,7 @@ def peak_value_sheet(peak):
                     line += ',' + str(sum_report[i][j][peak]['value']) + '(' + str(sum_report[i][j][peak]['hostname']) + ':' + str(sum_report[i][j][peak]['filename']) + ')'
                 else:
                     v = sum_report[i][j]['sum'] / sum_report[i][j]['sample']
-                    line += ',' + str(v) + '(sample:' + str(sum_report[i][j]['sample']) + ')' 
+                    line += ',' + str(v) + '(sample:' + str(sum_report[i][j]['sample']) + ')'
         result.append(line)
     return result
 
@@ -106,7 +106,7 @@ def update_value(pattern,p_index,p_value,p_hostname,p_filename):
             sum_report[pattern][p_index]['max']['value'] = float(p_value)
             sum_report[pattern][p_index]['max']['hostname'] = p_hostname
             sum_report[pattern][p_index]['max']['filename'] = p_filename
-        elif float(p_value) < float(sum_report[pattern][p_index]['min']['value']): 
+        elif float(p_value) < float(sum_report[pattern][p_index]['min']['value']):
             sum_report[pattern][p_index]['min']['value'] = float(p_value)
             sum_report[pattern][p_index]['min']['hostname'] = p_hostname
             sum_report[pattern][p_index]['min']['filename'] = p_filename
@@ -208,15 +208,15 @@ def store_to_global(log_dict,key_index):
     update_value(pattern_name,'latency_avg',lat_mean,_hostname,_filename)
     update_value(pattern_name,'latency_stddev',lat_stddev,_hostname,_filename)
     sum_report[pattern_name]['iodepth'] = _iodepth
-    sum_report[pattern_name]['numjobs'] = _numjobs 
-    sum_report[pattern_name]['runtime'] = _runtime 
+    sum_report[pattern_name]['numjobs'] = _numjobs
+    sum_report[pattern_name]['runtime'] = _runtime
     sum_report[pattern_name]['util']    = _util
-    sum_report[pattern_name]['size']    = _size 
+    sum_report[pattern_name]['size']    = _size
     # store log info to global perf list
     omit_stat   = u'○'.encode('GB2312')
     perf_info = {'hostname':_hostname,'filename':_filename,'pattern_name':pattern_name,'iodepth':_iodepth,'bw':_bw,'iops':_iops,'stat':omit_stat,'lat_avg':lat_mean,'lat_max':lat_max,'lat_min':lat_min,'lat_stddev':lat_stddev,'util':_util,'size':_size,'runtime':_runtime,'direct':_direct,'numjobs':_numjobs,'ioengine':_ioengine}
     perf_list.append(perf_info)
-        
+
 # get value from json
 def parse_json(fio_json_log):
     with open(fio_json_log,'r') as log_file:
@@ -258,7 +258,7 @@ def parse_json(fio_json_log):
             # bs set of rw can be omited, only the first group is for read io.
             bs_rd = cal_omit_bs(bs_re2dict(bs_split[0]))
             bs_rw = dict()
-            # 2k/50:256k/40:4m/,4k/50:8k/10,16k/ 
+            # 2k/50:256k/40:4m/,4k/50:8k/10,16k/
             # means : a workload that has 50% 2k reads, 40% 256k reads and 10% 4m reads, while having 50% 4k writes and 10% 8k writes and 16k for the rest 40%.
             if len(bs_split) > 1 :
                 # individual and multy write bs set
@@ -343,11 +343,11 @@ def compare_with_global(perf_list):
         avg_iops   = index_iops['sum'] / index_iops['sample']
         avg_lat    = index_lat['sum']  / index_lat['sample']
         # 2 avg info comparation
-        perf_log['bw_avg']     = str(avg_bw) 
-        perf_log['iops_avg']   = str(avg_iops) 
+        perf_log['bw_avg']     = str(avg_bw)
+        perf_log['iops_avg']   = str(avg_iops)
         perf_log['lat_global'] = str(avg_lat)
         #   add deviation info to log
-        perf_log['deviation']   = str(round(v_bw/avg_bw * 100 ,2) ) + '%' 
+        perf_log['deviation']   = str(round(v_bw/avg_bw * 100 ,2) ) + '%'
         if v_bw < avg_bw * weak_index :
             #perf_log['stat']   = u'●'.encode('GB2312')
             perf_list[index_log]['stat']   = u'●'.encode('GB2312')
@@ -357,7 +357,7 @@ def compare_with_global(perf_list):
             perf_list[index_log]['deviation']   = perf_log['deviation']
     #perf_list.sort(key=lambda x : int(x['hostname'].split('.')[3]) )
     perf_list.sort(key=lambda x : x['hostname'] )
-    return perf_list 
+    return perf_list
 
 
 for blk_type in ['hdd','nvme']:
@@ -382,8 +382,8 @@ for blk_type in ['hdd','nvme']:
 # if no nvme log then skip the rest.
     if blk_type == 'nvme' and blk_log_stat == 1:
         continue
-# save result to json 
-    json_output_file = './' + logdir.split('/')[-1] + '_' + blk_type + '.json' 
+# save result to json
+    json_output_file = './' + logdir.split('/')[-1] + '_' + blk_type + '.json'
     json_data        = json.dumps(sum_report,indent=4)
     with open(json_output_file,'w') as sum_json:
         sum_json.write(json_data)

@@ -11,12 +11,12 @@ cpu_usr_tmpfile=$(mktemp)
 cpu_total_tmpfile=$(mktemp)
 mem_tmpfile=$(mktemp)
 
-echo "$$ usr_sys_cpu_tmp: $cpu_usr_tmpfile cpu_total_tmp: $cpu_total_tmpfile mem_tmp: $mem_tmpfile" >>cal_cpu_mem.sh.pid 
+echo "$$ usr_sys_cpu_tmp: $cpu_usr_tmpfile cpu_total_tmp: $cpu_total_tmpfile mem_tmp: $mem_tmpfile" >>cal_cpu_mem.sh.pid
 tcmu_runner_pid=$(ps aux |grep tcmu-runner|grep -v grep |awk '{print$2}')
 
 
 #get usr and sys cpu usage record from top
-top -b -d 1 -n $total_time -p $tcmu_runner_pid |grep Cpu >>$cpu_usr_tmpfile & 
+top -b -d 1 -n $total_time -p $tcmu_runner_pid |grep Cpu >>$cpu_usr_tmpfile &
 
 #get cpu total usage
 #top -b -d 1 -n $total_time -p $tcmu_runner_pid |grep $tcmu_runner_pid >>$cpu_total_tmpfile &
@@ -73,5 +73,4 @@ echo "$cpu_usr_avg,$cpu_sys_avg,$cpu_total_avg,$mem_used_avg,$mem_buff_avg"
 rm -rf $cpu_usr_tmpfile
 rm -rf $cpu_total_tmpfile
 rm -rf $mem_tmpfile
-sed -i "/$$/d" cal_cpu_mem.sh.pid 
-
+sed -i "/$$/d" cal_cpu_mem.sh.pid

@@ -25,17 +25,17 @@ function cleanning(){
 trap "cleanning; exit" 1 2 15
 
 function conv_unit(){
-# $1 value 
+# $1 value
 # $2 unit
     value=$1
      unit=$2
-    if   [[ $unit == "GB/s" ]] 
+    if   [[ $unit == "GB/s" ]]
     then
         out_put=$(echo $value |awk '{print$1 * 1000 * 1000}')
-    elif [[ $unit == "MB/s" ]] 
+    elif [[ $unit == "MB/s" ]]
     then
         out_put=$(echo $value |awk '{print$1 * 1000}')
-    elif [[ $unit == "kB/s" ]] 
+    elif [[ $unit == "kB/s" ]]
     then
         out_put=$value
     fi
@@ -79,7 +79,7 @@ bw_wr_avg=$(cal_avg $bw_wr_tmpfile)
 iops_rd_avg=$(cal_avg $iops_rd_tmpfile)
 iops_wr_avg=$(cal_avg $iops_wr_tmpfile)
 
-#output 
+#output
 echo "\
 bw of read : $bw_rd_avg
 bw of write : $bw_wr_avg
@@ -87,4 +87,3 @@ iops of read : $iops_rd_avg
 iops of write : $iops_rd_avg"
 
 cleanning
-

@@ -24,9 +24,9 @@ with open(ref_json) as input_json:
     #print(json_report.keys())
     #print('\ninput csv:',source_csv,'\nreference json:',ref_json,'\noutput file:',output_file,'\n')
 
-# a result list csv 
+# a result list csv
 result = list()
-# a source list csv 
+# a source list csv
 source = list()
 
 with open(source_csv,'r') as f:
@@ -117,7 +117,7 @@ for i in range(len(source)) :
     row.insert(8,str_ratio)
     # change index value when deal with nvme disks
     if row[1].split('/')[-1][0:4] == 'nvme'
-        reference_index = nvme_ref_index 
+        reference_index = nvme_ref_index
         #
     if   ratio >= reference_index * 100 :
         stat     = u'○'.encode('GB2312')
@@ -142,7 +142,7 @@ for i in range(len(source)) :
     #
     index_iops   = json_report[pattern_name]['iops']
     result.append(row)
-    
+
 # save as csv
 with open(output_file,'w') as csv_out :
     for i in result:
@@ -154,4 +154,3 @@ with open(output_file,'w') as csv_out :
                 line += ',' + str(part_str)
         csv_out.write(line)
 #sheet_report.save_as(str(output_file))
-

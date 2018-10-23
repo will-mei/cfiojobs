@@ -1,4 +1,4 @@
-#!/usr/bin/expect -f 
+#!/usr/bin/expect -f
 #useage:
 # expect ./xxx.exp <ipaddr_of_host>  <password>
 set ip [ lindex $argv 0 ]

@@ -1,4 +1,4 @@
-#!/usr/bin/expect -f 
+#!/usr/bin/expect -f
 #usage: expect ./xxx.exp  <user> <ip> <port> <pwd> <cmd>
 set user [ lindex $argv 0 ]
 set ip [ lindex $argv 1 ]

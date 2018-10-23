@@ -41,4 +41,3 @@ echo "bw of write : $avr_wr kB/s"
 echo "iops of write : $avr_iops"
 
 #fi
-

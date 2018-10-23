@@ -90,7 +90,7 @@ for i in range(len(source)) :
     row.insert(12,avg_iops)
     row.insert(15,avg_lat)
     result.append(row)
-    
+
 # save as csv
 with open(output_file,'w') as csv_out :
     for i in result:
@@ -102,4 +102,3 @@ with open(output_file,'w') as csv_out :
                 line += ',' + str(part_str)
         csv_out.write(line)
 #sheet_report.save_as(str(output_file))
-

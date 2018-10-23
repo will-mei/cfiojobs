@@ -14,11 +14,11 @@ fi
 OUTPUTDIR=$LOGDIR"/_report"
 [[ -d $OUTPUTDIR ]] || mkdir -p $OUTPUTDIR
 
-# analise json log build csv sheet report for single device
+# Analyse json log build csv sheet report for single device
 for  i in $(ls $LOGDIR) ;do
     [[ -f "$LOGDIR/$i" ]] && continue
     [[ $i == "_report" ]] && continue
-    rm -rf $LOGDIR/$i/*.csv 
+    rm -rf $LOGDIR/$i/*.csv
     bash $(dirname $0)/cfiojobs.log.sh  $LOGDIR/$i &
     #bash ./catcsv.sh $LOGDIR/$i/*.csv
 done && wait
@@ -64,9 +64,9 @@ else
             \rfor i  in \$(ls $LOGDIR); do
             \r\tpython3 $(dirname $0)/cfiojobs.excel.py $LOGDIR/\$i
             \rdone\n"
-    # catcsv.sh 
+    # catcsv.sh
     echo -e "\e[34m 2. if no python3 enviroment on host,
-            \r    to get a human readable preview of any csv sheet file in shell. you can use command:\n\e[0m
+            \r    to get a human readable preview of any csv sheet file in shell, you can use command:\n\e[0m
             \r ./catcsv.sh <filename.csv> \n"
 fi
 }

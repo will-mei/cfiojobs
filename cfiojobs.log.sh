@@ -18,7 +18,7 @@ json_script="$(dirname $0)/cfiojobs.json.py"
 
 
 # analyse test logs
-for BS in $bs_list 
+for BS in $bs_list
 do
     for PATTERN in $pattern_list
     do
@@ -52,7 +52,7 @@ do
         fi
 
         #ceph bw iops
-        ceph_iobw_logfile=$LOGDIR/$BS-$PATTERN-ceph_iobw.log 
+        ceph_iobw_logfile=$LOGDIR/$BS-$PATTERN-ceph_iobw.log
         if [[ -f $ceph_iobw_logfile ]] ;then
             #take randread as read, randwrite as write
             ceph_bw=$(sed "/known hosts/"d $ceph_iobw_logfile \
@@ -113,7 +113,7 @@ do
             done
 
             # deal with mixed rw
-            if [[ $PATTERN == "randrw" ]] 
+            if [[ $PATTERN == "randrw" ]]
             then
                # if randrw mode, python script will generate the log automaticlly
                python2 $json_script $fio_logfile
@@ -146,7 +146,7 @@ do
             # fio $BS$PATTERN, log info
             # iodepth: $IODEPTH,
             # bw $BW
-            # iops $IOPS 
+            # iops $IOPS
             # latency: max $latency_max, min $latency_avg\n"
 
             #sleep 3

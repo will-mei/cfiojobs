@@ -43,4 +43,3 @@ fio \
 done
 
 #fio -iodepth=2 -rw=$ -ioengine=rbd -rbdname=rbd060 -clientname=admin -pool=rbd -bs=4k -size=200m -numjobs=1 -runtime=100 -group_reporting -name=2-  --output-format=json
-

@@ -71,10 +71,10 @@ while read LINE ;do
     #    echo -n "${field}"
         f_nu=$[f_nu + 1]
         zhpart=${field//[a-zA-Z0-9[:punct:]]/}
-    #    wid_f=$(( ${#field} + ${#zhpart} )) 
+    #    wid_f=$(( ${#field} + ${#zhpart} ))
         #wid_f=${#field}
-        #printf "%-${WIDTH[$f_nu]}s" "${field}" 
-        printf "%-$(( ${WIDTH[$f_nu]} + ${#zhpart}))b" "${field}" 
+        #printf "%-${WIDTH[$f_nu]}s" "${field}"
+        printf "%-$(( ${WIDTH[$f_nu]} + ${#zhpart}))b" "${field}"
     #    while [[ $wid_f -lt ${WIDTH[$f_nu]} ]] ;do
     #        echo -en " "
     #        wid_f=$[wid_f + 1]
