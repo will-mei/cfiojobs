@@ -9,9 +9,11 @@
 # description  :
 #               send files/command to multy host 
 #               parallel fio test on clusters 
-# last edit :   20181017
-# version   :   cfiojobs0.12
+# last edit :   20181023
+# version   :   cfiojobs0.12.10
 ###########################################################
+
+script_version=0.12.10
 
 STATUS=0
 function _stop_test(){
@@ -125,6 +127,7 @@ usage :
            --test-stop   stop test on given host groups(stop all test and all jobs)
            --fio-stop    stop all existinging fio jobs on given host groups (stop a round of jobs of a test)
            --fio-list    output summary info of fio jobs on given host groups
+           -c            check test env, (network, ssh connections, fio installation, blk dev to test)
            -b            run fio jobs with given blk group in $b_conf
            -j            run fio job with given job group in $j_conf
            -A            fio task 'After' commands that are given
@@ -150,6 +153,7 @@ usage :
    options:
            -h            show this help info
            -e            make examples of config file (when they do not exist)
+           -v, --version show version info
 "
 }
 
@@ -772,6 +776,7 @@ function _blk_group_check(){
         for blk_group_name in $blk_group_list ;do
             # 1. if found in conf
 #echo "check result"
+#_format_conf $b_conf 
 #_format_conf $b_conf |grep ^$blk_group_name[' ']
 #echo "pre check result"
 #_format_conf $b_conf |grep ^[' ']*$blk_group_name[' ']
@@ -793,6 +798,10 @@ function _blk_group_check(){
             # 3. after check no part missing, store device list of this blk group in global array.
                 BLK_DEV_ARRAY[$blk_group_name]=${blk_group_info[1]//,/ }
                 fi
+            elif [[ -f $(dirname $0)/conf/$blk_group_name".blk" ]] ;then
+                # check blk config and add blk info to array 
+                blk_group_info[1]=$(_format_conf $(dirname $0)/conf/$blk_group_name".blk")
+                [[ -n ${blk_group_info[1]//,/} ]] && BLK_DEV_ARRAY[$blk_group_name]=${blk_group_info[1]//,/ }
             # 1.2 name missing in conf
             else
             #remove the invalid group which its name not exist in conf
@@ -802,6 +811,7 @@ function _blk_group_check(){
                 # skip missing test with the rest group
                 _error_interrupt
            fi
+           #sleep 30
         #check done
         done
        # after all checked, if available blk_group exist
@@ -942,7 +952,8 @@ function _parse_host_info(){
         # give info
         #[[ -n $blk_group_name ]] && _unquiet " blk group:\"$blk_group_name\",job batch num:\"$job_batch_index\",job group name:\"$job_group_name\",job pattern:\"$job_name\""
         if [[ -n $blk_group_name ]] ;then 
-            _local_unquiet " test mode:\"$test_mode\",  host amount:\"$(echo $ip_list |wc -w)\""
+            _local_unquiet " host amount: $(echo $ip_list |wc -w) "
+            _local_unquiet " test mode: $(_yellow $test_mode) "
             _local_unquiet " blk group:\"$blk_group_name\",  blk amount:\"$(echo ${BLK_DEV_ARRAY[$blk_group_name]} |wc -w )\""
             _local_unquiet " job group:\"$job_group_name\",  job pattern:\"$job_name\""
         fi
@@ -1369,7 +1380,7 @@ function _group_execute(){
          check_stat=$(sort -nr $tmpfile_exec |head -1)
          rm -rf $tmpfile_exec
          #if some failed, read done, show status
-         [[ $check_stat -eq 1 ]] && echo "command executition partially failed." && _error_interrupt
+         [[ $check_stat -eq 1 ]] && echo "group execution partially failed." && _error_interrupt
     _unquiet "execute action done." || echo " group stat : $check_stat"
 }
 function _host_fio_list(){
@@ -1550,13 +1561,14 @@ function _group_pre_check(){
     _parse_host_info "$1"
 #        check_stat=0
         tmpfile_precheck=$(mktemp)
-        echo 0 > $tmpfile_precheck
+        # echo 0 > $tmpfile_precheck
         for host_ip in $ip_list ;do
             _verbose "hostinfo" && _waiting "reading" 5
-           # network check
+            # network check
             if ping -c 2 $host_ip &>/dev/null ;then
-                if !_ssh_send 'whoami' &>/dev/null ;then
+                if ! _ssh_send 'whoami' &>/dev/null ;then
                     _red "\t $host_ip ssh connection failed."
+                    continue 
                 fi
                 #check fio installation
                 if _ssh_send 'fio -v' &>/dev/null ;then
@@ -1573,13 +1585,22 @@ function _group_pre_check(){
                     fi
                 # no fio installed
                 else
-                    if _ssh_send 'yum makecache fast' ;then
+                    # check version makecache fast 
+                    if _ssh_send 'yum makecache fast >/dev/null' ;then
                         version=$(_ssh_send "yum list fio|grep fio|tail -1|awk '{print \$2}'|cut -d'.' -f1")
                        if [[ $version -ge 3 ]] ;then 
                            _update_check_stat 2  $tmpfile_precheck
                            _blue "host:$host_ip, fio installing.."
                            # fio installing in background 
-                           _ssh_send 'fio -v || yum -y install librbd1 fio &>/dev/null &'
+                           # install fio , makecache 
+                           if _ssh_send 'fio -v || yum makecache >/dev/null' ;then 
+                               _ssh_send 'fio -v || yum -y install librbd1 fio &>/dev/null &'
+                               # get smartmontools installed
+                               _verbose && _ssh_send 'smartctl -V &>/dev/null || yum -y install smartmontools &>/dev/null' & 
+                           else
+                               _red "host:$host_ip: fio installation, makecache failed"
+                               _update_check_stat 1 $tmpfile_precheck
+                           fi
                        else 
                            echo "host:$host_ip, fio check failed. (not installed and fio version: $version in available repo is lower than 3)"
                            _update_check_stat 1 $tmpfile_precheck
@@ -1589,8 +1610,6 @@ function _group_pre_check(){
                         _update_check_stat 1 $tmpfile_precheck
                     fi
                 fi
-                # get smartmontools installed
-                _verbose && _ssh_send 'smartctl -V &>/dev/null || yum -y install smartmontools &>/dev/null' & 
                 # try get rsync installed if possible
                 #_ssh_send 'rsync --version || yum -y install rsync' &>/dev/null &
             else
@@ -1629,15 +1648,13 @@ function _group_pre_check(){
             _yellow "waiting fio installation ... "
             sleep 20
             _group_pre_check "$1"
-        elif grep -q 1 $tmpfile_precheck ;then
-            echo check stat : $check_stat 
+        #elif grep -q 1 $tmpfile_precheck ;then
+        #    echo check stat : $check_stat 
         fi
-        [[ -f $$tmpfile_precheck ]] && rm -rf $tmpfile_precheck &>/dev/null 
+        [[ -f $tmpfile_precheck ]] && rm -rf $tmpfile_precheck &>/dev/null 
         # if fio failed, no need to continue
         [[ $check_stat -eq 1 ]] && echo 'pre check partially failed.' && _timeout 15 && _error_interrupt
     _unquiet "host group pre check action done. group stat : $check_stat " || echo " group stat : $check_stat" 
-}
-function _host_blk_detect(){
 }
 function _group_blk_detect(){
 # detected possible target blk on a given host group
@@ -1654,12 +1671,17 @@ function _group_blk_detect(){
                     _ssh_send "lsblk -ps" >$tmpfile_host_blk_detected
                     #check blk device 
                     local host_blk_detected=$(grep disk $tmpfile_host_blk_detected |grep -v "─" |awk '{print$1}')
-                    local host_root_disk=$(grep /$ $tmpfile_host_blk_detected |awk '{print$1}' )
+                    # root partition 
+                    local host_root_info=($(grep /$ $tmpfile_host_blk_detected))
+                    [[ ${host_root_info[-2]} != "disk" ]] && local host_root_info=($(grep /$ -A1 $tmpfile_host_blk_detected|tail -1))
+                    [[ ${host_root_info[-2]} != "disk" ]] && local host_root_info=($(grep /$ -A2 $tmpfile_host_blk_detected|tail -1))
+                    local host_root_disk=${host_root_info[-1]//[^a-z,'/']/}
                     local host_root_size=$(grep $host_root_disk'\ ' $tmpfile_host_blk_detected |sort -u |awk '{if(NR==1)print$4}' )
                     for i in $host_blk_detected ;do
-                        if ! grep $i $tmpfile_grp_blk_detected ;then 
-                            local tmp_blk_size=$(grep $i'\ ' $tmpfile_host_blk_detected |sort -u |awk '{if(NR==1)print$4}')
-                            [[ $tmp_blk_size == $host_root_size ]] && local disk_note=" # same size as root"
+                        # add new disk 
+                        if ! grep -q $i $tmpfile_grp_blk_detected ;then 
+                            local tmp_blk_size=$(grep ^$i'\ ' $tmpfile_host_blk_detected |sort -u |awk '{if(NR==1)print$4}')
+                            [[ $tmp_blk_size == $host_root_size ]] && local disk_note=" # same size as the disk for system partition"
                             echo $i"," "$disk_note" >> $tmpfile_grp_blk_detected
                         fi
                     done
@@ -1672,12 +1694,19 @@ function _group_blk_detect(){
             fi &
         done && wait 
         #output blk list to group blk configfile 
-        if grep -q $1 $b_conf && [[ -f $(dirname $0)/conf/$1".blk" ]] ;then 
+        echo check done 
+        sleep 5
+        if [[ ! -f $(dirname $0)/conf/$1".blk" ]] ;then 
             cat $tmpfile_grp_blk_detected > $(dirname $0)/conf/$1".blk" 
-            echo "new blk config file: $(dirname $0)/conf/$1'.blk'"
+            sed -i "$ s/\,//g" $(dirname $0)/conf/$1".blk"
+            _yellow "new blk config file: $(dirname $0)/conf/$1.blk"
+            cat $(dirname $0)/conf/$1".blk"
+        elif ! _format_conf $b_conf |grep -q ^$1 ;then 
+            sed -i "$ s/\,//g" $tmpfile_grp_blk_detected 
+            _yellow "possible blk list of $1 for fio test:"
+            cat $tmpfile_grp_blk_detected
         fi
-        _yellow "possible blk list of $1 for fio test:\n$(cat $tmpfile_grp_blk_detected)"
-        #
+        # clean tmpfile 
         rm -f $tmpfile_grp_blk_detected
 }
 function round_report(){
@@ -1956,6 +1985,10 @@ while [ $# -gt 0 ] ;do
            ;;
         "-e" )
            _make_conf_example
+           exit 0
+           ;;
+        "-v"|"--version" )
+           echo "$0 $script_version"
            exit 0
            ;;
         * )
