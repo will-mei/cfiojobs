@@ -23,6 +23,7 @@ normal      500     100%        4k,64k,256k,4m      read,randread,write,randwrit
 # 5 min
 quick       300     100%        4k,4m               read,randread,write,randwrite   True
 quicknormal 300     100%        4k,256k,4m          read,randread,write,randwrite   True
+rbdnormal   300     100%        4k,256k,4m          read,randread,write,randwrite   True            "-ioengine=rbd -clientname=admin -pool=rbd"
 allbs       300     100% 4k,8k,16k,32k,64k,128k,256k,512k,1m,4m randread,randwrite  True            "-iodepth=32 -numjobs=2"
 
 

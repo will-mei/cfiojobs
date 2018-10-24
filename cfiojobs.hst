@@ -6,3 +6,7 @@
 2018-09-19_13:46:46: ./cfiojobs -g last2 -F /home/meiwei/aacraid-1.2.1.56008-1dkms.noarch.rpm,~/dkms-2.6.1-1.el7.noarch.rpm -D /root/
 2018-09-26_17:15:14: ./cfiojobs -g gansuapp7 --fio-list -p
 2018-10-11_03:58:11: ./cfiojobs -g ceph3 -C tmp,tmp2 -o collect_a -q
+2018-10-23_22:45:14: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
+2018-10-23_22:45:57: ./cfiojobs -h
+2018-10-23_22:46:21: ./cfiojobs -v
+2018-10-24_03:50:24: ./cfiojobs -g ceph3 ls / -f

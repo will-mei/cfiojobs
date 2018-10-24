@@ -13,7 +13,7 @@
 # version   :   cfiojobs0.12.10
 ###########################################################
 
-script_version=0.12.10
+script_version=0.12.11
 
 STATUS=0
 function _stop_test(){
@@ -1051,15 +1051,35 @@ if [[ -n $CMD ]] ;then
         _ssh_send "$CMD " &>/dev/null 
         echo "  $host_ip stat: $?"
     else
-        [[ $p_exec == "True" ]] || _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
-        [[ $p_exec == "True" ]] || _segline "$host_ip stdout"
+        tmpfile_exec_host_out=$(mktemp)
+    #    [[ $p_exec == "True" ]] || _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
+    #    [[ $p_exec == "True" ]] || _segline "$host_ip stdout"
         #use virtual terminal and recive tty input.
         # echo "$host_ip :"
-        ssh -t -q -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD"
+        ssh -t -q -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" &>$tmpfile_exec_host_out
         local cmd_stat=$?
         _update_check_stat $cmd_stat $tmpfile_exec 
-        [[ $p_exec == "True" ]] || _segline "$host_ip ending"
-        [[ $p_exec == "True" ]] ||echo ""
+    #    [[ $p_exec == "True" ]] || _segline "$host_ip ending"
+    #    [[ $p_exec == "True" ]] || echo ""
+        #
+        if [[ $cmd_stat -eq 0 ]] && [[ $(wc -l <$tmpfile_exec_out) -eq 0 ]] ;then 
+            cat $tmpfile_exec_host_out > $tmpfile_exec_out 
+            _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
+            _segline "group: \"$current_host_group\" stdout"
+            cat $tmpfile_exec_host_out
+            _segline "group: \"$current_host_group\" ending"
+            echo ""
+        elif [[ -n $(diff $tmpfile_exec_out $tmpfile_exec_host_out) ]] ;then
+            _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
+            _segline "$host_ip stdout"
+            cat $tmpfile_exec_host_out
+            _segline "$host_ip ending"
+            echo ""
+        else
+            _blue "\t $host_ip same output as group: \"$current_host_group\" \n"
+        fi
+        rm -rf $tmpfile_exec_host_out 
+
     fi
 #else
 #    _unquiet "    no command to run."
@@ -1367,6 +1387,7 @@ function _group_execute(){
     _yellow "execute:"
     _parse_host_info "$1"
         tmpfile_exec=$(mktemp)
+        tmpfile_exec_out=$(mktemp)
         echo 0 > $tmpfile_exec
         for host_ip in $ip_list ;do
              #ping check
@@ -1379,6 +1400,7 @@ function _group_execute(){
          # read stat after all exec done
          check_stat=$(sort -nr $tmpfile_exec |head -1)
          rm -rf $tmpfile_exec
+         rm -rf $tmpfile_exec_out 
          #if some failed, read done, show status
          [[ $check_stat -eq 1 ]] && echo "group execution partially failed." && _error_interrupt
     _unquiet "execute action done." || echo " group stat : $check_stat"
