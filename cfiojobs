@@ -13,7 +13,7 @@
 # version   :   cfiojobs0.12.13
 ###########################################################
 
-script_version=0.12.13
+script_version=0.12.14
 
 STATUS=0
 function _stop_test(){
@@ -88,84 +88,104 @@ Remanber, you need passwordless ssh access permitions to all hosts, and use a co
 
 usage :
 1. Edit your own host group, block group and fio job type settings in config files.
-   (1)     hosts  list conf:   $g_conf
-   (2)     blocks list conf:   $b_conf
-   (3)     jobs   list conf:   $j_conf
+    (1)     hosts  list conf:   $g_conf
+    (2)     blocks list conf:   $b_conf
+    (3)     jobs   list conf:   $j_conf
 
-   tips: '$0 -e' will generate example configure files for you
+    tips: '$0 -e' will generate example configure files for you
 
 2. Run a short single cmd: 
-   $0 <options> [commands]
-   options: 
-           -t            check host group config file format.
-           -g group      run commands on certain groups in $g_conf
-           -a            run commands on all groups set
-           -x host       make an exception on these hosts
-           -X group      make an exception on these host groups 
-           -q            return only exit status of command.(be quiet and less output if no error occurred)
-           -d            check and give function parameters, also, skip failue
-           -f            skip failure and try to continue, if possible
-           -p            send commands and copy files execute in parallel
+    $0 <options> [commands]
+    options: 
+            -t             check host group config file format.
+            -g group       run commands on certain groups in $g_conf
+            -a             run commands on all groups set
+            -x host        make an exception on these hosts
+            -X group       make an exception on these host groups 
+            -q             return only exit status of command.(be quiet and less output if no error occurred)
+            -d             check and give function parameters, also, skip failue
+            -f             skip failure and try to continue, if possible
+            -p             send commands and copy files execute in parallel
 
    example: $0 -q -g grp1,grp2,grp3,grp4 \"systemctl status sshd ;ls abc\" -x 172.18.211.105
       tips:
       say you want run the command:
-              'ls -i' 
+            'ls -i' 
       you can use: 
-              $0 ls -i -g vmg1,grp3 -t -d
+            $0 ls -i -g vmg1,grp3 -t -d
       it is fine, because '-i' does not confilict with any options supported by this script,
       but still we strongly recommend you write it this way:
-              $0 \"ls -i\" -g vmg1,grp3 -t -d
+            $0 \"ls -i\" -g vmg1,grp3 -t -d
 
 3. Example of Some more complex situation. (how to use double/single quote to pass the complete cmd to script):
-   (1). with multy command a time:  $0 \"command1 ;  command2 ;  command3 \"
-        with command list to run :  $0 \"command1 && command2 || command3 \"
-   (2). with pipe thing or some  :  $0 \"your command |pipe |pipe \"
-   (3). with local bash variable :  $0 \"your command \$local_variable \"
-   (4). with remote env variable :  $0 \"your command '\$remote_env_viriable' \" 
+    (1).with multy command a time:  
+            $0 \"command1 ;  command2 ;  command3 \"
+        with command list to run :  
+            $0 \"command1 && command2 || command3 \"
+    (2).with pipe thing or some  :  
+            $0 \"your command |pipe |pipe \"
+    (3).with local bash variable :  
+            $0 \"your command \$local_variable \"
+    (4).with remote env variable :  
+            $0 \"your command '\$remote_env_viriable' \" 
 
-   example: $0 -g grp1 \"ls -l |awk '{print\\\$2}'\"
-         or $0 -g grp1 \"ls -l |awk \\\"{print"'\\''\\\$2'"}\\\"\"
-      tips: awk variable is not shell variable, so there were three antislash inside curly braces,
+    example: 
+            $0 -g grp1 \"ls -l |awk '{print\\\$2}'\"
+         or: 
+            $0 -g grp1 \"ls -l |awk \\\"{print"'\\''\\\$2'"}\\\"\"
+       tips: awk variable is not shell variable, so there were three antislash inside curly braces,
             first two antislash passed an '\\' to remote bash, and then the third is for the translating of the '\$'.
 
 4. FIO jobs control
-   options:
-           --fio         launch a fio test
-           --test-stop   stop test on given host groups(stop all test and all jobs)
-           --fio-stop    stop all existinging fio jobs on given host groups (stop a round of jobs of a test)
-           --fio-list    output summary info of fio jobs on given host groups
-           -c            check test env, (network, ssh connections, fio installation, blk dev to test)
-           -b            run fio jobs with given blk group in $b_conf
-           -j            run fio job with given job group in $j_conf
-           -A            fio task 'After' commands that are given
-           -o            set the output dir for all fio test logs.
-           -s            single mode, one block a time.
-           -l            list all running fio jobs info.
+    options:
+            --fio          launch a fio test
+            --test-stop    stop test on given host groups(stop all test and all jobs)
+            --fio-stop     stop all existinging fio jobs on given host groups (stop a round of jobs of a test)
+            --fio-list     output summary info of fio jobs on given host groups
+            --recover      recover an undone test form where it was interrupted (aborted, killed or cancled)
+            --recover-from recover or restart the test form a given \"round number\" (and a certain \"blk group\")
+            -c             check test env, (network, ssh connections, fio installation, blk dev to test)
+            -b             run fio jobs with given blk group in $b_conf
+            -j             run fio job with given job group in $j_conf
+            -A             fio task 'After' commands that are given
+            -E             run the commands everythime fio test starts
+            -o             set the output dir for all fio test logs.
+            -s             single mode, one block a time.
+            -l             list all running fio jobs info.
 
-   example: $0 --fio-list -g group1 -q
-            $0 --fio -g grp1 -b vd5 -j rand1,mix1 -A \"umount /dev/vdb\"
+    example: 
+            $0 --fio -g grp1 -b vd5,blk8 -j rand1 -o test01 
+            $0 --fio-list -g group1 -p
+        you can have the current round info from script stdout or log file: \"<output_dir>/recover.log\", you can easyly 
+        recover the test with with a certin round point in test progress, say, to recover the previous test with blk 
+        target \"blk8\" and round \"6\", you can use the command :         
+            $0 --fio -g grp1 -b vd5,file8 -j rand1 --recover-from blk8,6 -o test01 
+        or recover a test with only one blk group:
+            $0 --fio -g grp1 -b vd5 -j rand1,mix1 --recover-from 6 -f -o test02 
+        or recover the test from where you don't know:
+            $0 --fio -g grp1 -b vd5 -j rand1,mix1 --recover -f -o test02 
+    note:
+        when both the commands and fio jobs were running on a given host, they will be execute in parallel,
+        but fio jobs will be send first by default, you can use '-A' to let command execute first.
+            $0 --fio -g grp1 -b vd5,blk8 -j rand1,mix1 -A \"umount /dev/vdb\" -o grp1_parallel_test01
 
-      when both the commands and fio jobs were running on a given host, they will be execute in parallel,
-      but fio jobs will be send first by default, you can use '-A' to let command execute first.
-
-   tips:
-      remanber to check the test env befor you start your fio test on a group:
+    tips:
+        remanber to check the test env befor you start your fio test on a group:
             $0 -g <group name> -f -c
 
 5. File distribution
-   options:
-           -F file       copy files to remote host
-           -C file       collect files from remote to local host
-           -D dir        specify destination directory on remote host
+    options:
+            -F file        copy files to remote host
+            -C file        collect files from remote to local host
+            -D dir         specify destination directory on remote host
 
-   example: $0 -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
+    example: $0 -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
 
 6. Help info
-   options:
-           -h            show this help info
-           -e            make examples of config file (when they do not exist)
-           -v, --version show version info
+    options:
+            -h             show this help info
+            -e             make examples of config file (when they do not exist)
+            -v, --version  show version info
 "
 }
 
@@ -1845,6 +1865,10 @@ file_group_list=""
 harvest_file_group_list=""
 multy_job_group="False"
 multy_blk_group="False"
+recover_test="False"
+recover_blk_group_name=""
+recover_job_batch_index=""
+command_mode="onece"
 #no_sys_blk="False"
 
 }
@@ -1872,7 +1896,9 @@ info:
        X group: $x_group_list
         x host: $x_host_list
            CMD: $CMD
+  command_mode: $command_mode 
     output_dir: $output_dir
+  recover_test: $recover_test 
      test_mode: $test_mode
     printdebug: $pdebug
       tolerate: $tolerate
@@ -1958,6 +1984,21 @@ while [ $# -gt 0 ] ;do
         "--fio" )
             send_fio="True"
             ;;
+        "--recover" )
+            recover_test="True"
+            ;;
+        "--recover-from" )
+            if [ $# -lt 2 ]
+            then
+                echo "$0: --recover-from requires a Round Number at least"
+                STATUS=1
+                exit
+            fi
+            recover_test="True"
+            recover_blk_group_name=${2%,*}
+            recover_job_batch_index=${2##*,}
+            shift
+            ;;
         "-b" )
             if [ $# -lt 2 ]
             then
@@ -2003,6 +2044,9 @@ while [ $# -gt 0 ] ;do
             ;;
         "-A" )
             execute_mode="After"
+            ;;
+        "-E" )
+            command_mode="always"
             ;;
         #"--no-sys" )
         #    no_sys_blk="True"
@@ -2083,6 +2127,22 @@ done
         if [[ $send_fio == "True" ]] ;then
             _blk_group_check
             _job_group_check
+            if [[ $recover_test == "True" ]] ;then
+                # recover_blk_group_name might be empty 
+                # recover_job_batch_index cannot be empty 
+                if [[ -z $recover_job_batch_index ]] ;then
+                    # check recover log file 
+                    if [[ -f $output_dir/recover.log ]] ;then
+                        _red "recover log file \"$output_dir/recover.log\" is missing !" 
+                        echo "fio test can not be automatically recovered!"
+                        echo "perhapes the test ended too early or it's all done, you can restart the test but it cant't be recovered."
+                        exit 1
+                    fi
+                    recover_info=$(sed 1p $output_dir/recover.log)
+                    recover_blk_group_name=${recover_info%,*}
+                    recover_job_batch_index=${recover_info##*,}
+                fi
+            fi
         else
             #stop job expansion
             blk_stat=2
@@ -2165,10 +2225,20 @@ done
                 done
                 _tmp_quiet "off"
 
+                # recover 
+                [[ $recover_test == "True" ]] && [[ -n $recover_blk_group_name ]] && [[ $blk_group_name != $recover_blk_group_name ]] && continue 
+
             #send job batchs to host groups
             for job_batch_index in $(seq 1 $total_round) ;do
                 # count number and give process info 
                 job_batch=${JOB_BATCH_ARRAY[$job_batch_index]}
+
+                # command_mode check 
+                [[ $job_batch -ge 2 ]] && [[ $command_mode != "always" ]] && $CMD=""
+
+                [[ $recover_test == "True" ]] && [[ $job_batch_index != $recover_job_batch_index ]] && continue 
+                # set new recover_info 
+                echo "$blk_group_name,$job_batch_index" > $output_dir/recover.log
 
                 #exec on all groups
                 _yellow "\n$(date "+%Y-%m-%d_%H:%M:%S"): BLK ROUND $bround/$btotal, JOB ROUND $job_batch_index/$total_round EXECUTING ..."
@@ -2204,6 +2274,9 @@ done
 
         done
         #blk group
+
+        # cleanning recover log when test is done 
+        rm -f $output_dir/recover.log  
 
         #build final report of test
         _yellow "\n$(date "+%Y-%m-%d_%H:%M:%S") FIO TEST \"$output_dir\", LOG ANALYSING ..."
