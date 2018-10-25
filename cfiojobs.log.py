@@ -186,7 +186,10 @@ def store_to_global(log_dict,key_index):
     _runtime    = log_dict['global options']['runtime']
     _iodepth    = log_dict['global options']['iodepth']
     _ioengine   = log_dict['global options']['ioengine']
-    _filename   = log_dict['global options']['filename']
+    try :
+        _filename   = log_dict['global options']['filename']
+    except KeyError:
+        _filename   = log_dict['global options']['rbdname']
     _numjobs    = log_dict['jobs'][0]['job options']['name'].split('-')[0]
     #_date       = time.strftime("%y%m%d",time.localtime(log_dict['timestamp']))
     # get special index name
@@ -232,12 +235,16 @@ def parse_json(fio_json_log):
             print(fio_json_log,': status abnormal, util value missing!')
             return 0
         # skip hdd or nvme drive
+        try :
+            blk_info = log_dict['global options']['filename'].split('/')[-1][0:4]
+        except KeyError:
+            blk_info = log_dict['global options']['rbdname'].split('/')[-1][0:4]
         if blk_type == 'nvme':
-            if log_dict['global options']['filename'].split('/')[-1][0:4] != blk_type:
+            if blk_info != blk_type:
                 return 0
         else:
             # hdd
-            if log_dict['global options']['filename'].split('/')[-1][0:4] == 'nvme':
+            if blk_info == 'nvme':
                 return 0
         #util,pattern_percentage,bs_percentage,iodepth,bw,iops,latency_max,latency_avg
         _util       = log_dict['disk_util'][0]['util']

@@ -15,22 +15,22 @@ OUTPUTDIR=$LOGDIR"/_report"
 [[ -d $OUTPUTDIR ]] || mkdir -p $OUTPUTDIR
 
 # analise json log build csv sheet report for single device
-for  i in $(ls $LOGDIR) ;do
-    [[ -f "$LOGDIR/$i" ]] && continue
-    [[ $i == "_report" ]] && continue
-    rm -rf $LOGDIR/$i/*.csv 
-    bash $(dirname $0)/cfiojobs.log.sh  $LOGDIR/$i &
-    #bash ./catcsv.sh $LOGDIR/$i/*.csv
-done && wait
-
-# err info
 for i in $(ls $LOGDIR) ;do
     [[ -f "$LOGDIR/$i" ]] && continue
     [[ $i == "_report" ]] && continue
-    cat $LOGDIR/$i/fio-err.log  > $OUTPUTDIR/${LOGDIR##*/}"_fio-err.log"
-done
+    if ls $LOGDIR/$i/*.log.json >/dev/null ;then 
+        # err info os host logs 
+        grep ^fio: $LOGDIR/$i/*.log.json >> $OUTPUTDIR/${LOGDIR##*/}"_fio-err.log"  
+        sed -i "/^fio:/d" $LOGDIR/$i/*.log.json &>/dev/null 
+        # rebuild csv report of disks
+        rm -rf $LOGDIR/$i/*.csv 
+        bash $(dirname $0)/cfiojobs.log.sh  $LOGDIR/$i &
+        #cat $LOGDIR/$i/fio-err.log  > $OUTPUTDIR/${LOGDIR##*/}"_fio-err.log"
+        #bash ./catcsv.sh $LOGDIR/$i/*.csv
+    fi &
+done && wait 
 
-# report of the whole test.
+# make a report of the whole test.
 if python2 $(dirname $0)/cfiojobs.log.py $LOGDIR ;then
     # remove empty csv
     for i in $(ls "${LOGDIR##*/}"*.csv) ;do
@@ -45,6 +45,8 @@ else
     exit 1
 fi
 
+###############################
+# auto excel 
 function _host_excel_report(){
 # generate excel format report for single host.
 if python3 -V &>/dev/null ;then

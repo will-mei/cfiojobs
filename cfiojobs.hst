@@ -9,4 +9,17 @@
 2018-10-23_22:45:14: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio
 2018-10-23_22:45:57: ./cfiojobs -h
 2018-10-23_22:46:21: ./cfiojobs -v
-2018-10-24_03:50:24: ./cfiojobs -g ceph3 ls / -f
+2018-10-24_04:56:06: ./cfiojobs -g ceph3 -b ceph3 -j seqr,sseqr -f --fio -o test01
+2018-10-24_04:57:05: ./cfiojobs -g ceph3 -b ceph3 -j seqr,sseqr -f --fio -o test01
+2018-10-24_05:30:08: ./cfiojobs -g ceph3 -b ceph3 -j seqr,sseqr -f --fio -o test02
+2018-10-24_05:55:46: ./cfiojobs -g ceph3 -b ceph3,ceph1 -j sseqr -f --fio -o test03
+2018-10-24_23:13:25: ./cfiojobs -g ceph3 -b ceph3,ceph1 -j seqr sseqr -f --fio -o test04
+2018-10-25_00:51:43: ./cfiojobs -g ceph3 -b ceph3,ceph1 -j seqr,sseqr -f --fio -o test04
+2018-10-25_02:38:05: ./cfiojobs -g ceph3 -b ceph3,ceph1 -j seqr,sseqr -f --fio -o test05
+2018-10-25_03:31:21: ./cfiojobs -g ceph3 -b ceph3 -j sseqr -f --fio -o test06
+2018-10-25_03:41:47: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o test07
+2018-10-25_04:10:15: ./cfiojobs -g ceph3 ls -p -q
+2018-10-25_04:18:51: ./cfiojobs -g ceph3 -b ceph1,ceph3 -j seqr -f --fio -o test08
+2018-10-25_05:26:58: ./cfiojobs -g ceph3 -b ceph1,ceph3 -j sseqr,seqr -f --fio -o test09
+2018-10-25_05:40:26: ./cfiojobs -v
+2018-10-25_05:45:43: ./cfiojobs -g ceph3 lsblk

@@ -7,4 +7,4 @@ vd5     /dev/vdb,  #abcd
         /dev/vde,
         /dev/vdf  #for kvm vm virtio driver
 
-#ceph3 /dev/sdb,/dev/sdc
+ceph1 /dev/sdb
