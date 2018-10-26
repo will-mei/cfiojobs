@@ -24,3 +24,46 @@
 2018-10-25_05:40:26: ./cfiojobs -v
 2018-10-25_05:45:43: ./cfiojobs -g ceph3 lsblk
 2018-10-26_00:20:25: ./cfiojobs -v
+2018-10-25_21:24:54: ./cfiojobs -h
+2018-10-25_23:02:34: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10
+2018-10-25_23:05:27: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 --recover
+2018-10-25_23:09:15: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 --recover
+2018-10-25_23:24:20: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 --recover
+2018-10-25_23:26:54: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 --recover
+2018-10-26_00:09:15: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 --recover
+2018-10-26_00:17:56: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 --recover
+2018-10-26_00:18:37: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 --recover
+2018-10-26_00:19:02: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 --recover
+2018-10-26_00:22:47: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 -E ls --recover
+2018-10-26_00:26:58: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 -E ls --recover
+2018-10-26_00:27:20: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 -E ls --recover-from 1
+2018-10-26_00:30:01: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 -E ls --recover-from 1
+2018-10-26_00:31:46: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 -E ls --recover-from 1
+2018-10-26_00:52:05: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 -E ls --recover-from 1
+2018-10-26_01:36:31: ./cfiojobs -g ceph3 -b ceph1 -j sseqr -f --fio -o ../tmp/test10 -E ls --recover-from 1
+2018-10-26_01:41:38: ./cfiojobs -g ceph3 -b ceph1 -j seqr -f --fio -o ../tmp/test11 -E ls
+2018-10-26_02:01:58: ./cfiojobs -g ceph3 -b ceph1 -j seqr -f --fio -o ../tmp/test11 -E ls
+2018-10-26_02:03:57: ./cfiojobs -g ceph3 -b ceph1 -j seqr -f --fio -o ../tmp/test11 -E ls --recover
+2018-10-26_02:04:05: ./cfiojobs -g ceph3 -b ceph1 -j seqr -f --fio -o ../tmp/test11 -E ls
+2018-10-26_02:58:19: ./cfiojobs -g ceph3 -b ceph1 -j seqr -f --fio -o ../tmp/test11 -E ls
+2018-10-26_03:22:50: ./cfiojobs -g ceph3 -b ceph1 -j seqr -f -s --fio -o ../tmp/test11 -E ls
+2018-10-26_03:25:32: ./cfiojobs -l
+2018-10-26_03:25:32: ./cfiojobs -g ceph3 --fio-list -p
+2018-10-26_03:49:48: ./cfiojobs -g ceph3 ls
+2018-10-26_03:50:12: ./cfiojobs -g ceph3 ls
+2018-10-26_03:51:08: ./cfiojobs -g ceph3 ls -f
+2018-10-26_03:51:35: ./cfiojobs -g ceph3 ls -f -p
+2018-10-26_03:58:08: ./cfiojobs -g ceph3 -b ceph1 -j seqr -f --fio -o ../tmp/test12 ls
+2018-10-26_04:05:00: ./cfiojobs -g ceph3 -b ceph1 -j seqr -f --fio -o ../tmp/test12 ls --recover
+2018-10-26_05:04:10: ./cfiojobs -g ceph3 -b ceph1 -j seqr -f --fio -o ../tmp/test12 --round-list
+2018-10-26_05:05:19: ./cfiojobs -g ceph3 -b ceph1 -j seqr -f --fio -o ../tmp/test12 --round-list
+2018-10-26_05:08:45: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o ../tmp/test12 --round-list
+2018-10-26_05:09:34: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o ../tmp/test12 --round-list
+2018-10-26_05:52:16: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o ../tmp/test12 --round-list
+2018-10-26_05:52:41: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o ../tmp/test12 --round-retest 7
+2018-10-26_05:58:59: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o ../tmp/test12 --round-retest 6
+2018-10-26_06:01:45: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o ../tmp/test12 --round-retest 6
+2018-10-26_06:06:50: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o ../tmp/test12 --round-list
+2018-10-26_06:10:12: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o ../tmp/test12 --round-retest 6
+2018-10-26_06:23:11: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o ../tmp/test12 --round-retest 5
+2018-10-26_06:35:16: ./cfiojobs -g ceph3 -b ceph1 -j seqr,sseqr -f --fio -o ../tmp/test12 --round-retest 4
