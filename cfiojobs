@@ -1078,8 +1078,8 @@ function _ssh_send(){
         echo "${FUNCNAME[@]} warning: no command info to send!" 
         continue
     else
-        #ssh -n -t -q -o ConnectTimeout=15 -l $host_user $host_ip -p $host_port "$@"
-        ssh -n -q -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$@"
+        #ssh -n -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -l $host_user $host_ip -p $host_port "$@"
+        ssh -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$@"
         #expect -v &>/dev/null && expect bin/expect_ssh2vm.exp $host_user $host_ip $host_port $host_pwd "$@"
     fi
 }
@@ -1087,12 +1087,12 @@ function _send_file(){
 if [[ -n $file_group_list ]] ;then
     _unquiet "  $host_ip send files..."
     if [[ $quiet_mode == "True" ]] ;then
-        scp -r -q -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
+        scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
         local scp_stat=$?
         echo "  $host_ip stat: $scp_stat"
         _update_check_stat $scp_stat $tmpfile_exec 
     else
-        scp -r -q -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
+        scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
         local scp_stat=$?
         _update_check_stat $scp_stat $tmpfile_exec 
     fi
@@ -1109,24 +1109,24 @@ if [[ -n ${harvest_file_group_list//,/} ]] ;then
     # one file or dir to harvest
     if [[ ${harvest_file_group_list//,/} == ${harvest_file_group_list} ]] ;then
         if [[ $quiet_mode == "True" ]] ;then
-            eval scp -r -q -o ConnectTimeout=15 -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir/ &>/dev/null                                                        
+            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir/ &>/dev/null                                                        
             local hvst_stat=$?
             echo "  $host_ip stat: $hvst_stat"
             _update_check_stat $hvst_stat $tmpfile_exec 
         else
-            eval scp -r -q -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir && echo "  $host_ip done"
+            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir && echo "  $host_ip done"
             local hvst_stat=$?
             _update_check_stat $hvst_stat $tmpfile_exec 
         fi
     # multy files
     else
         if [[ $quiet_mode == "True" ]] ;then
-            eval scp -r -q -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir/ &>/dev/null                                                        
+            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir/ &>/dev/null                                                        
             local hvst_stat=$?
             echo "  $host_ip stat: $hvst_stat"
             _update_check_stat $hvst_stat $tmpfile_exec 
         else
-            eval scp -r -q -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir && echo "  $host_ip done"
+            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir && echo "  $host_ip done"
             local hvst_stat=$?
             _update_check_stat $hvst_stat $tmpfile_exec 
         fi
@@ -1149,7 +1149,7 @@ if [[ -n $CMD ]] ;then
     #    [[ $p_exec == "True" ]] || _segline "$host_ip stdout"
         #use virtual terminal and recive tty input.
         # echo "$host_ip :"
-        ssh -t -q -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" &>$tmpfile_exec_host_out
+        ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" &>$tmpfile_exec_host_out
         local cmd_stat=$?
         _update_check_stat $cmd_stat $tmpfile_exec 
     #    [[ $p_exec == "True" ]] || _segline "$host_ip ending"
@@ -1186,8 +1186,8 @@ function _ssh_send_bknd(){
         echo "${FUNCNAME[@]} warning: no command to send!" 
         continue
     else
-        #ssh -t -q -n -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $bknd_user $bknd_ip -p $bknd_port "$@" 
-        ssh -T -q -n -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $bknd_user $bknd_ip -p $bknd_port "$@" 
+        #ssh -t -q -n -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $bknd_user $bknd_ip -p $bknd_port "$@" 
+        ssh -T -q -n -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $bknd_user $bknd_ip -p $bknd_port "$@" 
     fi 
 }
 function _ssh_bknd(){
@@ -1561,7 +1561,7 @@ if [[ -n $output_dir  ]] ;then
 #sleep 30
                     # stop scp from coping "/" from remote, when output dir missing
                     if [[ -n $output_dir ]] && [[ $output_dir != '/' ]] ;then
-                        scp -q -r -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:$output_dir/* $output_dir/ 
+                        scp -q -r -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -P $host_port $host_user@$host_ip:$output_dir/* $output_dir/ 
                         _update_check_stat $? $tmpfile_hvst 
                         # wait
                         _ssh_send "rm -rf $output_dir/"
