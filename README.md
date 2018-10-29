@@ -35,15 +35,15 @@
 <br>
 <br>3. Example of Some more complex situation. (how to use double/single quote to pass the complete cmd to script):
 <br>    (1).with multy command a time:  
-<br>            ./cfiojobs "command1 ;  command2 ;  command3 "
+<br>            ./cfiojobs  -g <grp name> "command1 ;  command2 ;  command3 "
 <br>        with command list to run :  
-<br>            ./cfiojobs "command1 && command2 || command3 "
+<br>            ./cfiojobs  -g <grp name> "command1 && command2 || command3 "
 <br>    (2).with pipe thing or some  :  
-<br>            ./cfiojobs "your command |pipe |pipe "
+<br>            ./cfiojobs  -g <grp name> "your command |pipe |pipe "
 <br>    (3).with local bash variable :  
-<br>            ./cfiojobs "your command $local_variable "
+<br>            ./cfiojobs  -g <grp name> "your command $local_variable "
 <br>    (4).with remote env variable :  
-<br>            ./cfiojobs "your command '$remote_env_viriable' " 
+<br>            ./cfiojobs  -g <grp name> "your command '$remote_env_viriable' " 
 <br>
 <br>    example: 
 <br>            ./cfiojobs -g grp1 "ls -l |awk '{print\$2}'"

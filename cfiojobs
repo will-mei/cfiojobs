@@ -119,15 +119,15 @@ usage :
 
 3. Example of Some more complex situation. (how to use double/single quote to pass the complete cmd to script):
     (1).with multy command a time:  
-            $0 \"command1 ;  command2 ;  command3 \"
+            $0  -g <grp name> \"command1 ;  command2 ;  command3 \"
         with command list to run :  
-            $0 \"command1 && command2 || command3 \"
+            $0  -g <grp name> \"command1 && command2 || command3 \"
     (2).with pipe thing or some  :  
-            $0 \"your command |pipe |pipe \"
+            $0  -g <grp name> \"your command |pipe |pipe \"
     (3).with local bash variable :  
-            $0 \"your command \$local_variable \"
+            $0  -g <grp name> \"your command \$local_variable \"
     (4).with remote env variable :  
-            $0 \"your command '\$remote_env_viriable' \" 
+            $0  -g <grp name> \"your command '\$remote_env_viriable' \" 
 
     example: 
             $0 -g grp1 \"ls -l |awk '{print\\\$2}'\"
