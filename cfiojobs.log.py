@@ -216,6 +216,7 @@ def store_to_global(log_dict,key_index):
     sum_report[pattern_name]['util']    = _util
     sum_report[pattern_name]['size']    = _size 
     # store log info to global perf list
+    #omit_stat   = '○'
     omit_stat   = u'○'.encode('GB2312')
     perf_info = {'hostname':_hostname,'filename':_filename,'pattern_name':pattern_name,'iodepth':_iodepth,'bw':_bw,'iops':_iops,'stat':omit_stat,'lat_avg':lat_mean,'lat_max':lat_max,'lat_min':lat_min,'lat_stddev':lat_stddev,'util':_util,'size':_size,'runtime':_runtime,'direct':_direct,'numjobs':_numjobs,'ioengine':_ioengine}
     perf_list.append(perf_info)
@@ -350,17 +351,18 @@ def compare_with_global(perf_list):
         avg_iops   = index_iops['sum'] / index_iops['sample']
         avg_lat    = index_lat['sum']  / index_lat['sample']
         # 2 avg info comparation
-        perf_log['bw_avg']     = str(avg_bw) 
-        perf_log['iops_avg']   = str(avg_iops) 
-        perf_log['lat_global'] = str(avg_lat)
+        perf_log['bw_global']     = str(avg_bw) 
+        perf_log['iops_global']   = str(avg_iops) 
+        perf_log['lat_avg_global'] = str(avg_lat)
         #   add deviation info to log
         perf_log['deviation']   = str(round(v_bw/avg_bw * 100 ,2) ) + '%' 
         if v_bw < avg_bw * weak_index :
             #perf_log['stat']   = u'●'.encode('GB2312')
+            #perf_list[index_log]['stat']        = '●'
             perf_list[index_log]['stat']   = u'●'.encode('GB2312')
-            perf_list[index_log]['bw_avg']     = perf_log['bw_avg']
-            perf_list[index_log]['iops_avg']   = perf_log['iops_avg']
-            perf_list[index_log]['lat_global'] = perf_log['lat_global']
+            perf_list[index_log]['bw_global']      = perf_log['bw_global']
+            perf_list[index_log]['iops_global'] = perf_log['iops_global']
+            perf_list[index_log]['lat_avg_global']  = perf_log['lat_avg_global']
             perf_list[index_log]['deviation']   = perf_log['deviation']
     #perf_list.sort(key=lambda x : int(x['hostname'].split('.')[3]) )
     perf_list.sort(key=lambda x : x['hostname'] )
@@ -406,11 +408,12 @@ for blk_type in ['hdd','nvme']:
     # compare bw and iops value with global avg and give shortfall report
     perf_list = compare_with_global(perf_list)
     # set out put keys and title
-    sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值,"该盘带宽/同组所有磁盘带宽平均值筛选状态 *低于90%标为●，否则记为○",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
-    #sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值,"该盘带宽/同组所有磁盘带宽平均值筛选状态 *低于90%标为●，否则记为○",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
-    #sheet_title = u'主机名,测试设备,块大小/模式,测试带宽(MiB/s),总样本带宽平均值(MiB/s),测试带宽/总样本平均值,同组筛选状态,每秒读写,总样本每秒读写平均值,平均延迟(ms),总样本延迟平均值(ms),该测试最大延迟(ms),读写队列深度,测试设备使用率,数据量,测试时长,读写数据引擎\n'.encode('GB2312')
-    #title_utf8 = 'hostname,device,bw_pattern,bw(MiB/s),bw_avg,deviation(%),stat,iops,iops_avg,lat_avg(ms),lat_max(ms),lat_avg_global(ms),util,util\n'
-    sheet_keys  = ['hostname','filename','pattern_name','bw','bw_avg','deviation','stat','iops','iops_avg','lat_avg','lat_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
+    sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值,"该盘带宽/同组所有磁盘带宽平均值筛选状态(低于90%标为●，否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
+    #sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值,"该盘带宽/同组所有磁盘带宽平均值筛选状态(低于90%标为●，否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'
+    #sheet_title = '主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),该测试带宽相对平均带宽的比值,同组筛选状态,该测试iops,测试iops平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'
+    #sheet_title = 'hostname,device,bs_pattern,bw(MiB/s),bw_global,deviation(%),stat,iops,iops_global,lat_avg(ms),lat_avg_global(ms),lat_max(ms),lat_min(ms),iodepth,numjobs,util,size,runtime,ioengine\n'
+    #sheet_title  = 'hostname,filename,bs/pattern,bw(MiB/s),bw_global(MiB/s),deviation,stat,iops,iops_global,lat_avg(ms),lat_avg_global,lat_max,lat_min,iodepth,numjobs,util,size,runtime,ioengine\n'
+    sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','deviation','stat','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
     # output all host list to csv file
     output_csv  =  './' + logdir.split('/')[-1] + '_' + blk_type + '_all_host.csv'
     printf_perf_list(perf_list,sheet_keys,sheet_title,output_csv)
