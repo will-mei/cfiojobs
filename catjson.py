@@ -36,7 +36,10 @@ with open(json_logfile,'r') as log_file:
     _util       = log_dict['disk_util'][0]['util']
     _iodepth    = log_dict['global options']['iodepth']
     _rw         = log_dict['global options']['rw']
-    _filename   = log_dict['global options']['filename'].replace('/','')
+    try:
+        _filename   = log_dict['global options']['filename'].replace('/','')
+    except KeyError:
+        _filename   = log_dict['global options']['rbdname'].replace('/','')
     print(p.get_sheet(adict = log_dict['global options']))
 #    print(p.get_sheet(adict = log_dict['disk_util'][0]))
 
