@@ -11,6 +11,7 @@ then
 else
         LOGDIR="$1"
 fi
+[[ ! -d $LOGDIR ]] && echo "dir $LOGDIR not exist!" &&  exit 1
 OUTPUTDIR=$LOGDIR"/_report"
 [[ -d $OUTPUTDIR ]] || mkdir -p $OUTPUTDIR
 
