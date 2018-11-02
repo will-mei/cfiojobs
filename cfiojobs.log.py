@@ -21,6 +21,10 @@ try:
 except IndexError:
     print("this script requires: \n1. cluster fiolog dir, please pass in directory name first.")
     exit()
+try:
+    test_blk_type = sys.argv[2]
+except IndexError:
+    test_blk_type = 'normal'
 
 host_list   = os.listdir(logdir)
 # bs pattern - value - max/min/avg
@@ -30,8 +34,8 @@ peak_value  = {'max':copy.deepcopy(max_info),'min':copy.deepcopy(min_info),'sum'
 key_index   = {'iodepth':0,'numjobs':0,'util':0,'size':0,'runtime':0,'bw':copy.deepcopy(peak_value),'iops':copy.deepcopy(peak_value),'latency_max':copy.deepcopy(peak_value),'latency_avg':copy.deepcopy(peak_value),'latency_min':copy.deepcopy(peak_value),'latency_stddev':copy.deepcopy(peak_value)}
 
 # the performance threshold value
-dev_weak_index  = {'hdd':0.9,'nvme':0.6}
-
+dev_weak_index  = {'hdd':0.9,'nvme':0.6,'rbd':0.6}
+dev_name_index  = {'hdd':'dev','nvme':'nvme','rbd':'rbd'}
 
 # calculate omit values in bs dict
 def cal_omit_bs(bs_dic):
@@ -239,14 +243,13 @@ def parse_json(fio_json_log):
         try :
             blk_info = log_dict['global options']['filename'].split('/')[-1][0:4]
         except KeyError:
-            blk_info = log_dict['global options']['rbdname'].split('/')[-1][0:4]
-        if blk_type == 'nvme':
-            if blk_info != blk_type:
-                return 0
-        else:
-            # hdd
-            if blk_info == 'nvme':
-                return 0
+            blk_info = log_dict['global options']['rbdname']
+        # nvme time , skip not nvme 
+        if blk_type == 'nvme' and blk_info != blk_type:
+            return 0
+        # hdd/rbd time , skip nvme 
+        elif blk_info == 'nvme':
+            return 0
         #util,pattern_percentage,bs_percentage,iodepth,bw,iops,latency_max,latency_avg
         _util       = log_dict['disk_util'][0]['util']
         _rw         = log_dict['global options']['rw']
@@ -369,7 +372,7 @@ def compare_with_global(perf_list):
     return perf_list 
 
 
-for blk_type in ['hdd','nvme']:
+for blk_type in ['hdd','nvme','rbd']:
     blk_log_stat= 1
     sum_report  = dict()
     # hostname,filename,pattern,index,value
@@ -386,10 +389,10 @@ for blk_type in ['hdd','nvme']:
                 if os.path.splitext(file_name)[1] == '.json' :
                     logfile = os.path.join(json_dir,file_name)
                     parse_json(logfile)
-                    if blk_type == 'nvme' and 'nvme' in logfile:
+                    if dev_name_index[blk_type] in logfile:
                         blk_log_stat = 0
 # if no nvme log then skip the rest.
-    if blk_type == 'nvme' and blk_log_stat == 1:
+    if blk_log_stat == 1:
         continue
 # save result to json 
     json_output_file = './' + logdir.split('/')[-1] + '_' + blk_type + '.json' 
@@ -414,8 +417,14 @@ for blk_type in ['hdd','nvme']:
     #sheet_title = 'hostname,device,bs_pattern,bw(MiB/s),bw_global,deviation(%),stat,iops,iops_global,lat_avg(ms),lat_avg_global(ms),lat_max(ms),lat_min(ms),iodepth,numjobs,util,size,runtime,ioengine\n'
     #sheet_title  = 'hostname,filename,bs/pattern,bw(MiB/s),bw_global(MiB/s),deviation,stat,iops,iops_global,lat_avg(ms),lat_avg_global,lat_max,lat_min,iodepth,numjobs,util,size,runtime,ioengine\n'
     sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','deviation','stat','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
+    if test_blk_type == 'rbd':
+        sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
+        sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
+    elif test_blk_type == 'nocompare':
+        sheet_title = u'主机名,测试设备,块大小/模式,测试带宽(MiB/s),每秒读写(iops),平均延迟(ms),最大延迟(ms),最低延迟(ms),iodepth,numjobs,util,size,runtime,ioengine\n'.encode('GB2312')
+        sheet_keys  = ['hostname','filename','pattern_name','bw','iops','lat_avg','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
     # output all host list to csv file
-    output_csv  =  './' + logdir.split('/')[-1] + '_' + blk_type + '_all_host.csv'
+    output_csv  = './' + logdir.split('/')[-1] + '_' + blk_type + '_all_host.csv'
     printf_perf_list(perf_list,sheet_keys,sheet_title,output_csv)
 
 #print(byte_sort(sum_report.keys()))

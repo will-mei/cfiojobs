@@ -2,6 +2,7 @@
 
 LOGDIR="$1"
 [[ -z $1 ]] && echo "Usage: $0  <host fio logdir>" && exit 1
+[[ ! -f $LOGDIR/fio-batch.log ]] && echo "$LOGDIR/fio-batch.log is missing, skiped." && exit 1
 #bs_list="$(awk -F'-' '{print$1}' $LOGDIR/fio-batch.log |sort -un)"
 #pattern_list="$(awk -F'-' '{print$2}' $LOGDIR/fio-batch.log |sort -u)"
 #blk_list="$(awk -F'-' '{print$3}' $LOGDIR/fio-batch.log |sort -u)"

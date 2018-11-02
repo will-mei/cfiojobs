@@ -11,7 +11,9 @@ then
 else
         LOGDIR="$1"
 fi
+# check logdir existence 
 [[ ! -d $LOGDIR ]] && echo "dir $LOGDIR not exist!" &&  exit 1
+# output dir 
 OUTPUTDIR=$LOGDIR"/_report"
 [[ -d $OUTPUTDIR ]] || mkdir -p $OUTPUTDIR
 
@@ -29,10 +31,17 @@ for i in $(ls $LOGDIR) ;do
         #cat $LOGDIR/$i/fio-err.log  > $OUTPUTDIR/${LOGDIR##*/}"_fio-err.log"
         #bash ./catcsv.sh $LOGDIR/$i/*.csv
     fi &
+    if grep -q rbdname $LOGDIR/$i/*.log.json ;then 
+        blk_type='rbd'
+    fi 
 done && wait 
 
+# clean old report 
+[[ -n $(ls $OUTPUTDIR) ]] && [[ ! -d $OUTPUTDIR/old_report ]] && mkdir -p $OUTPUTDIR/old_report
+mv $OUTPUTDIR/*.csv $OUTPUTDIR/*.tar $OUTPUTDIR/*.json $OUTPUTDIR/old_report/ 
+
 # make a report of the whole test.
-if python2 $(dirname $0)/cfiojobs.log.py $LOGDIR ;then
+if python2 $(dirname $0)/cfiojobs.log.py $LOGDIR $blk_type ;then
     # remove empty csv
     for i in $(ls "${LOGDIR##*/}"*.csv) ;do
         [[ $(wc -l < $i) -le 1 ]] && rm -rf $i
