@@ -1,0 +1,16 @@
+#!/usr/bin/expect -f 
+#useage:
+# expect ./xxx.exp <ipaddr_of_host>  <password>
+set ip [ lindex $argv 0 ]
+set password [ lindex $argv 1 ]
+set timeout 10
+#spawn ssh root@$ip
+spawn ssh-copy-id root@$ip
+expect {
+ "*yes/no" { send "yes\r"; exp_continue}
+ "*password:" { send "$password\r";exp_continue }
+ "*Password:" { send "$password\r" }
+}
+#interact   //交互模式,用户会停留在远程服务器上面.
+#close
+exit
