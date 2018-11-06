@@ -19,7 +19,7 @@ try:
     #nvme
 #    peak_name = sys.argv[3]
 except IndexError:
-    print("this script requires: \n1. cluster fiolog dir, please pass in directory name first.")
+    print("script Usage: \nsys.argv[0] <cluster fiolog dir> <nocompare|rbd> \nplease pass in directory name first, the other options can be omitted.")
     exit()
 try:
     test_blk_type = sys.argv[2]
