@@ -883,7 +883,10 @@ function _blk_group_check(){
     fi
 }
 function _recover_point_check(){
+    # confilict check.
     [[ $recover_test == "True" ]] && [[ $round_retest == "True" ]] && echo "Parameter confusion!" && exit 1
+# recover or retest.
+if  [[ $recover_test == "True" ]] || [[ $round_retest == "True" ]] ;then 
     if [[ $recover_test == "True" ]] ;then
         # recover_blk_group_name might be empty 
         # recover_job_batch_index cannot be empty 
@@ -910,6 +913,7 @@ function _recover_point_check(){
     fi
     [[ -z $recover_blk_group_name ]] && local b_name="omited" || local b_name=\"$recover_blk_group_name\"
     _blue "recover point: blk_group_name: $b_name, job_batch_index: \"$recover_job_batch_index\""
+fi 
 }
 ##############################################################################################
 # task preparation.
@@ -1809,18 +1813,22 @@ function _group_blk_detect(){
                 # ssh check 
                 if _ssh_send 'whoami' &>/dev/null ;then
                     tmpfile_host_blk_detected=$(mktemp)
+                    # get all blk info form ssh 
                     _ssh_send "lsblk -ps" >$tmpfile_host_blk_detected
                     #check blk device 
                     local host_blk_detected=$(grep disk $tmpfile_host_blk_detected |grep -v "─" |awk '{print$1}')
-                    # root partition 
+                    # get root disk info from root partition
                     local host_root_info=($(grep /$ $tmpfile_host_blk_detected))
                     [[ ${host_root_info[-2]} != "disk" ]] && local host_root_info=($(grep /$ -A1 $tmpfile_host_blk_detected|tail -1))
                     [[ ${host_root_info[-2]} != "disk" ]] && local host_root_info=($(grep /$ -A2 $tmpfile_host_blk_detected|tail -1))
                     local host_root_disk=${host_root_info[-1]//[^a-z,'/']/}
+                    # get size info of root disk 
                     local host_root_size=$(grep $host_root_disk'\ ' $tmpfile_host_blk_detected |sort -u |awk '{if(NR==1)print$4}' )
+                    # check all detected disks on host 
                     for i in $host_blk_detected ;do
-                        # add new disk 
+                        # add new disk when it's not in detected blk dev list.
                         if ! grep -q $i $tmpfile_grp_blk_detected ;then 
+                            # check it's size.
                             local tmp_blk_size=$(grep ^$i'\ ' $tmpfile_host_blk_detected |sort -u |awk '{if(NR==1)print$4}')
                             [[ $tmp_blk_size == $host_root_size ]] && local disk_note=" # same size as the disk for system partition"
                             echo $i"," "$disk_note" >> $tmpfile_grp_blk_detected
@@ -1841,10 +1849,12 @@ function _group_blk_detect(){
         if [[ ! -f $(dirname $0)/conf/$1".blk" ]] ;then 
             cat $tmpfile_grp_blk_detected > $(dirname $0)/conf/$1".blk" 
             sed -i "$ s/\,//g" $(dirname $0)/conf/$1".blk"
+            # show detected blk list 
             _yellow "new blk config file: $(dirname $0)/conf/$1.blk"
             cat $(dirname $0)/conf/$1".blk"
         elif ! _format_conf $b_conf |grep -q ^$1 ;then 
             sed -i "$ s/\,//g" $tmpfile_grp_blk_detected 
+            # show detected blk list 
             _yellow "possible blk list of $1 for fio test:"
             cat $tmpfile_grp_blk_detected
         fi
@@ -1872,7 +1882,7 @@ function round_report(){
     fi
 }
 function _list_all_running_jobs(){
-    local groups_to_list=$(ps aux |grep $(whoami) |grep '\-\-'fio'\ ' |grep -v grep |awk -F'-g' '{print$2}' |awk '{print$1}' |sort -u)
+    local groups_to_list=$(ps aux |grep $(whoami) |grep -E "\-\-fio|\-\-fio\ " |grep -v grep |awk -F'-g' '{print$2}' |awk '{print$1}' |sort -u)
     if [[ -n $groups_to_list ]] ;then
         for i in $groups_to_list ;do
             bash $0 -g $i --fio-list -p 
