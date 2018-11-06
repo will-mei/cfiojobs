@@ -37,8 +37,8 @@ for i in $(ls $LOGDIR) ;do
 done && wait 
 
 # clean old report 
-[[ -n $(ls $OUTPUTDIR) ]] && [[ ! -d $OUTPUTDIR/old_report ]] && mkdir -p $OUTPUTDIR/old_report
-mv $OUTPUTDIR/*.csv $OUTPUTDIR/*.tar $OUTPUTDIR/*.json $OUTPUTDIR/old_report/ 
+[[ -n $(ls $OUTPUTDIR/* ) ]] && [[ ! -d $OUTPUTDIR/old_report ]] && mkdir -p $OUTPUTDIR/old_report
+mv $OUTPUTDIR/*.csv $OUTPUTDIR/*.tar $OUTPUTDIR/*.json $OUTPUTDIR/old_report/ &>/dev/null  
 
 # make a report of the whole test.
 if python2 $(dirname $0)/cfiojobs.log.py $LOGDIR $blk_type ;then
