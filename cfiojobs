@@ -1866,7 +1866,7 @@ function round_report(){
             [[ ${host_log_dir##*/} == "_report" ]] && continue 
             for json_file in $(find $host_log_dir -type f -name "$previous_job_pattern_name"*.log.json );do 
                 # check format 
-                python2 $(dirname $0)/cfiojobs.json.py $json_file &>/dev/null || _red "$json_file : log stat abnormal!"
+                python2 $(dirname $0)/bin/cfiojobs.json.py $json_file &>/dev/null || _red "$json_file : log stat abnormal!"
             done 
         done 
     fi
@@ -2362,11 +2362,11 @@ done
             # loop through multy jobgroup 
             if [[ $multy_job_group == "True" ]] ;then 
                 for job_group_dir in $(ls $path_flyover/* -d) ;do 
-                    bash $(dirname $0)/cfiojobs.log2.sh $job_group_dir
+                    bash $(dirname $0)/bin/cfiojobs.log2.sh $job_group_dir
                     [[ $? -ne 0 ]] && _red "dir: \"$job_group_dir\" status abnormal!" 
                 done
             else
-                bash $(dirname $0)/cfiojobs.log2.sh $path_flyover 
+                bash $(dirname $0)/bin/cfiojobs.log2.sh $path_flyover 
                 [[ $? -ne 0 ]] && _red "dir: \"$path_flyover\" status abnormal!" 
             fi
         done
