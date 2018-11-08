@@ -33,6 +33,7 @@ for i in $(ls $LOGDIR) ;do
     fi &
     if grep -q rbdname $LOGDIR/$i/*.log.json ;then 
         blk_type='rbd'
+        echo "info: there will be no lateral contrast on rbd performance test."
     fi 
 done && wait 
 
