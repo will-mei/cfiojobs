@@ -2,6 +2,7 @@
 ###########################################################
 # Author  : william mei
 # Date    : 20181010
+# version : cfiojobs0.12.13
 # Test platform:
 #               kernel     : 3.10.0-514.26.2.el7.x86_64
 #               OS release : CentOS 7.3.1611
@@ -9,11 +10,10 @@
 # description  :
 #               send files/command to multy host 
 #               parallel fio test on clusters 
-# last edit :   20181025
-# version   :   cfiojobs0.12.13
+# last edit :   20181108
 ###########################################################
 
-script_version=0.12.15
+script_version=0.12.17
 
 STATUS=0
 function _stop_test(){
