@@ -207,6 +207,16 @@ def store_to_global(log_dict,key_index):
     lat_min     = log_dict['jobs'][0][rw_mode]['lat_ns']['min'] / 1000000
     lat_mean    = log_dict['jobs'][0][rw_mode]['lat_ns']['mean'] / 1000000
     lat_stddev  = log_dict['jobs'][0][rw_mode]['lat_ns']['stddev'] / 1000000
+    #clat_ns_key= log_dict['jobs'][0]['rw_mode']['clat_ns']['percentile'].values()
+    #clat_ms_seq_key =  map(lambda x: float(x), sorted(clat_ns_key))
+    #[0.0, 1.0, 10.0, 20.0, 30.0, 40.0, 5.0, 50.0, 60.0, 70.0, 80.0, 90.0, 95.0, 99.0, 99.5, 99.9, 99.95, 99.99]
+    clat_ns_seq = log_dict['jobs'][0][rw_mode]['clat_ns']['percentile'].values()
+    clat_ms_seq = map(lambda x: float(x) /1000000, sorted(clat_ns_seq))
+    #print(clat_ms_seq[0])
+    if clat_ms_seq[0] == 0.0 :
+        clat_ms_seq_str = ''.join(map(lambda x: ',' + str(x), clat_ms_seq[1:]))[1:]
+    else:
+        clat_ms_seq_str = ''.join(map(lambda x: ',' + str(x), clat_ms_seq))[1:]
     # update values to global dict
     update_value(pattern_name,'bw',_bw,_hostname,_filename)
     update_value(pattern_name,'iops',_iops,_hostname,_filename)
@@ -222,7 +232,7 @@ def store_to_global(log_dict,key_index):
     # store log info to global perf list
     #omit_stat   = '○'
     omit_stat   = u'○'.encode('GB2312')
-    perf_info = {'hostname':_hostname,'filename':_filename,'pattern_name':pattern_name,'iodepth':_iodepth,'bw':_bw,'iops':_iops,'stat':omit_stat,'lat_avg':lat_mean,'lat_max':lat_max,'lat_min':lat_min,'lat_stddev':lat_stddev,'util':_util,'size':_size,'runtime':_runtime,'direct':_direct,'numjobs':_numjobs,'ioengine':_ioengine}
+    perf_info = {'hostname':_hostname,'filename':_filename,'pattern_name':pattern_name,'iodepth':_iodepth,'bw':_bw,'iops':_iops,'stat':omit_stat,'lat_avg':lat_mean,'lat_max':lat_max,'lat_min':lat_min,'lat_stddev':lat_stddev,'util':_util,'size':_size,'runtime':_runtime,'direct':_direct,'numjobs':_numjobs,'ioengine':_ioengine,'clat_ms_seq_str':clat_ms_seq_str}
     perf_list.append(perf_info)
         
 # get value from json
@@ -313,7 +323,7 @@ def printf_perf_list(log_list,keys_of_log,csv_title,csv_name):
                 try :
                     field = str(log[key])
                 except KeyError:
-                    print('key missed:',log)
+                    print('key missed:',key,'\nlog:',log)
                     continue
                     field = 'x'
                 if key == 'util':
@@ -418,8 +428,14 @@ for blk_type in ['hdd','nvme','rbd']:
     #sheet_title  = 'hostname,filename,bs/pattern,bw(MiB/s),bw_global(MiB/s),deviation,stat,iops,iops_global,lat_avg(ms),lat_avg_global,lat_max,lat_min,iodepth,numjobs,util,size,runtime,ioengine\n'
     sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','deviation','stat','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
     if test_blk_type == 'rbd':
-        sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
-        sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
+        #clat_ms_seq_key = [0.0, 1.0, 10.0, 20.0, 30.0, 40.0, 5.0, 50.0, 60.0, 70.0, 80.0, 90.0, 95.0, 99.0, 99.5, 99.9, 99.95, 99.99]
+        #clat_ms_seq_key = ''join(map(lambda x: str(x) + '%,', clat_ms_seq_key))[:-1]
+        #clat_ms_seq_key = '0.0,1.0,10.0,20.0,30.0,40.0,5.0,50.0,60.0,70.0,80.0,90.0,95.0,99.0,99.5,99.9,99.95,99.99'
+        #clat_ms_seq_key = '0.0%,1.0%,10.0%,20.0%,30.0%,40.0%,5.0%,50.0%,60.0%,70.0%,80.0%,90.0%,95.0%,99.0%,99.5%,99.9%,99.95%,99.99%'
+        clat_ms_seq_key = '99.0%,90.0%,80.0%,70.0%,60.0%,95.0%,50.0%,40.0%,30.0%,20.0%,10.0%,5.0%,1.0%,0.5%,0.1%,0.05%,0.01%'
+        sheet_title_str = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),延迟值离散度(stdev),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎'
+        sheet_title = sheet_title_str.encode('GB2312') + ',' + clat_ms_seq_key + '\n'
+        sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','lat_stddev','iodepth','numjobs','util','size','runtime','ioengine','clat_ms_seq_str']
     elif test_blk_type == 'nocompare':
         sheet_title = u'主机名,测试设备,块大小/模式,测试带宽(MiB/s),每秒读写(iops),平均延迟(ms),最大延迟(ms),最低延迟(ms),iodepth,numjobs,util,size,runtime,ioengine\n'.encode('GB2312')
         sheet_keys  = ['hostname','filename','pattern_name','bw','iops','lat_avg','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
