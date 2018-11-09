@@ -1482,15 +1482,19 @@ function _host_fio_list(){
             host_name=$(_ssh_send 'echo $HOSTNAME')
             [[ ${#host_name} -gt 18 ]] && host_name="${host_name:0:18}.."
             # get args info
-            _ssh_send 'ps aux|grep fio|grep filename|grep -v grep' > $tmpfile
+            local blk_keywd="filename"
+            if _ssh_send 'ps aux |grep fio |grep rbdname  |grep -vq grep' ;then
+                local blk_keywd="rbdname"
+            fi
+            _ssh_send 'ps aux|grep fio|grep $blk_keywd |grep -v grep' > $tmpfile
             # get time info
-            _ssh_send "ps -aeo user,pid,etimes,args|grep fio|grep filename=|grep -v grep |awk '{for(i=3;i<4;i=i+1){printf \$i\" \"};printf \"\n\"}'|sort -u"  > $tmpfile2
+            _ssh_send "ps -aeo user,pid,etimes,args|grep fio|grep $blk_keywd|grep -v grep |awk '{for(i=3;i<4;i=i+1){printf \$i\" \"};printf \"\n\"}'|sort -u"  > $tmpfile2
             no_job=$(wc -l < $tmpfile) 
             job_pattern=$(awk -F "rw=" '{print$2}' $tmpfile |awk '{print$1}'|sort -u |sed ':label;N;s/\n/\ /;t label')
             job_bs=$(awk -F " -bs=" '{print$2}' $tmpfile |awk '{print$1}'|sort -u |sed ':label;N;s/\n/\ /;t label')
             max_runtime=$(awk -F "runtime=" "{print\$2}" $tmpfile|awk "{print\$1}"|sort -u |head -1)
-            disk_list=$(awk -F'filename=' '{print$2}' $tmpfile|awk '{print$1}'|sed 's/\/dev\///g' |sort -u |sed ':label;N;s/\n/\ /;t label')
-            no_disk=$(awk -F'filename=' '{print$2}' $tmpfile|awk '{print$1}' |sort -u |wc -l)
+            disk_list=$(awk -F"$blk_keywd" '{print$2}' $tmpfile|awk '{print$1}'|sed 's/\/dev\///g' |sort -u |sed ':label;N;s/\n/\ /;t label')
+            no_disk=$(awk -F"$blk_keywd" '{print$2}' $tmpfile|awk '{print$1}' |sort -u |wc -l)
             # nojobs running
             [[ -z $job_pattern ]] && job_pattern="none"
             # mixed read and write, no bs
