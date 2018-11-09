@@ -133,8 +133,8 @@ usage :
             $0 -g grp1 \"ls -l |awk '{print\\\$2}'\"
          or: 
             $0 -g grp1 \"ls -l |awk \\\"{print"'\\''\\\$2'"}\\\"\"
-       tips: awk variable is not shell variable, so there were three antislash inside curly braces,
-            first two antislash passed an '\\' to remote bash, and then the third is for the translating of the '\$'.
+       tips: awk variable is not bash shell variable, so there were three antislash inside curly braces,
+            first two antislash passed an '\\' to remote bash, and then the third is for translating the '\$'.
 
 4. FIO jobs control
     options:
@@ -516,6 +516,10 @@ function _pingfail(){
 function _sshfail(){
     # give ssh connection failed info 
     _red "  host:$host_ip ssh connection failed."
+}
+function _devfail(){
+    # give device check failed info 
+    _red "  host:$host_ip dev:$blk not a valid test device."
 }
 
 ##############################################################################################
@@ -1779,8 +1783,8 @@ function _group_pre_check(){
                         _error_interrupt && continue 
                         return 1
                     else
-                        _red "ERROR: NO successfull fio installation fonund on \"$1\" ! it is not possible to continue on this group !!"
-                        _red "test abort!"
+                        _red "ERROR: NO success signal of fio installation recived on \"$1\" ! it is not possible to continue on this group !!"
+                        _red "$date abort!"
                         exit 1
                     fi
                 else
@@ -1859,11 +1863,56 @@ function _group_blk_detect(){
         elif ! _format_conf $b_conf |grep -q ^$1 ;then 
             sed -i "$ s/\,//g" $tmpfile_grp_blk_detected 
             # show detected blk list 
-            _yellow "possible blk list of $1 for fio test:"
+            _yellow "\ncurrently nonpartitioned blk list of group $1:"
             cat $tmpfile_grp_blk_detected
+            echo ""
         fi
         # clean tmpfile 
         rm -f $tmpfile_grp_blk_detected
+}
+function _group_blk_precheck(){
+    #check if detected blk available on every host 
+    _yellow "group blk recheck:"
+    _parse_host_info "$1"
+local grp_blk_conf=$(dirname $0)/conf/$1".blk"
+if [[ -f $grp_blk_conf ]] ;then 
+    local blk_list=$(_format_conf $grp_blk_conf)
+    if [[ -n $blk_list ]] ;then 
+        local blk_list=${blk_list//,/ }
+        for host_ip in $ip_list;do
+            if ping -c 1 $host_ip &>/dev/null ;then
+                if _ssh_send 'whoami' &>/dev/null ;then
+                    #
+                    for blk in $blk_list ;do 
+                        _ssh_send "lsblk -p $blk" &>/dev/null 
+                        if [[ $? -ne 0 ]] ;then
+                            _devfail 
+                            sed -i "/^${blk//\//\\/}/s/$/ #this blk device is not valid on all host/" $grp_blk_conf
+                            sed -i "/^${blk//\//\\/}/s/^/#/" $grp_blk_conf
+                        elif [[ $(_ssh_send "lsblk -p $blk |wc -l") -ne 2 ]] ;then
+                            _devfail 
+                            sed -i "/^${blk//\//\\/}/s/$/ #this blk device is not valid on all host/" $grp_blk_conf
+                            sed -i "/^${blk//\//\\/}/s/^/#/" $grp_blk_conf
+                        fi 
+                        unset blk 
+                    done
+                else
+                    _sshfail 
+                fi
+            else
+                _pingfail 
+            fi &
+        done && wait 
+        # show blk list after recheck 
+        _yellow "currently valid blk list of $1:"
+        grep -v "^#" $grp_blk_conf || _red "  $grp_blk_conf :No valid block device for group: $1 !" 
+    else
+        _red "  $grp_blk_conf contains no valid block devices."
+    fi
+else 
+    echo "$grp_blk_conf not exist, skiped"
+fi 
+    echo "blk recheck done"
 }
 function round_report(){
     if [[ -n $job_batch_index ]]; then
@@ -2247,6 +2296,7 @@ done
         for host_group_name in $host_group_list ;do
             _group_pre_check $host_group_name
             _group_blk_detect $host_group_name
+            _group_blk_precheck $host_group_name 
         done
 # stop jobs of job round running.
     elif [[ $stop_fio == "True" ]] ;then
