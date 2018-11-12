@@ -79,7 +79,6 @@ def get_pattern_rows_map(data_work_book):
                 tmp_dict[pattern_name][work_sheet.title] = pattern_rows_range_dict[pattern_name]
     return tmp_dict 
 
-def workbook_
 
 # plot ScatterChart
 def draw_pattern_scatterchart(data_work_sheet, data_rows_seq, data_columns_list, chart_position, chart_title):
