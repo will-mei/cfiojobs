@@ -19,8 +19,8 @@ from openpyxl.chart._3d import View3D
 #from openpyxl.styles import Font 
 #from openpyxl.drawing.text import Paragraph,ParagraphProperties,CharacterProperties,LineProperties,Font
 # turn x axis line off 
-#from openpyxl.drawing.line import LineProperties
-#from openpyxl.chart.shapes import GraphicalProperties
+from openpyxl.drawing.line import LineProperties
+from openpyxl.chart.shapes import GraphicalProperties
 #from openpyxl.chart.axis import ChartLines
 #from openpyxl.chart.label import DataLabelList
 
@@ -78,7 +78,8 @@ def get_pattern_rows_map(data_work_book):
                 tmp_dict[pattern_name] = dict()
                 tmp_dict[pattern_name][work_sheet.title] = pattern_rows_range_dict[pattern_name]
     return tmp_dict 
- 
+
+def workbook_
 
 # plot ScatterChart
 def draw_pattern_scatterchart(data_work_sheet, data_rows_seq, data_columns_list, chart_position, chart_title):
@@ -86,7 +87,7 @@ def draw_pattern_scatterchart(data_work_sheet, data_rows_seq, data_columns_list,
     chart.title = str(chart_title)
     chart.legend.position = 't' 
     #chart.x_axis.title = 'samples from:' + data_work_sheet.title[0:21]
-    chart.x_axis.title = u'样本:' + data_work_sheet.title[0:23] + '..'
+    chart.x_axis.title = u'样本:' + data_work_sheet.title[0:25] + '..'
     #chart.x_axis.txPr =
     #chart_title_font = Font(name='Arial Narrow',size=12)
     chart.y_axis.title = 'lantency(ms)'
@@ -120,7 +121,7 @@ def draw_pattern_bubblechart(data_work_sheet, data_rows_seq, data_columns_list, 
     chart = BubbleChart()
     chart.title = str(chart_title)
     chart.style = 18
-    chart.x_axis.title = data_work_sheet.title[0:21] + '...samples'
+    chart.x_axis.title = data_work_sheet.title[0:25] + '...samples'
     chart.y_axis.title = 'lantency(ms)'
     #same sheet same sample width of chart
     xvalues = Reference(data_work_sheet, min_col=1, min_row=data_rows_seq[0], max_row=data_rows_seq[-1])
@@ -141,23 +142,37 @@ def draw_lateral_pattern_scatterchart(data_work_book, data_columns_list):
     # plot chart 
     column_num = 0
     for data_column in data_columns_list:
-        column_position = cu.decimal2alphabet(column_num *8 +1)
+        #column_position = cu.decimal2alphabet(column_num *8 +1)
+        column_position = cu.decimal2alphabet(column_num *9 +1)
         column_num = column_num +1
         # get pattern info in sheets combined together. 
         pattern_num = 0 
         for pattern_name in cu.pattern_filter(tmp_dict.keys()):
             # 4mwrite
-            row_position = str(pattern_num *16 +1)
+            #row_position = str(pattern_num *16 +1)
+            #row_position = str(pattern_num *22 +1)
+            row_position = str(pattern_num *26 +1)
             pattern_num = pattern_num +1
             chart_position = column_position + row_position
             #print(chart_position)
             # chart format 
             chart = ScatterChart()
+            #chart.height = 10 
+            chart.height = 12 
+            chart.width  = 17 
             chart.title = str(pattern_name)
             chart.legend.position = 't'
             tmp_sheet = tmp_dict[pattern_name].keys()[0]
             chart.x_axis.title = wb[tmp_sheet][str(cu.decimal2alphabet(data_column)) + '1'].value 
             chart.y_axis.title = 'latency(ms)'
+            # turn majorGridlines off using shapes.GraphicalProperties and drawing.LineProperties
+            #chart.y_axis.majorGridlines.spPr = GraphicalProperties(noFill = 'True')
+            #chart.y_axis.majorGridlines.spPr.ln = LineProperties(solidFill = '000000')
+            #chart.x_axis.majorGridlines = ChartLines()
+            chart.x_axis.majorGridlines.spPr = GraphicalProperties(noFill=True)
+            chart.x_axis.majorGridlines.spPr.ln = LineProperties(solidFill = 'F0F0F0')
+            #chart.dLbls = DataLabelList()
+            #chart.dLbls.showVal = 0
             # add info from different sheet for a certain pattern , 'sheet1':[n,n+1]
             line_set_info = tmp_dict[pattern_name]
             #print(line_set_info)
@@ -183,6 +198,8 @@ def draw_pattern_surfacechart(data_work_book, data_columns_list ):
         if data_work_sheet.title in ['Lateral Contrast LineChart', 'ScatterChart','SurfaceChart']:
             #print(work_sheet.title)
             continue 
+        if data_work_sheet[cu.decimal2alphabet(surface_columns[-1]) + '1'].value == None:
+            continue 
         column_position = cu.decimal2alphabet(column_num *8 +1)
         column_num = column_num +1
         pattern_num = 0 
@@ -199,10 +216,10 @@ def draw_pattern_surfacechart(data_work_book, data_columns_list ):
             chart.wireframe = True
             chart.legend.position = 'r'
             chart.title = str(pattern_name)
-            chart.x_axis.title = 'percentile:' + data_work_sheet.title[0:21] + '...'
+            chart.x_axis.title = 'percentile:' + data_work_sheet.title[0:25] + '...'
             chart.y_axis.title = 'latency(ms)'
             # change view3D property 
-            v3d = View3D(rotX=0.0, rotY=340L, depthPercent=150L, rAngAx=False, perspective=10L)
+            v3d = View3D(rotX=0.0, rotY=355L, depthPercent=150L, rAngAx=False, perspective=10L)
             #v3d.depthPercent = 20L
             chart.view3D = v3d 
             # turn majorGridlines off using shapes.GraphicalProperties and drawing.LineProperties
@@ -267,7 +284,12 @@ for csv in sys.argv[1:]:
     #    print(position)
         draw_pattern_scatterchart(wb[tmp_sheet_name], pattern_rows_range_dict[pattern_name], data_columns, chart_position, pattern_name)
 
-draw_pattern_surfacechart(wb, surface_columns)
+s=0
+for data_work_sheet in wb.worksheets:
+    if data_work_sheet[cu.decimal2alphabet(surface_columns[-1]) + '1'].value != None:
+        s = 1
+if s != 0 :
+    draw_pattern_surfacechart(wb, surface_columns)
 
 if len(sys.argv[1:]) > 1 :
     draw_lateral_pattern_scatterchart(wb, data_columns) 
