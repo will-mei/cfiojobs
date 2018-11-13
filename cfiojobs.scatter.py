@@ -86,7 +86,8 @@ def draw_pattern_scatterchart(data_work_sheet, data_rows_seq, data_columns_list,
     chart.title = str(chart_title)
     chart.legend.position = 't' 
     #chart.x_axis.title = 'samples from:' + data_work_sheet.title[0:21]
-    chart.x_axis.title = u'样本:' + data_work_sheet.title[0:25] + '..'
+    #chart.x_axis.title = u'样本:' + data_work_sheet.title[0:25] + '..'
+    chart.x_axis.title = data_work_sheet.title + '..'
     #chart.x_axis.txPr =
     #chart_title_font = Font(name='Arial Narrow',size=12)
     chart.y_axis.title = 'lantency(ms)'
@@ -120,7 +121,7 @@ def draw_pattern_bubblechart(data_work_sheet, data_rows_seq, data_columns_list, 
     chart = BubbleChart()
     chart.title = str(chart_title)
     chart.style = 18
-    chart.x_axis.title = data_work_sheet.title[0:25] + '...samples'
+    chart.x_axis.title = data_work_sheet.title + '..'
     chart.y_axis.title = 'lantency(ms)'
     #same sheet same sample width of chart
     xvalues = Reference(data_work_sheet, min_col=1, min_row=data_rows_seq[0], max_row=data_rows_seq[-1])
@@ -215,7 +216,8 @@ def draw_pattern_surfacechart(data_work_book, data_columns_list ):
             chart.wireframe = True
             chart.legend.position = 'r'
             chart.title = str(pattern_name)
-            chart.x_axis.title = 'percentile:' + data_work_sheet.title[0:25] + '...'
+            #chart.x_axis.title = 'percentile:' + data_work_sheet.title[0:25] + '...'
+            chart.x_axis.title = data_work_sheet.title + '..'
             chart.y_axis.title = 'latency(ms)'
             # change view3D property 
             v3d = View3D(rotX=0.0, rotY=355L, depthPercent=150L, rAngAx=False, perspective=10L)
