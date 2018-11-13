@@ -98,10 +98,10 @@ usage :
     $0 <options> [commands]
     options: 
             -t             check host group config file format.
-            -g group       run commands on certain groups in $g_conf
-            -a             run commands on all groups set
-            -x host        make an exception on these hosts
-            -X group       make an exception on these host groups 
+            -g groups      run commands on certain host groups in $g_conf (sep with comma)
+            -a             run commands on all host group set
+            -x hosts       make an exception on these hosts (sep with comma)
+            -X groups      make an exception on these host groups (sep with comma)
             -q             return only exit status of command.(be quiet and less output if no error occurred)
             -d             check and give function parameters, also, skip failue
             -f             skip failure and try to continue, if possible
@@ -139,12 +139,12 @@ usage :
 4. FIO jobs control
     options:
             --fio          launch a fio test
-            --test-stop    stop test on given host groups(stop all test and all jobs)
-            --fio-stop     stop all existinging fio jobs on given host groups (stop a round of jobs of a test)
             --fio-list     output summary info of fio jobs on given host groups
+            --fio-stop     stop all existinging fio jobs on given host groups (stop a certain round of jobs in test)
+            --test-stop    stop test on given host groups (stop all test and all jobs)
             --recover      recover an undone test form where it was interrupted (aborted, killed or cancled)
             --recover-from recover or restart the test form a given \"round number\" (and a certain \"blk group\")
-            --round-list   list all job round info with your test options and arguments
+            --round-list   list all job round info with your test options and arguments (launch no test)
             --round-retest retest a batch of jobs with a given \"round number\" (and a certain \"blk group\")
             -c             check test env, (network, ssh connections, fio installation, blk dev to test)
             -b             run fio jobs with given blk group in $b_conf
@@ -177,8 +177,8 @@ usage :
 
 5. File distribution
     options:
-            -F file        copy files to remote host
-            -C file        collect files from remote to local host
+            -F files       copy files(sep with comma) to remote host
+            -C files       collect files(sep with comma) from remote to local host
             -D dir         specify destination directory on remote host
 
     example: $0 -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
@@ -918,6 +918,28 @@ if  [[ $recover_test == "True" ]] || [[ $round_retest == "True" ]] ;then
     [[ -z $recover_blk_group_name ]] && local b_name="omited" || local b_name=\"$recover_blk_group_name\"
     _blue "recover point: blk_group_name: $b_name, job_batch_index: \"$recover_job_batch_index\""
 fi 
+}
+function _recover_blk_group(){
+                # recover 
+                [[ $recover_test == "True" ]] && [[ -n $recover_blk_group_name ]] && [[ $blk_group_name != $recover_blk_group_name ]] && continue 
+                # clean recover info after recovery
+                [[ $recover_test == "True" ]] && recover_blk_group_name=""
+                #_blue "recover from blk group: $blk_group_name"
+
+                # round retest 
+                [[ $round_retest == "True" ]] && [[ -n $recover_blk_group_name ]] && [[ $blk_group_name != $recover_blk_group_name ]] && continue 
+}
+function _recover_job_batch(){
+                # recover  
+                [[ $recover_test == "True" ]] && [[ -n $recover_job_batch_index ]] && [[ $job_batch_index != $recover_job_batch_index ]] && continue 
+                # clean recover info after recovery
+                [[ $recover_test == "True" ]] && recover_job_batch_index="" && recover_test="False"
+                # set new recover_info 
+                echo "$blk_group_name,$job_batch_index" > $output_dir/recover.log
+                #_blue "recover test batch from job Round_No: $job_batch_index"
+
+                # round retest 
+                [[ $round_retest == "True" ]] && [[ -n $recover_job_batch_index ]] && [[ $job_batch_index != $recover_job_batch_index ]] && continue 
 }
 ##############################################################################################
 # task preparation.
@@ -1838,7 +1860,7 @@ function _group_blk_detect(){
                         if ! grep -q $i $tmpfile_grp_blk_detected ;then 
                             # check it's size.
                             local tmp_blk_size=$(grep ^$i'\ ' $tmpfile_host_blk_detected |sort -u |awk '{if(NR==1)print$4}')
-                            [[ $tmp_blk_size == $host_root_size ]] && local disk_note=" # same size as the disk for system partition"
+                            [[ $tmp_blk_size == $host_root_size ]] && local disk_note=" # same size as root partition disk"
                             echo $i"," "$disk_note" >> $tmpfile_grp_blk_detected
                         fi
                     done
@@ -2349,33 +2371,16 @@ done
                 done
                 _tmp_quiet "off"
 
-                # recover 
-                [[ $recover_test == "True" ]] && [[ -n $recover_blk_group_name ]] && [[ $blk_group_name != $recover_blk_group_name ]] && continue 
-                # clean recover info after recovery
-                [[ $recover_test == "True" ]] && recover_blk_group_name=""
-                #_blue "recover from blk group: $blk_group_name"
-
-                # round retest 
-                [[ $round_retest == "True" ]] && [[ -n $recover_blk_group_name ]] && [[ $blk_group_name != $recover_blk_group_name ]] && continue 
+                _recover_blk_group
 
             #send job batchs to host groups
             for job_batch_index in $(seq 1 $total_round) ;do
                 # count number and give process info 
                 job_batch=${JOB_BATCH_ARRAY[$job_batch_index]}
-
                 # command_mode check 
                 [[ $job_batch_index -ge 2 ]] && [[ $command_mode != "always" ]] && CMD=""
 
-                # recover  
-                [[ $recover_test == "True" ]] && [[ -n $recover_job_batch_index ]] && [[ $job_batch_index != $recover_job_batch_index ]] && continue 
-                # clean recover info after recovery
-                [[ $recover_test == "True" ]] && recover_job_batch_index="" && recover_test="False"
-                # set new recover_info 
-                echo "$blk_group_name,$job_batch_index" > $output_dir/recover.log
-                #_blue "recover test batch from job Round_No: $job_batch_index"
-
-                # round retest 
-                [[ $round_retest == "True" ]] && [[ -n $recover_job_batch_index ]] && [[ $job_batch_index != $recover_job_batch_index ]] && continue 
+                _recover_job_batch
 
                 #exec on all groups
                 _yellow "\n$(date "+%Y-%m-%d_%H:%M:%S"): BLK ROUND $bround/$btotal, JOB ROUND $job_batch_index/$total_round EXECUTING ..."
