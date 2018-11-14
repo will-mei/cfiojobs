@@ -21,7 +21,7 @@ exec 0<&-
 }
 
 #calculate column width
-sep='+'
+sep='+-'
 declare -a WIDTH
 for i in $(seq 1 $col);do
     # sort width max in column
@@ -38,9 +38,10 @@ for i in $(seq 1 $col);do
     while [[ ${#tsep} -lt ${WIDTH[$i]} ]] ;do
         tsep+='-'
     done
-    tsep+='+'
+    tsep+='-+-'
     sep+="$tsep"
 done
+sep=${sep:0:-1}
 #echo $sep
 
 # print format table
@@ -60,7 +61,7 @@ while read LINE ;do
     #sep
     echo "$sep"
     #line start
-    echo -n "|"
+    echo -n "| "
     f_nu=0
     # field completion
     for field in ${LINE//,/ };do
@@ -79,7 +80,7 @@ while read LINE ;do
     #        echo -en " "
     #        wid_f=$[wid_f + 1]
     #    done
-        echo -n '|'
+        echo -n ' | '
     done
     echo ''
 done < $csv_file
