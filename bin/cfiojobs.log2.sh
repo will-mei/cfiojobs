@@ -38,7 +38,7 @@ for i in $(ls $LOGDIR) ;do
 done && wait 
 
 # clean old report 
-[[ -n $(ls $OUTPUTDIR/{*.csv,*.tar,*.json} ) ]] && [[ ! -d $OUTPUTDIR/old_report ]] && mkdir -p $OUTPUTDIR/old_report
+[[ -n $(ls $OUTPUTDIR/{*.csv,*.tar,*.json} 2>/dev/null ) ]] && [[ ! -d $OUTPUTDIR/old_report ]] && mkdir -p $OUTPUTDIR/old_report
 mv $OUTPUTDIR/*.csv $OUTPUTDIR/*.tar $OUTPUTDIR/*.json $OUTPUTDIR/old_report/ &>/dev/null  
 
 # make a report of the whole test.
