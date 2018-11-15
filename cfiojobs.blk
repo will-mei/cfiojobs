@@ -8,3 +8,5 @@ vd5     /dev/vdb,  #abcd
         /dev/vdf  #for kvm vm virtio driver
 
 ceph1 /dev/sdb
+
+rbd10 rbd001,rbd002,rbd003,rbd004,rbd005,rbd006,rbd007,rbd008,rbd009,rbd010

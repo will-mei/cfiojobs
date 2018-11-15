@@ -1,4 +1,5 @@
 # fio -bs=4m -size=100% -rw=randread -runtime=500 -ramp_time=30 -iodepth=32 -numjobs=2 -group_reporting -direct=1 -ioengine=libaio -time_based --output-format=json -filename=/dev/sdb -name=4m-randread-devsdb.log.json
+# fio -bs=4m -size=100% -rw=randread -runtime=500 -ioengine=rbd -clientname=admin -pool=rbd -ramp_time=30 -iodepth=32 -numjobs=2 -group_reporting -direct=1 -ioengine=libaio -time_based --output-format=json -rbdname=rbd060 -name=4m-randread-rbd060.log.json
 # "DEFAULT" job should be set, if any job with an empty customized_options exists.
 #
 #job_name   runtime data_size   block_size_range    read_write_pattern              inherit_args    "customized_options_args"
@@ -32,3 +33,4 @@ short       120     100%        4k,256k,4m          read,randread,write,randwrit
 # test
 seqr        120     100%        4k,256k,4m          read,randread                   True            "-iodepth=1  -numjobs=1"
 sseqr       80      100%        4k,4m               read                            True            "-iodepth=1  -numjobs=1"
+srbd        120     100%        4k,256k,4m          read,randread,write,randwrite   True            "-ioengine=rbd -clientname=admin -pool=rbd -iodepth=1 -numjobs=1"
