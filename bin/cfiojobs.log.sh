@@ -103,7 +103,7 @@ do
             if grep -q "disk_util" $fio_logfile || [[ $(cat $fio_logfile |wc -l) -gt 50 ]] ;then
                 :
             else
-                echo "$fio_logfile, json log info missing."
+                echo "warning: $fio_logfile, json log info missing."
                 continue
             fi
             # remove none json info

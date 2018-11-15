@@ -16,7 +16,11 @@ except IndexError:
     exit()
 # get value from json
 with open(json_logfile,'r') as log_file:
-    log_dict = json.load(log_file)
+    try :
+        log_dict = json.load(log_file)
+    except ValueError:
+        print('warning: ',json_logfile,'load failed, skiped!')
+        exit()
     #print(log_dict)
     fio_version = log_dict['fio version']
     _date       = time.strftime("%y%m%d",time.localtime(log_dict['timestamp']))
@@ -28,7 +32,10 @@ with open(json_logfile,'r') as log_file:
     _util       = log_dict['disk_util'][0]['util']
     _iodepth    = log_dict['global options']['iodepth']
     _rw         = log_dict['global options']['rw']
-    _filename   = log_dict['global options']['filename'].replace('/','')
+    try :
+        _filename   = log_dict['global options']['filename'].replace('/','')
+    except KeyError:
+        _filename   = log_dict['global options']['rbdname'].replace('/','_')
 # bs - dic
 def get_bs_dic(bs_str):
     #'2k/50:4k/20:256k/'
@@ -107,7 +114,7 @@ if _rw == "randrw":
     #print('bs dict of write:',bs_rw)
     #print('string of bs list:', bs_str(bs_rw))
     bs_percentage={'read':bs_rw,'write':bs_rw}
-    csv_name  = os.path.dirname(json_logfile) + '/fio-' + log_dict['global options']['filename'].replace('/','') + '.csv'
+    csv_name  = os.path.dirname(json_logfile) + '/fio-' + log_dict['global options']['filename'].replace('/','_') + '.csv'
     print(csv_name)
     with open(csv_name,'a+') as csv_file:
         csv_file.write('pattern_percentage(bs_percentage),iodepth,bw(MiB/s),iops,latency_max(ms),latency_avg(ms)\n')

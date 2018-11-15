@@ -241,13 +241,13 @@ def parse_json(fio_json_log):
         try:
             log_dict = json.load(log_file)
         except ValueError:
-            print(fio_json_log,' : fail to load fio json log, skiped')
+            print('warning:',fio_json_log,'load fio json log failed, skiped!')
             return 0
         #print(log_dict)
         if log_dict.has_key('disk_util'):
             pass
         else:
-            print(fio_json_log,': status abnormal, util value missing!')
+            print('warning:',fio_json_log,'status abnormal, util value missing, skiped!')
             return 0
         # skip hdd or nvme drive
         try :
@@ -368,7 +368,10 @@ def compare_with_global(perf_list):
         perf_log['iops_global']   = str(avg_iops) 
         perf_log['lat_avg_global'] = str(avg_lat)
         #   add deviation info to log
-        perf_log['deviation']   = str(round(v_bw/avg_bw * 100 ,2) ) + '%' 
+        if float(avg_bw) != 0.0 :
+            perf_log['deviation']   = str(round(v_bw/avg_bw * 100 ,2) ) + '%' 
+        else:
+            perf_log['deviation']   = 'NA'
         if v_bw < avg_bw * weak_index :
             #perf_log['stat']   = u'●'.encode('GB2312')
             #perf_list[index_log]['stat']        = '●'
