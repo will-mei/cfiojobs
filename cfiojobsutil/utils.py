@@ -13,6 +13,42 @@ def get_file_name(filename):
     (shortname,extension)  = os.path.splitext(tmpfilename)
     return filepath,shortname,extension
 
+def print_dic(dic):
+    #print('dict')
+    sep = '+'
+    title =  content = '|'
+    for i in dic:
+        if len(str(i)) > len(str(dic[i])):
+            sep     += '-' + '-' * (len(str(i)) +1) + '+'
+            title   += ' ' + str(i) + ' |'
+            content += ' ' + str(dic[i]) + ' '* (len(str(i)) - len(str(dic[i])) +1) + '|'
+        else:
+            sep     += '-' + '-'* (len(str(dic[i])) +1) + '+'
+            title   += ' ' + str(i) + ' '* (len(str(dic[i])) - len(str(i)) +1) + '|'
+            content += ' ' + str(dic[i]) + ' |'
+    print('',sep,'\n',title,'\n',sep,'\n',content,'\n',sep,'\n')
+
+# print a list of list with readable format 
+def print_array(ll):
+    #print('array')
+    len_max_list=list()
+    for i in ll:
+        len_l = map(lambda x :len(str(x)) , i)
+        if len(len_max_list) == 0:
+            len_max_list = len_l
+        else:
+            len_max_list = map(lambda x, y : max([x,y]), len_max_list,len_l)
+    sep = '+' + ''.join(map(lambda x : '-' + '-'*x + '-+', len_max_list ))
+    print(sep)
+    for i in ll:
+        if len(i) < len(len_max_list):
+            i += ['']* (len(len_max_list)-len(i))
+        s = '|' + ''.join(map(lambda x, y : ' ' + str(y) + ' '*(x-len(str(y))) + ' |' ,len_max_list,i))
+        print(s)
+        print(sep)
+        #
+
+#####################################################################################
 def decimal2alphabet(i):
     n = int(i)
     #print('input:',i)

@@ -118,7 +118,7 @@ do
             then
                # if randrw mode, python script will generate the log automaticlly
                python2 $json_script $fio_logfile
-               echo "mixed read and write skip single pattern anaylsing..."
+               #echo "mixed read and write skip single pattern anaylsing..."
                continue
             else
                 #normal pattern log
@@ -128,7 +128,7 @@ do
                 util=${job_info_list[2]%"."*}
                 #echo "iodepth:$IODEPTH util:$util"
                 if [[ "$util" -lt 1 ]] ;then
-                    echo -e "\e[31m value unavailable! \e[0m"
+                    echo -e "\e[31mwarning: $fio_logfile util value abnormal! \e[0m"
                     #IO="x"
                     IOPS="x"
                     BW="x"

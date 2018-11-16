@@ -4,6 +4,7 @@
 import re 
 import os
 import sys
+import json 
 import cfiojobsutil.utils as cu
 from openpyxl import Workbook
 from openpyxl.chart import (
@@ -25,13 +26,38 @@ from openpyxl.chart.shapes import GraphicalProperties
 #from openpyxl.chart.label import DataLabelList
 
 #print(sys.argv)
-#csv              = sys.argv[1]
 # column nuber(Natural number)
-key_column_num   = 3
-data_columns     = [8,10,11,12]
-#surface_columns  = map(lambda x: x , range(19,37))
-surface_columns  = map(lambda x: x , range(19,34))
-#data_columns     = [10,12,13]
+#key_column_num   = 3
+#data_columns     = [8,10,11,12]
+#surface_columns  = map(lambda x: x , range(19,34))
+
+# load config file 
+conf_file = sys.argv[0] + '.ini'
+if os.path.exists(conf_file) and os.path.isfile(conf_file):
+    pass
+else:
+    print('config file error!')
+    sys.exit(1)
+
+def load_conf(conf_file):
+    with open(conf_file,'r') as cf: 
+        try:
+            cf_dict = json.load(cf)
+        except ValueError:
+            print('warning: load json config file',cf,' failed, abort!')
+            sys.exit(1)
+    return cf_dict 
+
+try:
+    conf_dict = load_conf(conf_file)
+    key_column_num  = int(conf_dict['global options']['key_column_num'])
+    data_columns    = map(lambda x : int(x), conf_dict['global options']['data_columns'])
+    surf_col_range  = map(lambda x : int(x), conf_dict['global options']['surface_columns_range'])
+    surface_columns = map(lambda x : x , range(surf_col_range[0],surf_col_range[-1]))
+except:
+    print('config file format error!')
+    print(key_column_num,data_columns,surface_columns)
+    sys.exit(1)
 
 key_column_index = key_column_num -1
 key_column       = cu.decimal2alphabet(key_column_num)
@@ -260,6 +286,11 @@ def draw_pattern_surfacechart(data_work_book, data_columns_list ):
 # draw patter ScatterChart for each sheet 
 csv_num = 0
 for csv in sys.argv[1:]:
+    if os.path.isfile(csv):
+        pass
+    else:
+        print csv,': not a file!'
+        continue 
     # sheet name less than 30 letters 
     tmp_sheet_name = cu.get_file_name(csv)[1][0:30]
     #print(cu.load_csv(csv))

@@ -2,26 +2,49 @@
 # -*- coding:utf-8 -*-
 
 from __future__ import print_function
-import re
-import os
 import sys
 import json
 import time
-import datetime
-try:
-    import pyexcel as p
-except ImportError:
-    print("\npyexcel is not installed or the env is not yet activated.\n")
-    os.system('[[ ! -d vpy2 ]] && [[ -f vpy2.tar.xz ]] && echo "extract vpy2 files.." && tar xfJ vpy2.tar.xz ')
-    os.system('[[ -d vpy2 ]] && bash vpy2/bin/update_path_on_new_host.sh && echo -e "please run:\v\e[1;32m source vpy2/bin/activate\e[0m\n"')
-    exit()
-#finally:
 
 try:
     json_logfile    = sys.argv[1]
 except IndexError:
     print("this script requires a json format fio test log to run, please pass in the logfile name first.\n")
     exit()
+
+def print_dic(dic):
+    sep = '+'
+    title =  content = '|'
+    for i in dic:
+        if len(str(i)) > len(str(dic[i])):
+            sep     += '-' + '-' * (len(str(i)) +1) + '+'
+            title   += ' ' + str(i) + ' |'
+            content += ' ' + str(dic[i]) + ' '* (len(str(i)) - len(str(dic[i])) +1) + '|'
+        else:
+            sep     += '-' + '-'* (len(str(dic[i])) +1) + '+'
+            title   += ' ' + str(i) + ' '* (len(str(dic[i])) - len(str(i)) +1) + '|'
+            content += ' ' + str(dic[i]) + ' |'
+    print('',sep,'\n',title,'\n',sep,'\n',content,'\n',sep,'\n')
+
+# print a list of list with readable format 
+def print_array(ll):
+    len_max_list=list()
+    for i in ll:
+        len_l = map(lambda x :len(str(x)) , i)
+        if len(len_max_list) == 0:
+            len_max_list = len_l
+        else:
+            len_max_list = map(lambda x, y : max([x,y]), len_max_list,len_l)
+    sep = '+' + ''.join(map(lambda x : '-' + '-'*x + '-+', len_max_list ))
+    print(sep)
+    for i in ll:
+        if len(i) < len(len_max_list):
+            i += ['']* (len(len_max_list)-len(i))
+        s = '|' + ''.join(map(lambda x, y : ' ' + str(y) + ' '*(x-len(str(y))) + ' |' ,len_max_list,i))
+        print(s)
+        print(sep)
+        #
+
 
 # get value from json
 with open(json_logfile,'r') as log_file:
@@ -40,8 +63,8 @@ with open(json_logfile,'r') as log_file:
         _filename   = log_dict['global options']['filename'].replace('/','')
     except KeyError:
         _filename   = log_dict['global options']['rbdname'].replace('/','')
-    print(p.get_sheet(adict = log_dict['global options']))
-#    print(p.get_sheet(adict = log_dict['disk_util'][0]))
+    print('global options:')
+    print_dic(log_dict['global options'])
 
 # bs - dic
 def get_bs_dic(bs_str):
@@ -122,7 +145,8 @@ if _rw == "randrw":
         lat_mean  = log_dict['jobs'][0][rw_mode]['lat_ns']['mean'] / 1000000
     # output
         sheet     = [title, [_date,rw_mode+'('+_pattern+'%:'+_bs+')',_iodepth,_bw,_iops,lat_max,lat_mean,_util,fio_version]]
-        print(p.get_sheet(array=sheet))
+        print('main indices:')
+        print_array(sheet)
 else:
     _bs         = log_dict['global options']['bs']
     rw_mode     = _rw.split('rand')[-1:][0]
@@ -133,4 +157,5 @@ else:
     lat_mean    = log_dict['jobs'][0][rw_mode]['lat_ns']['mean'] / 1000000
     title       = ['date','bs_pattern','iodepth','bw(MiB/s)','iops','latency_max(ms)','latency_avg(ms)','util','fio_version']
     sheet=[title,[_date,_bs+_rw,_iodepth,_bw,_iops,lat_max,lat_mean,_util,fio_version]]
-    print(p.get_sheet(array=sheet))
+    print('main indices:')
+    print_array(sheet)
