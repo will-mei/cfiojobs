@@ -7,7 +7,8 @@ if [[ -z $3 ]] || [[ ! -f $3 ]] ;then
 fi
 
 fio -v &>/dev/null || yum -y install fio || exit 1
-mkdir -p $0-test
+outputdir="$0-test"
+mkdir -p $outputdir 
 #mkdir -p $4
 [[ $1 == "-p"  ]] && mode="&"
 
@@ -48,7 +49,7 @@ fio \
 -time_based \
 -group_reporting \
 --output-format=json  \
--name="2"-"$BS"-"$PATTERN"-"${RBD}".log.json &> "$0"-test/"$BS"-"$PATTERN"-"${RBD}".log.json $mode
+-name="2"-"$BS"-"$PATTERN"-"${RBD}".log.json &> "$outputdir"/"$BS"-"$PATTERN"-"${RBD}".log.json $mode
         done <$3
     done
 
