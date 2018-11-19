@@ -1,9 +1,10 @@
 #!/bin/bash
 
-job_group=quicknormal
+#job_group=quicknormal
+job_group=allmode
 if [[ -z $1 ]] ;then
     echo "test the group in grouplist single and/or parallel (default jobs: $job_group)."
-    echo "Usage: $0  <-s|-p|-all>" && exit 1
+    echo "Usage: nohup $0  <-s|-p|-all>  &>logfile.log" && exit 1
 fi
 
 timestamp=$(date +%Y%m%d)

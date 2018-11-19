@@ -2002,8 +2002,9 @@ function _group_blk_detect(){
                     tmpfile_host_blk_detected=$(mktemp)
                     # get all blk info form ssh 
                     _ssh_send "lsblk -ps" >$tmpfile_host_blk_detected
-                    #check blk device 
-                    local host_blk_detected=$(grep disk $tmpfile_host_blk_detected |grep -v "─" |awk '{print$1}')
+                    #check blk device     ## do not quote the slash '─', it's not ascii format ! 
+                    #local host_blk_detected=$(grep disk $tmpfile_host_blk_detected |grep -v ─ |awk '{print$1}')
+                    local host_blk_detected=$(grep disk $tmpfile_host_blk_detected |grep ^'/' |awk '{print$1}')
                     # get root disk info from root partition
                     local host_root_info=($(grep /$ $tmpfile_host_blk_detected))
                     [[ ${host_root_info[-2]} != "disk" ]] && local host_root_info=($(grep /$ -A1 $tmpfile_host_blk_detected|tail -1))
@@ -2017,7 +2018,7 @@ function _group_blk_detect(){
                         if ! grep -q $i $tmpfile_grp_blk_detected ;then 
                             # check it's size.
                             local tmp_blk_size=$(grep ^$i'\ ' $tmpfile_host_blk_detected |sort -u |awk '{if(NR==1)print$4}')
-                            [[ $tmp_blk_size == $host_root_size ]] && local disk_note=" # same size as root partition disk"
+                            [[ $tmp_blk_size == $host_root_size ]] && local disk_note=" # same size as disk of root partition"
                             echo $i"," "$disk_note" >> $tmpfile_grp_blk_detected
                         fi
                     done
