@@ -1644,7 +1644,8 @@ function _group_execute(){
     _unquiet "$1: execute action done." || echo " group stat : $check_stat"
 }
 function _host_fio_list(){
-        if ping -c1 $host_ip &>/dev/null && _ssh_send 'echo ok' &>/dev/null ;then
+    if ping -c1 $host_ip &>/dev/null ;then 
+        if _ssh_send 'echo ok' &>/dev/null ;then
             tmpfile=$(mktemp)
             tmpfile2=$(mktemp)
             host_stat=0
@@ -1688,14 +1689,18 @@ function _host_fio_list(){
             fi
             [[ -z "$disk_list" ]] && disk_list="none"
           #output
-        else
+      else
             host_stat=1
-            check_stat=1
-            host_name='unreachable :('
-            no_job='-' ;max_runtime='-' ;time_left='-' ;job_bs='-' ;job_pattern='-';no_disk='-' ;disk_list='-'
-        fi
+            host_name='ssh inaccessible :('
+      fi 
+    else
+            host_stat=1
+            host_name='ip unreachable :('
+    fi
         # check done
         if [[ $host_stat -eq 1 ]] ;then
+            check_stat=1
+            no_job='-' ;max_runtime='-' ;time_left='-' ;job_bs='-' ;job_pattern='-';no_disk='-' ;disk_list='-'
             printf "\e[1;31m%-21s%-16s%-6s%-12s%-12s%-8s%-11s%-9s%-30s\n\e[0m" "$host_name" "$host_ip" "$no_job" "$max_runtime" "$time_left" "$job_bs" "$job_pattern" "$no_disk" "$disk_list"
         else
             printf "%-21s%-16s%-6s%-12s%-12s%-8s%-11s%-9s%-30s\n" "$host_name" "$host_ip" "$no_job" "$max_runtime" "$time_left" "$job_bs" "$job_pattern" "$no_disk" "$disk_list"
@@ -1919,8 +1924,8 @@ function _group_pre_check(){
                            _blue "host:$host_ip, fio installing.."
                            # fio installing in background 
                            # install fio , makecache 
-                           if _ssh_send 'fio -v || yum makecache >/dev/null' ;then 
-                               _ssh_send 'fio -v || yum -y install librbd1 fio &>/dev/null &'
+                           if _ssh_send 'fio -v 2>/dev/null || yum makecache >/dev/null' ;then 
+                               _ssh_send 'fio -v 2>/dev/null || yum -y install librbd1 fio &>/dev/null &'
                                # get smartmontools installed
                                _verbose && _ssh_send 'smartctl -V &>/dev/null || yum -y install smartmontools &>/dev/null' & 
                            else
@@ -1967,12 +1972,12 @@ function _group_pre_check(){
                 fi
             else
                 # first round 
-                recheck=1
+                local recheck=1
                 _yellow "check status abnormal, start fio installation recheck ..."
             fi
             # clean tmpfile and recheck 
             rm -rf $tmpfile_precheck
-            _yellow "waiting fio installation ... "
+            _yellow "waiting fio installation (yum) ... "
             sleep 20
             _group_pre_check "$1"
         #elif grep -q 1 $tmpfile_precheck ;then
@@ -2029,7 +2034,7 @@ function _group_blk_detect(){
         echo check done 
         sleep 5
         if [[ ! -f $(dirname $0)/conf/$1".blk" ]] ;then 
-            cat $tmpfile_grp_blk_detected > $(dirname $0)/conf/$1".blk" 
+            sort -u $tmpfile_grp_blk_detected > $(dirname $0)/conf/$1".blk" 
             sed -i "$ s/\,//g" $(dirname $0)/conf/$1".blk"
             # show detected blk list 
             _yellow "new blk config file: $(dirname $0)/conf/$1.blk"
@@ -2330,6 +2335,10 @@ _waiting "read info" 10
     sleep 2
     fi
 }
+
+#############################################################################################
+# parameters parse and check, get test arguments info  and command 
+#############################################################################################
 #options check 
 [[ -z $1 ]] &&  _show_help_info && exit 0
 _parameter_set
