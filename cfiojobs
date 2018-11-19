@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.19
+script_version=0.12.18
 
 STATUS=0
 function _stop_test(){
@@ -1031,25 +1031,31 @@ function _rbd_expansion(){
         if [[ -n $1 ]] ;then 
             local i="host group: $host_group_name" 
         else
-            echo "group parallel test expansion"
+            #_blue "\ngroup parallel test expansion"
             local i="host groups: ${host_group_list// /, }" 
         fi 
         _yellow "\nRBD Distribution Info:"
         _blue "blk group: $blk_group_name, $i"
-        for k in ${!HOST_GROUP_RBD_DEV_ARRAY[*]};do
-            printf "%-24s%-15s\n" "host: $k " "| ${HOST_GROUP_RBD_DEV_ARRAY[$k]}"
+#echo keys: ${!HOST_GROUP_RBD_DEV_ARRAY[*]}
+#echo host: $all_ip_list
+        for k in ${all_ip_list};do
+            printf "%-24s%-15s\n" "host: ${k}" "| ${HOST_GROUP_RBD_DEV_ARRAY[$k]}"
         done
+        echo ''
     fi
 }
 function _show_rbd_expansion(){
     #test _rbd_expansion 
     if [[ $rbd_mode == "True" ]] ;then 
-        for blk_group_name in $blk_group_list;do 
-            for host_group_name in $host_group_list;do
-                _rbd_expansion $host_group_name 
+        if [[ $group_mode == "single" ]];then
+            for blk_group_name in $blk_group_list;do 
+                for host_group_name in $host_group_list;do
+                    _rbd_expansion $host_group_name 
+                done
             done
+        else
             _rbd_expansion 
-        done
+        fi
     fi 
 }
 function _get_iodepth_from_table(){
@@ -1635,7 +1641,7 @@ function _group_execute(){
         #[[ $send_fio != "True" ]] && rm -rf $tmpfile_exec_out # remove it in the end of script .
         #if some failed, read done, show status
         [[ $check_stat -eq 1 ]] && echo "$1 group execution partially failed." && _error_interrupt
-    _unquiet "$1 execute action done." || echo " group stat : $check_stat"
+    _unquiet "$1: execute action done." || echo " group stat : $check_stat"
 }
 function _host_fio_list(){
         if ping -c1 $host_ip &>/dev/null && _ssh_send 'echo ok' &>/dev/null ;then
@@ -1757,7 +1763,7 @@ if [[ -n $output_dir  ]] ;then
 #        _update_check_stat 1 $tmpfile_exec
 #    fi
     [[ $check_stat -ne 0 ]] && echo "$1 log harvest partially failed." && _error_interrupt
-    _unquiet "$1 log harvest done." || echo " group stat : $check_stat"
+    _unquiet "$1: log harvest done." || echo " group stat : $check_stat"
 else
     _red "empty output dir" && _verbose "jobinfo"
 fi
@@ -1791,7 +1797,7 @@ function _group_fio_stop(){
         done && wait
         check_stat=$(cat $tmpfile_stop)
         [[ $check_stat -eq 1 ]] && _error_interrupt
-    _unquiet "$1 round stop action done." || echo "stop stat: $check_stat" 
+    _unquiet "$1: round stop action done." || echo "stop stat: $check_stat" 
 }
 
 # stop test on a group
@@ -1833,7 +1839,7 @@ function _group_test_stop(){
         #check_stat=$(cat $tmpfile_stop)
         check_stat=$(sort -nr $tmpfile_exec |head -1)
         [[ $check_stat -ne 0 ]] && _error_interrupt
-    _unquiet "$1 stop action done." || echo "stop stat: $check_stat" 
+    _unquiet "$1: stop action done." || echo "stop stat: $check_stat" 
 }
 
 function _group_fio_check(){
@@ -1856,15 +1862,24 @@ function _group_fio_check(){
                 while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
                     sleep 30
                 done
+            # rbd test check
+            elif _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;then
+                while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
+                    sleep 30
+                done
             else
                 sleep 15
                 while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
                     sleep 30
                 done
+                # wait rbd
+                while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
+                    sleep 30
+                done
             fi &
         done && wait
     #[[ $check_stat -eq 1 ]] && _error_interrupt
-    _unquiet "$1 check action done."  # || echo " group stat : $check_stat" 
+    _unquiet "$1: check action done."  # || echo " group stat : $check_stat" 
 }
 function _group_pre_check(){
 # check and wait when fio jobs detected on a given host group
@@ -1966,7 +1981,7 @@ function _group_pre_check(){
         [[ -f $tmpfile_precheck ]] && rm -rf $tmpfile_precheck &>/dev/null 
         # if fio failed, no need to continue
         [[ $check_stat -eq 1 ]] && echo "$1 pre check partially failed." && _timeout 15 && _error_interrupt
-    _unquiet "host group $1 pre check action done. group stat : $check_stat " || echo " group $1 stat : $check_stat" 
+    _unquiet "host group $1: pre check action done. group stat : $check_stat " || echo " group $1 stat : $check_stat" 
 }
 function _group_blk_detect(){
 # detected possible target blk on a given host group
@@ -2071,7 +2086,7 @@ if [[ -f $grp_blk_conf ]] ;then
 else 
     echo "$grp_blk_conf not exist, skiped"
 fi 
-    echo "$1 blk recheck done"
+    echo "$1: blk recheck done"
 }
 function round_report(){
     if [[ -n $job_batch_index ]]; then
