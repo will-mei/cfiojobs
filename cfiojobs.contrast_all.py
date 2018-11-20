@@ -42,11 +42,11 @@ for i in range(len(source)) :
         #row.insert(9,  u'对照筛选状态'.encode('GB2312'))
         #row.insert(9,  u'是否合格(性能对比值不低于90%)'.encode('GB2312'))
         # 7+0
-        row.insert(7,  u'单盘独立测试平均带宽(MiB/s)(同一时间同一主机上，只测试一块磁盘，最后计算得出所有磁盘的带宽平均值)'.encode('GB2312'))
+        row.insert(7,  u'单盘独立测试的平均带宽(MiB/s)(同一时间同一主机上只测试一块磁盘，最后计算得出的所有磁盘的带宽平均值)'.encode('GB2312'))
         # 7+1
-        row.insert(8,  u'满盘并发时该盘带宽/单盘独立测试时带宽平均值的百分比(%)'.encode('GB2312'))
+        row.insert(8,  u'满盘并发时该盘带宽/单盘独立测试时的带宽平均值的百分比(%)'.encode('GB2312'))
         # 7+2
-        row.insert(9,  u'满盘并发时该盘带宽/单盘独立测试时带宽平均值的筛选状态(低于90%标为●，否则记为○)'.encode('GB2312'))
+        row.insert(9,  u'筛选状态(满盘并发时该盘带宽值/单盘独立测试时的带宽平均值;低于90%标为●否则记为○)'.encode('GB2312'))
         # 9+3
         row.insert(12, u'单盘独立测试的每秒读写(iops)平均值'.encode('GB2312'))
         # 11+4
@@ -116,7 +116,7 @@ for i in range(len(source)) :
     row.insert(7,avg_bw)
     row.insert(8,str_ratio)
     # change index value when deal with nvme disks
-    if row[1].split('/')[-1][0:4] == 'nvme'
+    if row[1].split('/')[-1][0:4] == 'nvme':
         reference_index = nvme_ref_index 
         #
     if   ratio >= reference_index * 100 :
