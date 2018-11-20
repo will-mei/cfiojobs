@@ -560,6 +560,7 @@ function _format_conf(){
     # 5. space/tab between comma and the line end '\n'
     # 6. cancle line switch, by remove '\n' after comma
     grep -vE "^$|^#" $configfile \
+    |sort -u \
     |sed -e 's/\t\+/\ /g' \
          -e 's/[ ]\+/\ /g' \
          -e 's/^[ ]\+//g' \
