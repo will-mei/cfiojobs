@@ -34,7 +34,7 @@ elif [[ $1 == "-all" ]] ;then
     group_test "single"
     wait_test
     for i in $(cat grouplist);do
-        [[ $(grep -vE "^$|^#" conf/$i'.blk' |sort -u |wc -l) -eq 1 ]] && continue
+        #[[ $(grep -vE "^$|^#" conf/$i'.blk' |sort -u |wc -l) -eq 1 ]] && continue
         ./cfiojobs.contrast2.sh $i"_parallel_"$timestamp $i"_single_"$timestamp
     done 
     tar czf test_"$timestamp"_report.tar.gz $(find ./ -type f -name *_all_host.csv) $(find ./ -type f -name *_all_host-contrast.csv)
