@@ -424,7 +424,7 @@ for blk_type in ['hdd','nvme','rbd']:
     # compare bw and iops value with global avg and give shortfall report
     perf_list = compare_with_global(perf_list)
     # set out put keys and title
-    sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值,"筛选状态(该盘带宽/同组所有磁盘带宽平均值;低于90%标为●否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
+    sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值(公式:(D2/E2)*100%),"筛选状态(该盘测试带宽值/同批次测试主机的所有同类型磁盘的带宽平均值;低于90%标为●否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
     #sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值,"该盘带宽/同组所有磁盘带宽平均值筛选状态(低于90%标为●，否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'
     #sheet_title = '主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),该测试带宽相对平均带宽的比值,同组筛选状态,该测试iops,测试iops平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'
     #sheet_title = 'hostname,device,bs_pattern,bw(MiB/s),bw_global,deviation(%),stat,iops,iops_global,lat_avg(ms),lat_avg_global(ms),lat_max(ms),lat_min(ms),iodepth,numjobs,util,size,runtime,ioengine\n'
