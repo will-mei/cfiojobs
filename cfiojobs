@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.22
+script_version=0.12.23
 
 STATUS=0
 function _stop_test(){
@@ -1818,9 +1818,10 @@ function _group_test_stop(){
         echo "  stop fio jobs on hosts..."
         tmpfile_stop=$(mktemp)
         #echo 0 >$tmpfile_stop
+        _update_check_stat 0 $tmpfile_stop
         for host_ip in $ip_list ;do
             # stop local process
-            local host_pid=$(ps aux |grep $host_ip|grep ssh |grep -v grep |awk '{print$2}')
+            local host_pid=$(ps aux |grep $(whoami) |grep $host_ip |grep ssh |grep -v grep |awk '{print$2}')
             [[ -n $host_pid ]] && kill $host_pid 
             # stop fio on host
             if ping -c2 $host_ip &>/dev/null ;then
@@ -1833,6 +1834,7 @@ function _group_test_stop(){
                     fi
                 else
                     _sshfail 
+                    _update_check_stat 1 $tmpfile_stop
                 fi
             else
                 _pingfail 
@@ -1843,7 +1845,7 @@ function _group_test_stop(){
 # if run in backgroud return will always be 0
         done && wait
         #check_stat=$(cat $tmpfile_stop)
-        check_stat=$(sort -nr $tmpfile_exec |head -1)
+        check_stat=$(sort -nr $tmpfile_stop |head -1)
         [[ $check_stat -ne 0 ]] && _error_interrupt
     _unquiet "$1: stop action done." || echo "stop stat: $check_stat" 
 }
