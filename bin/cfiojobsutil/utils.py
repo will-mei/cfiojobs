@@ -112,6 +112,17 @@ def load_csv(csv_file, sort_sheet=False, sort_column_index=0, reverse=True):
     else :
         return sheet_csv 
 
+def list2csv_row(line, sep=','):
+    return ''.join(map(lambda x: str(x) + sep , line ))
+
+# save array of list  as csv
+def save_csv(result, output_file):
+    with open(output_file,'w') as csv_out :
+        for i in result:
+            line = ''.join(map(lambda x: str(x) + ',' , line ))
+            csv_out.write(line)
+
+
 #####################################################################################
 # sort with fio pattern then data size
 def pattern_sort(str_list):

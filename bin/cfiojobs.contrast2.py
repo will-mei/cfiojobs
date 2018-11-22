@@ -13,7 +13,7 @@ try:
     single_csv      = sys.argv[2]
 #    output_file     = './test.xlsx'
 except IndexError:
-    print("this script contrast fio sing mode test report with parallel mode report, new report name: ./'test-contrast.csv'.\nand it requires: \n\t1. sing mode report csv filee \n\t2. parallel mode report csv file \n please pass in these names first.")
+    print("this script contrast fio sing mode test report with parallel mode report, new report name: ./'test-contrast.csv'.\nand it requires: \n\t1. parallel mode report csv filee \n\t2. single mode report csv file \n please pass in these names first.")
     exit()
 try:
     n= '-' + sys.argv[3] + '-report'
@@ -34,8 +34,8 @@ bad_stat   = u'●'
 err_stat   = u'…'
 stat_pool  = [ok_stat,bad_stat,err_stat]
 
-
-def tweens_report(dic_s, dic_p, ref_index, stat_list):
+# parallel first
+def tweens_report(dic_p, dic_s, ref_index, stat_list):
     result_array = list()
     # get parallel mode info
     for i in dic_p:
@@ -68,7 +68,7 @@ single_report   = cu.load_csv(single_csv)
 single_dict     = cu.array2dic(single_report, key_index_list)
 
 # contrast paralle to single
-result_sheet = tweens_report(single_dict, parallel_dict, reference_index, stat_pool)
+result_sheet = tweens_report(parallel_dict, single_dict, reference_index, stat_pool)
 #print(result_sheet)
 result_sheet.sort(key=lambda x : x[0], reverse=True )
 
@@ -119,6 +119,8 @@ for k in title_dict:
 # width = Chinese characters number * 2
 # width = ascii characters number * 1.1
 line_width_dict = {
+    'A':14.38,
+    'B':8.88,
     'c':11.5,
     'D':16.63,
     'E':18.13,

@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 
 from __future__ import print_function
-import os
+import os 
 import sys
 import json
 
@@ -15,8 +15,8 @@ except IndexError:
     exit()
 
 nvme_ref_index  = 0.9
-reference_index = 0.9
-reference_title = "单盘独立测试"
+ref_index       = 0.9
+ref_t           = u'单盘独立测试的'
 
 # load json report form file as a reference data source.
 with open(ref_json) as input_json:
@@ -34,37 +34,45 @@ with open(source_csv,'r') as f:
     for i in lines:
         source.append(i.split(','))
 
+title_col_dict1 = {
+        # 7+0        result.append(row)
+        7:  u'并发时带宽均值(MiB/s)',
+        # 7+1
+        8:  u'并发时该盘带宽/' + ref_t + u'带宽均值(%)',
+        # 7+2
+        9:  u'筛选状态'
+}
+title_col_dict2 = {
+        # 9+3
+        12: u'每秒读写(iops)平均值',
+        # 11+4
+        15: u'平均延迟平均值(ms)',
+        # 12+5
+        17: u'最大延迟平均值(ms)',
+        # 13+6
+        19: u'最低延迟平均值(ms)',
+        # 14+7
+        21: u'读写队列深度',
+        # 15+8
+        23: u'作业并发进程数',
+        # 16+9
+        25: u'设备使用率',
+        # 17+10
+        27: u'测试数据量',
+        # 18+11
+        29: u'测试时长'
+}
+for i in title_col_dict2:
+    title_col_dict2[i] = ref_t + title_col_dict2[i]
+title_col_dict = dict(title_col_dict1.items() + title_col_dict2.items())
+
 for i in range(len(source)) :
     row          = source[i]
     if i == 0 :
-        #row.insert(7,  u'对照带宽(MiB/s)'.encode('GB2312'))
-        #row.insert(8,  u'对照比值'.encode('GB2312'))
-        #row.insert(9,  u'对照筛选状态'.encode('GB2312'))
         #row.insert(9,  u'是否合格(性能对比值不低于90%)'.encode('GB2312'))
-        # 7+0
-        row.insert(7,  u'单盘独立测试的平均带宽(MiB/s)(同一时间同一主机上只测试一块磁盘，最后计算得出的所有磁盘的带宽平均值)'.encode('GB2312'))
-        # 7+1
-        row.insert(8,  u'满盘并发时该盘带宽/单盘独立测试时的带宽平均值的百分比(%)'.encode('GB2312'))
-        # 7+2
-        row.insert(9,  u'筛选状态(满盘并发时该盘带宽值/单盘独立测试时的带宽平均值;低于90%标为●否则记为○)'.encode('GB2312'))
-        # 9+3
-        row.insert(12, u'单盘独立测试的每秒读写(iops)平均值'.encode('GB2312'))
-        # 11+4
-        row.insert(15, u'单盘独立测试的平均延迟平均值(ms)'.encode('GB2312'))
-        # 12+5
-        row.insert(17, u'单盘独立测试的最大延迟平均值(ms)'.encode('GB2312'))
-        # 13+6
-        row.insert(19, u'单盘独立测试的最低延迟平均值(ms)'.encode('GB2312'))
-        # 14+7
-        row.insert(21, u'单盘独立测试的读写队列深度'.encode('GB2312'))
-        # 15+8
-        row.insert(23, u'单盘独立测试的作业并发进程数'.encode('GB2312'))
-        # 16+9
-        row.insert(25, u'单盘独立测试的设备使用率'.encode('GB2312'))
-        # 17+10
-        row.insert(27, u'单盘独立测试的测试数据量'.encode('GB2312'))
-        # 18+11
-        row.insert(29, u'单盘独立测试的测试时长'.encode('GB2312'))
+        for k in sorted(title_col_dict.keys()):
+            row.insert(k, title_col_dict[k].encode('GB2312'))
+        #print(row)
         result.append(row)
         continue
 # check pattern
@@ -78,21 +86,9 @@ for i in range(len(source)) :
     except KeyError:
         print('Warning:','%-10s' % pattern_name,'pattern info mismatch or missing')
         #stat     = 'Mismatch'
-        #stat     = u'×'.encode('GB2312')
-        stat     = u'…'.encode('GB2312')
-        row.insert(7,stat)
-        row.insert(8,stat)
-        row.insert(9,stat)
-        row.insert(12,stat)
-        row.insert(15,stat)
-        row.insert(17,stat)
-        row.insert(19,stat)
-        row.insert(21,stat)
-        row.insert(23,stat)
-        row.insert(25,stat)
-        row.insert(27,stat)
-        row.insert(29,stat)
-        result.append(row)
+        stat     = '…'
+        for i in title_col_dict1.keys + title_col_dict2.keys :
+            row.insert(i, stat)
         continue
     index_iops   = json_report[pattern_name]['iops']
     index_lat_avg= json_report[pattern_name]['latency_avg']
@@ -117,15 +113,14 @@ for i in range(len(source)) :
     row.insert(8,str_ratio)
     # change index value when deal with nvme disks
     if row[1].split('/')[-1][0:4] == 'nvme':
-        reference_index = nvme_ref_index 
+        ref_index = nvme_ref_index 
         #
-    if   ratio >= reference_index * 100 :
+    if   ratio >= ref_index * 100 :
         stat     = u'○'.encode('GB2312')
     elif ratio >= 75 :
         stat     = u'●'.encode('GB2312')
     else :
-        #stat     = u'✖'.encode('GB2312')
-        #stat     = u'✘'.encode('GB2312')
+        #stat     = u'✖'
         stat     = u'●'.encode('GB2312')
     row.insert(9,stat)
     #
@@ -143,6 +138,7 @@ for i in range(len(source)) :
     index_iops   = json_report[pattern_name]['iops']
     result.append(row)
     
+#print(result[0])
 # save as csv
 with open(output_file,'w') as csv_out :
     for i in result:

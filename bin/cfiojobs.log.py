@@ -68,6 +68,7 @@ def bs_re2str(a):
     return b
 
 # bs expr - dic
+#4k/50:256k/20:4m/30
 def bs_re2dict(bs_str):
     _bs_dic   = dict()
     for i in bs_str.split(':') :
