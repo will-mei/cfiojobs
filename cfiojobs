@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.24
+script_version=0.12.25
 
 STATUS=0
 function _stop_test(){
@@ -954,7 +954,12 @@ function _recover_job_batch(){
                 #_blue "recover test batch from job Round_No: $job_batch_index"
 
                 # round retest 
+            if [[ ${recover_job_batch_index/-/} == ${recover_job_batch_index} ]] ;then 
                 [[ $round_retest == "True" ]] && [[ -n $recover_job_batch_index ]] && [[ $job_batch_index != $recover_job_batch_index ]] && continue 
+            else 
+                [[ $round_retest == "True" ]] && [[ -n $recover_job_batch_index ]] && [[ $job_batch_index -lt ${recover_job_batch_index%-*} ]] && continue 
+                [[ $round_retest == "True" ]] && [[ -n $recover_job_batch_index ]] && [[ $job_batch_index -gt ${recover_job_batch_index#*-} ]] && continue 
+            fi 
 }
 ##############################################################################################
 # task preparation.
