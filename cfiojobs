@@ -927,7 +927,7 @@ if  [[ $recover_test == "True" ]] || [[ $round_retest == "True" ]] ;then
         _blue "Round retest starting..."
     fi
     # check format and give info 
-    if [[ ${recover_job_batch_index//[^0-9]/} != $recover_job_batch_index ]] ;then
+    if [[ ${recover_job_batch_index//[^0-9,-]/} != $recover_job_batch_index ]] ;then
         echo "$recover_job_batch_index: recover_job_batch_index format error!"
         exit 1
     fi
