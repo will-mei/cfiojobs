@@ -8,6 +8,24 @@ import os
 __author__ = 'william mei'
 
 #####################################################################################
+
+# store report to dict instead of list 
+def array2dic(sheet_array, key_index_list):
+    # key range set to field 1-3
+    tmp_dic = dict()
+    for line in sheet_array:
+        if len(line) < len(key_index_list):
+            continue 
+        # key = ip + dev(filename) + bs_pattern
+        tmp_list=list()
+        for l in key_index_list:
+            tmp_list += line[l] 
+        k = ''.join(tmp_list)
+        tmp_dic[k]=line 
+    return tmp_dic 
+
+#####################################################################################
+
 def get_file_name(filename):
     (filepath,tmpfilename) = os.path.split(filename)
     (shortname,extension)  = os.path.splitext(tmpfilename)
