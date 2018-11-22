@@ -97,27 +97,6 @@ for row in result_sheet:
 title_cell = 'A1:' + cu.decimal2alphabet(ws.max_column) + '1'
 #print(title_cell)
 
-
-####################################################################
-# set title fill 
-title_fill = PatternFill("solid", fgColor="FFA500")
-
-# set title border 
-bd       = Side(style='thin', color="000000")
-bd_round = Border(left=bd, top=bd, right=bd, bottom=bd)
-
-#highlight = NamedStyle(name="highlight")
-#highlight.font = Font(bold=True, size=12)
-#highlight.font = Font(bold=True)
-#highlight.border = bd_round
-
-for cell in ws[title_cell][0]:
-#for cell in ws['A1:L1'][0]:
-#    print(cell) 
-    cell.fill = title_fill
-    cell.border = bd_round
-    #cell.alignment = Alignment(wrap_text=False, shrink_to_fit=False, indent=0)
-
 ####################################################################
 title_dict = {
 'A1':'主机名',
@@ -137,11 +116,53 @@ for k in title_dict:
     ws[k].value = title_dict[k]
 
 ####################################################################
+# width = Chinese characters number * 2
+# width = ascii characters number * 1.1
+line_width_dict = {
+    'c':11.5,
+    'D':16.63,
+    'E':18.13,
+    'F':28.25,
+    'G':12.38,
+    'H':14.5,
+    'I':18.13,
+    'J':24.13,
+    'K':28.25,
+    'L':13.5
+}
+for k in line_width_dict:
+    ws.column_dimensions[k].width = line_width_dict[k]
+
+
+####################################################################
+# set title fill 
+title_fill = PatternFill("solid", fgColor="FFA500")
+
+# set title border 
+bd       = Side(style='thin', color="000000")
+bd_round = Border(left=bd, top=bd, right=bd, bottom=bd)
+
+#highlight = NamedStyle(name="highlight")
+#highlight.font = Font(bold=True, size=12)
+#highlight.font = Font(bold=True)
+#highlight.border = bd_round
+
+#for cell in ws[title_cell][0]:
+for cell in ws['A1:L1'][0]:
+#    print(cell) 
+    cell.fill = title_fill
+    cell.border = bd_round
+    cell.alignment = Alignment(wrap_text=True)
+    #cell.alignment = Alignment(wrap_text=False, shrink_to_fit=False, indent=0)
+
+
+####################################################################
 bold_font = Font(bold=True)
+
 font_dict = {
     'L1':bold_font
 }
-for k in bold_dict:
+for k in font_dict:
     ws[k].font = font_dict[k]
 
 ####################################################################
