@@ -1,6 +1,10 @@
 #!/bin/bash
 
-fio -v || yum -y install fio
+[[ -z $1 ]] && echo "\
+    Usage: nohup  $0 <-p | -s>  &>xxx.log 
+" && exit 1
+
+fio -v 1>/dev/null || yum -y install fio
 [[ $? -ne 0 ]] && exit 1
 
 outputdir="$0-test"
@@ -9,7 +13,7 @@ mkdir -p $outputdir
 
 bs_list="4k 256k 4m"
 pattern_list="read randread write randwrite"
-blk_list=$(lsblk -ps |grep disk |grep -v "─" |awk '{print$1}')
+blk_list=$(lsblk -ps |grep disk |grep -v ─ |awk '{print$1}')
 numjobs=2
 
 echo  "bs: ${bs_list// /,}" > "$outputdir"/fio-batch.log
