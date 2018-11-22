@@ -147,7 +147,8 @@ usage :
             --recover      recover an undone test form where it was interrupted (aborted, killed or cancled)
             --recover-from recover or restart the test form a given \"round number\" (and a certain \"blk group\")
             --round-list   list all job round info with your test options and arguments (launch no test)
-            --round-retest retest a batch of jobs with a given \"round number\" (and a certain \"blk group\")
+            --round-retest retest a batch of fio jobs with a given \"blk group name\" and \"round number\"
+                           the round range like: \"6-9\" or: \"blk8,6-9\" are both ok.
             -c             check test env, (network, ssh connections, fio installation, blk dev to test)
             -b             run fio jobs with given blk group in $b_conf
             -j             run fio job with given job group in $j_conf
