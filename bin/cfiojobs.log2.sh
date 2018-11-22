@@ -1,5 +1,6 @@
 #!/bin/bash
 [[ -z $1 ]] && echo "Usage: $0 <cluster fio logdir>" && exit 1
+
 function _yellow(){
     echo -e "\e[33m$@\e[0m"
 }
@@ -16,24 +17,49 @@ fi
 # output dir 
 OUTPUTDIR=$LOGDIR"/_report"
 [[ -d $OUTPUTDIR ]] || mkdir -p $OUTPUTDIR
+###############################################################
+trap "_close_pipe;exit 0" 1 2 15
+
+#set pipe 
+mkfifo /tmp/tmpfifo
+exec 100<>/tmp/tmpfifo
+rm -rf /tmp/tmpfifo
+
+function _close_pipe(){
+	# close pipe
+	exec 100>&-
+	exec 100<&-
+}
+
+for ((n=1;n<=100;n++))
+do
+	echo >&100
+done
+###############################################################
 
 # analise json log build csv sheet report for single device
 for i in $(ls $LOGDIR) ;do
-    [[ -f "$LOGDIR/$i" ]] && continue
-    [[ $i == "_report" ]] && continue
-    if ls $LOGDIR/$i/*.log.json >/dev/null ;then 
-        # err info os host logs 
-        grep ^fio: $LOGDIR/$i/*.log.json >> $OUTPUTDIR/${LOGDIR##*/}"_fio-err.log"  
-        sed -i "/^fio:/d" $LOGDIR/$i/*.log.json &>/dev/null 
-        # rebuild csv report of disks
-        rm -rf $LOGDIR/$i/*.csv 
-        bash $(dirname $0)/cfiojobs.log.sh  $LOGDIR/$i &
-        #cat $LOGDIR/$i/fio-err.log  > $OUTPUTDIR/${LOGDIR##*/}"_fio-err.log"
-        #bash ./catcsv.sh $LOGDIR/$i/*.csv
-    fi &
-    if grep -q rbdname $LOGDIR/$i/*.log.json ;then 
+    read -u 100
+    {
+        if [[ -f "$LOGDIR/$i" ]] || [[ $i == "_report" ]] ;then
+            :
+        elif ls $LOGDIR/$i/*.log.json >/dev/null ;then 
+            # err info os host logs 
+            grep ^fio: $LOGDIR/$i/*.log.json >> $OUTPUTDIR/${LOGDIR##*/}"_fio-err.log"  
+            sed -i "/^fio:/d" $LOGDIR/$i/*.log.json &>/dev/null 
+            # rebuild csv report of disks
+            rm -rf $LOGDIR/$i/*.csv 
+            bash $(dirname $0)/cfiojobs.log.sh  $LOGDIR/$i &
+            #cat $LOGDIR/$i/fio-err.log  > $OUTPUTDIR/${LOGDIR##*/}"_fio-err.log"
+            #bash ./catcsv.sh $LOGDIR/$i/*.csv
+        fi 
+        echo >&100
+    }&
+    if [[ -f "$LOGDIR/$i" ]] || [[ $i == "_report" ]] ;then
+        :
+    elif grep -q rbdname $LOGDIR/$i/*.log.json ;then 
         blk_type='rbd'
-        echo "info: there will be no lateral contrast on rbd performance test."
+        echo "info: there will be no lateral contrast on $LOGDIR/$i rbd performance test."
     fi 
 done && wait 
 
@@ -56,30 +82,3 @@ else
     exit 1
 fi
 
-###############################
-# auto excel 
-function _host_excel_report(){
-# generate excel format report for single host.
-if python3 -V &>/dev/null ;then
-    for  i in $(ls $LOGDIR) ;do
-        python3 $(dirname $0)/cfiojobs.excel.py  $LOGDIR/$i
-    done  || echo "python3 module pyexcel need to be installed"
-else
-    # show test report on stdout
-    #for i in $(ls $LOGDIR) ;do
-    #    bash ./catcsv.sh $LOGDIR/$i/*.csv
-    #done
-    # tips
-    echo "$(_yellow "Warning"): python3 is not installed on host, the excel report will not be generated."
-    # make excel report
-    echo -e "\e[34m 1. after pyexcel(python3) installed,
-            \r    to generate an excel report of the logs. you can use command:\n\e[0m
-            \rfor i  in \$(ls $LOGDIR); do
-            \r\tpython3 $(dirname $0)/cfiojobs.excel.py $LOGDIR/\$i
-            \rdone\n"
-    # catcsv.sh 
-    echo -e "\e[34m 2. if no python3 enviroment on host,
-            \r    to get a human readable preview of any csv sheet file in shell. you can use command:\n\e[0m
-            \r ./catcsv.sh <filename.csv> \n"
-fi
-}
