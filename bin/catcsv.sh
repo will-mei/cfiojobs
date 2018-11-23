@@ -22,12 +22,17 @@ exec 0<&-
 
 #calculate column width
 sep='+-'
+# array to save width of each column 
 declare -a WIDTH
+
+grep -q [^a-zA-Z0-9[:punct:]] $csv_file && has_doubl_width=1
+
 for i in $(seq 1 $col);do
     # sort width max in column
     #WIDTH[$i]=$(awk -F','  "{l=length(\$$i);if(l<1)l=1;print l}" $csv_file|sort -nr |head -1)
     # chinese double width charactors
-    if grep -q [^a-zA-Z0-9[:punct:]] $csv_file ;then
+    #if grep -q [^a-zA-Z0-9[:punct:]] $csv_file ;then
+    if [[ $has_doubl_width -eq 1 ]] ;then
         WIDTH[$i]=$(awk -F','  "{print\$$i}" $csv_file | _p_width |sort -nr |head -1)
     else
         #field with no chinese
@@ -44,6 +49,7 @@ done
 sep=${sep:0:-1}
 #echo $sep
 
+# use a delimeter inplace of space, '-' inplace of empty field 
 # print format table
 echo -e "\e[33m$csv_file \e[0m:"
 while read LINE ;do
@@ -52,13 +58,14 @@ while read LINE ;do
                            -e "s/^\,/_\,/g" \
                            -e "s/\,\,/\,_\,/g" \
                            -e "s/\,\,/\,_\,/g")
-    # calculate missing columns
+    # calculate missing (field)columns number 
     f=$(echo ${LINE//,/ } |wc -w)
+    # complete the short ones 
     while [[ $f -lt $col ]] ;do
         f=$[f + 1]
         LINE+=",_"
     done
-    #sep
+    # start with a sep line 
     echo "$sep"
     #line start
     echo -n "| "
@@ -67,7 +74,9 @@ while read LINE ;do
     for field in ${LINE//,/ };do
         # sep
         field="${field//TMPDELIMITEROFSPACE/ }"
-        # blank
+        local space="${field//[^ ]/}"
+        local l_space=${#space}
+        # blank column 
         [[ "$field" == '_' ]] && field=' '
     #    echo -n "${field}"
         f_nu=$[f_nu + 1]
@@ -75,7 +84,7 @@ while read LINE ;do
     #    wid_f=$(( ${#field} + ${#zhpart} )) 
         #wid_f=${#field}
         #printf "%-${WIDTH[$f_nu]}s" "${field}" 
-        printf "%-$(( ${WIDTH[$f_nu]} + ${#zhpart}))b" "${field}" 
+        printf "%-$(( ${WIDTH[$f_nu]} + ${#zhpart} - ${l_space}))b" "${field}" 
     #    while [[ $wid_f -lt ${WIDTH[$f_nu]} ]] ;do
     #        echo -en " "
     #        wid_f=$[wid_f + 1]

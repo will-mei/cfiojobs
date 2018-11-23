@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.32
+script_version=0.12.33
 
 STATUS=0
 function _stop_test(){
@@ -238,7 +238,7 @@ usage :
             -e             make examples of config file (when they do not exist)
             -v, --version  show version info
 
-    If an option requires an argument to work, you are not allowed to combine it with other options
+    If an option requires an argument to work, you are not allowed to combine it with other options,
     you can use :
 
             $0 -g <group name> -f -c 
@@ -578,27 +578,29 @@ fi
 }
 #----------------------------------------|continue here |-----------------------
 function _record_fail(){
-    local failure_stage="" # Round_No precheck list stop check 
-    local failure_stat="" # stat fio PATTERN / execute cmd 
-    local failure_host="$host_ip"
-    local failure_grp="$host_group_name"
-    local failure_type="${FUNCNAME[1]}" # parent function name # yum fio blk cmd net ssh 
-    local failure_time="$(date +%Y-%m-%d %H:%M:%S)"
-    local failure_obj=""  # blk cmd info 
-    echo "round_info,$host_ip,host_group_name,PATTERN/execute_mode,${FUNCNAME[1]},$(date +%Y-%m-%d %H:%M:%S),note" >>$output_dir/err.log 
+    if [[ $send_fio == "True" ]] || [[ -n $harvest_file_group_list  ]] ;then
+        local failure_time=$(date "+%Y-%m-%d %H:%M:%S")
+        local failure_type="${FUNCNAME[1]}" # parent function name 
+        [[ ${FUNCNAME[-2]} == "_fio_scale_control" ]] && local failure_stage=${FUNCNAME[-4]} || local failure_stage="${FUNCNAME[-2]}" # the last one is main 
+        [[ -z $job_batch_index ]] && failure_note="not in test" || local failure_note="round $job_batch_index"
+        echo "$failure_time,$host_group_name,$host_ip,$failure_stage,$failure_type,$failure_note" >>$output_dir/failure_host.csv  
+    fi 
 }
 function _pingfail(){
     # give unreachable host info
     _red "  host:$host_ip unreachable."
+    _record_fail
 }
 function _sshfail(){
     # give ssh connection failed info 
     _red "  host:$host_ip ssh connection failed."
+    _record_fail
 }
 function _devfail(){
     [[ -n $blk ]] && local dev_name=$blk || local dev_name=$BLK 
     # give device check failed info 
     _red "  host:$host_ip dev:$dev_name not a valid test device."
+    _record_fail
 }
 
 ##############################################################################################
