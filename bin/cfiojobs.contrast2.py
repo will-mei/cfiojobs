@@ -181,4 +181,10 @@ for k in comment_dict:
     cmt.width = 300
     ws[k].comment = cmt 
 
+####################################################################
+# freeze the first line 
+ws.freeze_panes = 'A2' 
+
+####################################################################
+
 wb.save(output_file)
