@@ -2430,6 +2430,25 @@ _parse_short_args(){
     while [[ $# -gt 0 ]] ;do
         case "$1" in
             #
+        "-v" )
+            echo "$0 $script_version"
+            exit 0
+            ;;
+        "-h" )
+            _show_help_info
+            exit 0
+            ;;
+        "-e" )
+            _make_conf_example
+            exit 0
+            ;;
+        "-l" )
+            _list_all_running_jobs
+            exit
+            ;;
+        "-a" )
+            _get_all_host_group
+            ;;
         "-t" )
             conf_check="True"
             ;;
@@ -2464,7 +2483,8 @@ _parse_short_args(){
             command_mode="always"
             ;;
         * )
-            _red "unknown options \"$1\""
+            _red "Error: wrong format for option \"$1\", please check again!"
+            echo "Use \"$0 -h\" to get more help."
             exit 1
             ;;
         esac
@@ -2511,9 +2531,6 @@ function _sep_and_parse(){
 #check option calculating result
 while [ $# -gt 0 ] ;do
     case "$1" in
-        "-a" )
-            _get_all_host_group
-            ;;
         "-g" )
             if [ $# -lt 2 ]
             then
@@ -2623,13 +2640,6 @@ while [ $# -gt 0 ] ;do
             fi
             shift
             ;;
-        "-l" )
-            _list_all_running_jobs
-            exit
-            ;;
-        #"--no-sys" )
-        #    no_sys_blk="True"
-        #    ;;
         "-F" )
             if [ $# -lt 2 ]
             then
@@ -2666,15 +2676,7 @@ while [ $# -gt 0 ] ;do
             fi
             shift
             ;;
-        "-h" )
-            _show_help_info
-            exit 0
-            ;;
-        "-e" )
-            _make_conf_example
-            exit 0
-            ;;
-        "-v"|"--version" )
+        "--version" )
             echo "$0 $script_version"
             exit 0
             ;;
