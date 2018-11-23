@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.31
+script_version=0.12.32
 
 STATUS=0
 function _stop_test(){
