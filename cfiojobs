@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.30
+script_version=0.12.31
 
 STATUS=0
 function _stop_test(){
@@ -543,8 +543,9 @@ function _sshfail(){
     _red "  host:$host_ip ssh connection failed."
 }
 function _devfail(){
+    [[ -n $blk ]] && local dev_name=$blk || local dev_name=$BLK 
     # give device check failed info 
-    _red "  host:$host_ip dev:$blk not a valid test device."
+    _red "  host:$host_ip dev:$dev_name not a valid test device."
 }
 
 ##############################################################################################
