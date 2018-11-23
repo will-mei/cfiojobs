@@ -101,7 +101,8 @@ usage :
             '$0 -e' will generate example configure files for you
 
 2. Run a short single cmd: 
-    $0 <options> [commands]
+
+            $0 <options> [commands]
 
             options: 
             -t             check host group config file format.
@@ -2423,17 +2424,95 @@ _waiting "read info" 10
 #options check 
 [[ -z $1 ]] &&  _show_help_info && exit 0
 _parameter_set
-#check option calculating result
-while [ $# -gt 0 ] ;do
-    case "$1" in
+# only individual arguments 
+_parse_short_args(){
+    #
+    while [[ $# -gt 0 ]] ;do
+        case "$1" in
+            #
         "-t" )
             conf_check="True"
             ;;
-        "-a" )
-            _get_all_host_group
-            ;;
         "-c" )
             pre_check="True"
+            ;;
+        "-q" )
+            quiet_mode="True"
+            ;;
+        "-d" )
+            pdebug="True"
+            ;;
+        "-f" )
+            tolerate="True"
+            ;;
+        "-p" )
+            p_exec="True"
+            ;;
+        "-s" )
+            test_mode="single"
+            ;;
+        "-S" )
+            group_mode="single"
+            ;;
+        "-r" )
+            rbd_mode="True"
+            ;;
+        "-A" )
+            execute_mode="After"
+            ;;
+        "-E" )
+            command_mode="always"
+            ;;
+        * )
+            _red "unknown options \"$1\""
+            exit 1
+            ;;
+        esac
+        shift 
+    done 
+}
+
+function _sep_and_parse(){
+#    echo "parse: $@"
+    while [[ $# -gt 0 ]] ;do
+        local alphabet=''
+        local args_set=''
+        case "$1" in
+            "-"* )
+                # start with a '-'
+                # one letter
+                alphabet=${1#*-}
+                # one charctor
+                if [[ ${#alphabet} -eq 1 ]] ;then 
+                    args_set+=' '$1
+                    shift 
+                    continue
+                fi 
+                # long combinations of letters 
+                # echo all short args : ${#alphabet}
+                for i in $(seq 0 $((${#alphabet} -1)) );do 
+                    #echo $i -${alphabet:$i:1}
+                    args_set+=' -'${alphabet:$i:1}
+                    #echo reparse ${alphabet:$i:1}
+                done
+                ;;
+            * )
+                # not start with a '-'
+                echo "format error: $1 is not an argument!"
+                exit 1
+                ;;
+        esac
+        shift
+    done
+    # do not quote the args set .
+    _parse_short_args $args_set
+}
+
+#check option calculating result
+while [ $# -gt 0 ] ;do
+    case "$1" in
+        "-a" )
+            _get_all_host_group
             ;;
         "-g" )
             if [ $# -lt 2 ]
@@ -2465,18 +2544,6 @@ while [ $# -gt 0 ] ;do
             #there will be a uniq element check, so redundant delimiter is fine here
             x_group_list+=" ${2//,/ }"
             shift
-            ;;
-        "-q" )
-            quiet_mode="True"
-            ;;
-        "-d" )
-            pdebug="True"
-            ;;
-        "-f" )
-            tolerate="True"
-            ;;
-        "-p" )
-            p_exec="True"
             ;;
         "--fio-list" )
             list_fio="True"
@@ -2556,24 +2623,9 @@ while [ $# -gt 0 ] ;do
             fi
             shift
             ;;
-        "-s" )
-            test_mode="single"
-            ;;
-        "-S" )
-            group_mode="single"
-            ;;
         "-l" )
             _list_all_running_jobs
             exit
-            ;;
-        "-r" )
-            rbd_mode="True"
-            ;;
-        "-A" )
-            execute_mode="After"
-            ;;
-        "-E" )
-            command_mode="always"
             ;;
         #"--no-sys" )
         #    no_sys_blk="True"
@@ -2617,19 +2669,24 @@ while [ $# -gt 0 ] ;do
         "-h" )
             _show_help_info
             exit 0
-           ;;
+            ;;
         "-e" )
-           _make_conf_example
-           exit 0
-           ;;
+            _make_conf_example
+            exit 0
+            ;;
         "-v"|"--version" )
-           echo "$0 $script_version"
-           exit 0
-           ;;
+            echo "$0 $script_version"
+            exit 0
+            ;;
         * )
-           #cmd none empty test is needed
-           [[ -z $CMD ]] && CMD="$1" || CMD+=" $1"
-           ;;
+            # one word or start with '-'
+            if [[ $(echo $1|wc -w) -gt 1 ]] || [[ ${1:0:1} != '-'  ]] ;then 
+                #cmd none empty test is needed
+                [[ -z $CMD ]] && CMD="$1" || CMD+=" $1"
+            else  
+                _sep_and_parse "$1"
+            fi 
+            ;;
     esac
     shift
 done
