@@ -16,7 +16,7 @@ usage :
 
 2. Run a short single cmd: 
 
-             ./cfiojobs <options> [commands]
+            ./cfiojobs <options> [commands]
 
             options: 
             -t             check host group config file format.
@@ -151,4 +151,15 @@ usage :
             -h             show this help info
             -e             make examples of config file (when they do not exist)
             -v, --version  show version info
+
+    If an option requires an argument to work, you are not allowed to combine it with other options
+    you can use :
+
+            ./cfiojobs -g <group name> -f -c 
+            or 
+            ./cfiojobs -g <group name> -fc 
+
+    but the option -g requires an argument of host group name, for this case, you cannot put them together!
+
+            ~~./cfiojobs -gfc <group name>~~
 

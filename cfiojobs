@@ -237,6 +237,17 @@ usage :
             -h             show this help info
             -e             make examples of config file (when they do not exist)
             -v, --version  show version info
+
+    If an option requires an argument to work, you are not allowed to combine it with other options
+    you can use :
+
+            $0 -g <group name> -f -c 
+            or 
+            $0 -g <group name> -fc 
+
+    but the option -g requires an argument of host group name, for this case, you cannot put them together!
+
+            ~~$0 -gfc <group name>~~
 "
 }
 
