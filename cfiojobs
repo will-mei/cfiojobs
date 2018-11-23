@@ -1516,7 +1516,8 @@ function _send_fio(){
                     log_name=$job_name-${BLK//\//}".log.json"
                     _verbose && echo "log name: $log_name"
                 else
-                    _red "host: $host_ip, blk or file : \"$BLK\" is not available on host!"
+                    #_red "host: $host_ip, blk or file : \"$BLK\" is not available on host!"
+                    _devfail 
                     _verbose "jobinfo"
                 fi
                 # ready to send
