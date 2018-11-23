@@ -129,7 +129,8 @@ usage :
             ./cfiojobs --fio -g grp1 -b vd5,blk8 -j rand1,mix1 -A "umount /dev/vdb" -o grp1_parallel_test01
 
     tips:
-    remanber to check the test env befor you start your fio test on a group:
+    
+    **remanber to check the test env befor you start your fio test on a group:**
            
 	   ./cfiojobs -g <group name> -f -c
 
