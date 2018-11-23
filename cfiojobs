@@ -85,8 +85,8 @@ j_conf="$0"".job"
 #help info 
 function _show_help_info(){
   echo -e "
-This script is a simple fio jobs and file distributer, you can also run commands on multy hosts with it.
-Remanber, you need passwordless ssh access permitions to all hosts, and use a comma as a delimiter when you have multiple group units.
+This script is a simple fio jobs and file distributor. You can also run commands on multiple hosts with it.
+Remenber, you need passwordless SSH access permssions for all hosts, and use a comma as a delimiter when you have multiple group units.
 
 usage :
 1. Edit your own host group, block group and fio job type settings in config files.
@@ -109,7 +109,7 @@ usage :
             -f             skip failure and try to continue, if possible
             -p             send commands and copy files execute in parallel
 
-   example: $0 -q -g grp1,grp2,grp3,grp4 \"systemctl status sshd ;ls abc\" -x 172.18.211.105
+   Example: $0 -q -g grp1,grp2,grp3,grp4 \"systemctl status sshd ;ls abc\" -x 172.18.211.105
       tips:
       say you want run the command:
             'ls -i' 
