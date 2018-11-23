@@ -159,7 +159,5 @@ usage :
             or 
             ./cfiojobs -g <group name> -fc 
 
-    but the option -g requires an argument of host group name, for this case, you cannot put them together!
-
-            ~~./cfiojobs -gfc <group name>~~
+    but the option -g requires an argument of host group name, for this case, you cannot put ~~ -gfc ~~ together!
 
