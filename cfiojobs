@@ -105,7 +105,7 @@ usage :
             -x hosts       make an exception on these hosts (sep with comma)
             -X groups      make an exception on these host groups (sep with comma)
             -q             return only exit status of command.(be quiet and less output if no error occurred)
-            -d             check and give function parameters, also, skip failue
+            -d             check and give function parameters, also, skip failure
             -f             skip failure and try to continue, if possible
             -p             send commands and copy files execute in parallel
 
@@ -522,6 +522,17 @@ _blue "\
 else
     [[ $pdebug == "True" ]] && return 0 || return 1
 fi
+}
+#----------------------------------------|continue here |-----------------------
+function _record_fail(){
+    local failure_stage="" # Round_No precheck list stop check 
+    local failure_stat="" # stat fio PATTERN / execute cmd 
+    local failure_host="$host_ip"
+    local failure_grp="$host_group_name"
+    local failure_type="${FUNCNAME[1]}" # parent function name # yum fio blk cmd net ssh 
+    local failure_time="$(date +%Y-%m-%d %H:%M:%S)"
+    local failure_obj=""  # blk cmd info 
+    echo "round_info,$host_ip,host_group_name,PATTERN/execute_mode,${FUNCNAME[1]},$(date +%Y-%m-%d %H:%M:%S),note" >>$output_dir/err.log 
 }
 function _pingfail(){
     # give unreachable host info
@@ -2036,6 +2047,13 @@ function _group_blk_detect(){
                             [[ $tmp_blk_size == $host_root_size ]] && local disk_note=" # same size as disk of root partition"
                             # [[ $? -eq 0 ]] && echo $i size $tmp_blk_size
                             echo $i"," "$disk_note" >> $tmpfile_grp_blk_detected  && disk_note=''
+                            # check if other data disk same size as root 
+                            local RootSize_nu=$(grep ^/ $tmpfile_host_blk_detected |grep $host_root_size|grep disk |wc -l)
+                            local AllDisk_nu=$(grep ^/ $tmpfile_host_blk_detected |grep disk |wc -l)
+                            #only one blk same size as root, and others not  
+                            if [[ $RootSize_nu -eq 2 ]] && [[ $AllDisk_nu -ge $RootSize_nu ]] ;then 
+                                sed -i "/^${i//\//\\/}/s/^/#/" $grp_blk_conf
+                            fi 
                         fi
                     done
                     rm -f $tmpfile_host_blk_detected
