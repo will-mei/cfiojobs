@@ -15,7 +15,8 @@ usage :
             './cfiojobs -e' will generate example configure files for you
 
 2. Run a short single cmd: 
-    ./cfiojobs <options> [commands]
+
+             ./cfiojobs <options> [commands]
 
             options: 
             -t             check host group config file format.
