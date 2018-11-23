@@ -152,7 +152,7 @@ usage :
             -e             make examples of config file (when they do not exist)
             -v, --version  show version info
 
-    If an option requires an argument to work, you are not allowed to combine it with other options
+    If an option requires an argument to work, you are not allowed to combine it with other options,
     you can use :
 
             ./cfiojobs -g <group name> -f -c 
