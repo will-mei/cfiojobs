@@ -10,7 +10,8 @@ usage :
 			2)     blocks list conf:   ./cfiojobs.blk
 			3)     jobs   list conf:   ./cfiojobs.job
 
-    tips: 
+    tips:
+    
             './cfiojobs -e' will generate example configure files for you
 
 2. Run a short single cmd: 
@@ -29,12 +30,12 @@ usage :
 
 
 
-
    Example: 
-            ./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.18.211.105
-      tips:
+
+		./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.18.211.105
       
-      say you want run the command:
+   tips:   
+   say you want run the command:
             
             'ls -i' 
 
@@ -42,12 +43,10 @@ usage :
             
             ./cfiojobs ls -i -g vmg1,grp3 -t -d
       
-            it is fine, because '-i' does not confilict with any options supported by this script,
-
-            but still we strongly recommend you write it this way:
-            ./cfiojobs "ls -i" -g vmg1,grp3 -t -d
-
-
+      it is fine, because '-i' does not confilict with any options supported by this script,
+      but still we strongly recommend you write it this way:
+           
+	   ./cfiojobs "ls -i" -g vmg1,grp3 -t -d
 
 
 3. Example of Some more complex situation. (how to use double/single quote to pass the complete cmd to script):
@@ -68,12 +67,14 @@ usage :
             ./cfiojobs  -g <grp name> "your command '$remote_env_viriable' " 
 
     example: 
+    
             ./cfiojobs -g grp1 "ls -l |awk '{print\$2}'"
          
         or: 
             ./cfiojobs -g grp1 "ls -l |awk \"{print\\\$2}\""
        
-        tips: 
+    tips: 
+    
             awk variable is not bash shell variable, so there were three antislash inside curly braces,
             first two antislash passed an '\' to remote bash, and then the third is for translating the '$'.
 
@@ -101,28 +102,36 @@ usage :
             -r             test on rbd blk.
 
     example: 
+    
             ./cfiojobs --fio -g grp1 -b vd5,blk8 -j rand1 -o test01 
             ./cfiojobs --fio-list -g group1 -p
     
-    you can have the current round info from script stdout or log file: "<output_dir>/recover.log", you can easyly 
-    recover the test with with a certin round point in test progress, say, to recover the previous test with blk 
-    target "blk8" and round "6", you can use the command :         
+    you can have the current round info from script stdout or log file:
+    
+    		"<output_dir>/recover.log",
+    you can easyly recover the test with with a certin round point in test progress, say, to recover the previous test with blk 
+    target "blk8" and round "6", you can use the command :     
+    
             ./cfiojobs --fio -g grp1 -b vd5,file8 -j rand1 --recover-from blk8,6 -o test01 
         
     or recover a test with only one blk group:
+    
             ./cfiojobs --fio -g grp1 -b vd5 -j rand1,mix1 --recover-from 6 -f -o test02 
         
     or recover the test from where you don't know:
+    
             ./cfiojobs --fio -g grp1 -b vd5 -j rand1,mix1 --recover -f -o test02 
         
     note:
+    
             when both the commands and fio jobs were running on a given host, they will be execute in parallel,
             but fio jobs will be send first by default, you can use '-A' to let command execute first.
             ./cfiojobs --fio -g grp1 -b vd5,blk8 -j rand1,mix1 -A "umount /dev/vdb" -o grp1_parallel_test01
 
     tips:
-        remanber to check the test env befor you start your fio test on a group:
-            ./cfiojobs -g <group name> -f -c
+    remanber to check the test env befor you start your fio test on a group:
+           
+	   ./cfiojobs -g <group name> -f -c
 
 5. File distribution
 
@@ -132,6 +141,7 @@ usage :
             -D dir         specify destination directory on remote host
 
     example: 
+    
             ./cfiojobs -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
 
 6. Help info
