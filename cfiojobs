@@ -1210,14 +1210,20 @@ ${JOB_ARGS_ARRAY[$job_group_name]} "
         local tmpfile_expansion=$(mktemp)
         local title="NO"
         local batch="PATTERN"
-        for index in $(seq 1 $total_round);do
+        if [[ $total_round -le 10 ]];then 
+            for index in $(seq 1 $total_round);do
             #
-            title+=",$index"
-            batch+=",${JOB_BATCH_NAME_ARRAY[$index]}"
-        done
-        echo -e "$title\n$batch" >$tmpfile_expansion 
+                title+=",$index"
+                batch+=",${JOB_BATCH_NAME_ARRAY[$index]}"
+            done
+            echo -e "$title\n$batch" >$tmpfile_expansion
+        else
+            for index in $(seq 1 $total_round);do
+                echo "$index,${JOB_BATCH_NAME_ARRAY[$index]}" >> $tmpfile_expansion 
+            done
+        fi 
         _yellow "round list:"
-        $(dirname $0)/catcsv.sh $tmpfile_expansion | sed 1d 
+        $(dirname $0)/bin/catcsv.sh $tmpfile_expansion | sed 1d 
         rm -f $tmpfile_expansion 
         [[ $round_list == "True" ]] && _show_rbd_expansion && exit 0 || _waiting "reading" 5
     fi
