@@ -78,10 +78,10 @@ result_sheet.sort(key=lambda x : x[0], reverse=True )
 wb=Workbook()
 ws=wb.active
 
-#get host number
+#get host number - title 
 h_list   = map(lambda x: x[0], result_sheet)
 u_list   = {}.fromkeys(h_list).keys()
-h_count  = len(u_list)
+h_count  = len(u_list) -1 
 
 #b_list   = map(lambda x: x[1], result_sheet)
 #ub_list  = {}.fromkeys(b_list).keys()
