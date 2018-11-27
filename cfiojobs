@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.34
+script_version=0.12.35
 
 STATUS=0
 function _stop_test(){
@@ -2122,10 +2122,12 @@ function _group_blk_detect(){
                             echo $i"," "$disk_note" >> $tmpfile_grp_blk_detected  && disk_note=''
                             # check if other data disk same size as root 
                             local RootSize_nu=$(grep ^/ $tmpfile_host_blk_detected |grep $host_root_size|grep disk |wc -l)
+#                            echo same root size disk number: $RootSize_nu
+#                            grep ^/ $tmpfile_host_blk_detected |grep $host_root_size|grep disk 
                             local AllDisk_nu=$(grep ^/ $tmpfile_host_blk_detected |grep disk |wc -l)
                             #only one blk same size as root, and others not  
-                            if [[ $RootSize_nu -eq 2 ]] && [[ $AllDisk_nu -ge $RootSize_nu ]] ;then 
-                                sed -i "/^${i//\//\\/}/s/^/#/" $grp_blk_conf
+                            if [[ $RootSize_nu -eq 1 ]] && [[ $AllDisk_nu -ge $RootSize_nu ]] ;then 
+                                sed -i "/^${i//\//\\/}/s/^/#/" $tmpfile_grp_blk_detected
                             fi 
                         fi
                     done
