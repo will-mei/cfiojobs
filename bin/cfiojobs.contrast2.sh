@@ -2,9 +2,11 @@
 
 # usage
 if [[ -z $2 ]] ;then
-	echo "Usage: $0 <parallel test log dir>  <single test log dir>"
+	echo "Usage: $0 <parallel test log dir>  <single test log dir>  <output excel file name>"
+    echo "the output excel file name can be omited"
     exit 1
 fi
+excel_name=$3
 
 # remove '/' in the end of dir name 
 [[ ${1:0-1:1} == "/" ]] && source_report_dir=${1%/*} || source_report_dir="$1"
@@ -29,7 +31,8 @@ for i in $(ls "$source_report_dir/_report/$source_report_name"*_all_host.csv) ;d
 	#reference_report_json="$reference_report_dir/_report/$reference_report_name"_"$type".json
     reference_report=$(ls "$reference_report_dir/_report/$reference_report_name"*_all_host.csv |grep $type)
 	if [[ -f $reference_report ]] ;then
-        $(dirname $0)/cfiojobs.contrast2.py $i $reference_report $type 
+        #$(dirname $0)/cfiojobs.contrast2.py $i $reference_report $type $excel_name 
+        $(dirname $0)/cfiojobs.contrast2 $i $reference_report $type $excel_name 
 	else
 		echo "$reference_report_name missing or mismatch."
 		echo "please check content in dir: $reference_report_dir/_report/ ."

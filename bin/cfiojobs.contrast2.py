@@ -6,6 +6,7 @@ import cfiojobsutil.utils as cu
 import sys
 # openpyxl packages
 from openpyxl import Workbook 
+from openpyxl import load_workbook
 from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill,Alignment,Border,Side
 try:
@@ -13,15 +14,29 @@ try:
     single_csv      = sys.argv[2]
 #    output_file     = './test.xlsx'
 except IndexError:
-    print("this script contrast fio sing mode test report with parallel mode report, new report name: ./'test-contrast.csv'.\nand it requires: \n\t1. parallel mode report csv filee \n\t2. single mode report csv file \n please pass in these names first.")
+    print("this script contrast fio sing mode test report with parallel mode report, new report name: ./'test-contrast.csv'.\nand it requires: \n\t1. parallel mode report csv filee \n\t2. single mode report csv file \n3. disk type \n4. excel name :xxx.xlsx \nplease pass in these names first.")
     exit()
+
 try:
     n= '-' + sys.argv[3] + '-report'
 except:
     n='-report'
     pass 
-output_file = cu.get_file_name(single_csv)[1][0:30].split('_')[0] + n + '.xlsx'
 
+# if output file name spcified
+try:
+    output_file = sys.argv[4]
+except:
+    output_file = cu.get_file_name(single_csv)[1][0:30].split('_')[0] + n + '.xlsx'
+# if output file an existing excel file 
+try:
+    # load and create a new 
+    wb = load_workbook(output_file)
+    wb.create_sheet(title='tmp_sheet')
+    ws = wb['tmp_sheet']
+except:
+    wb = Workbook()
+    ws = wb.active 
 
 reference_index = 0.9
 key_index_list  = [0,1,2]
@@ -75,8 +90,8 @@ result_sheet.sort(key=lambda x : x[0], reverse=True )
 
 
 ####################################################################
-wb=Workbook()
-ws=wb.active
+#wb=Workbook()
+#ws=wb.active
 
 #get host number - title 
 h_list   = map(lambda x: x[0], result_sheet)
@@ -87,8 +102,15 @@ h_count  = len(u_list) -1
 #ub_list  = {}.fromkeys(b_list).keys()
 #b_count  = len(ub_list)
 
+# change a new name 
 tmp_sheet_name = cu.get_file_name(single_csv)[1][0:30].split('_')[0] + '(' + str(h_count) + u'台' +  ')'
-ws.title = tmp_sheet_name 
+# check same name worksheet 
+if tmp_sheet_name in wb.sheetnames:
+    same_name_num=map(lambda x : tmp_sheet_name in x.title , wb).count(True)
+    tmp_sheet_name = tmp_sheet_name + str(same_name_num)
+    ws.title = tmp_sheet_name 
+else:
+    ws.title = tmp_sheet_name 
 
 for row in result_sheet:
         ws.append(row)

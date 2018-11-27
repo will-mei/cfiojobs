@@ -61,7 +61,11 @@ except:
 
 key_column_index = key_column_num -1
 key_column       = cu.decimal2alphabet(key_column_num)
-outputfile       = './' + cu.get_file_name(sys.argv[1])[1][0:30] + '-ScatterChart' + '.xlsx'
+try:
+    outputfile       = './' + cu.get_file_name(sys.argv[1])[1][0:30] + '-ScatterChart' + '.xlsx'
+except:
+    print'Usage:', sys.argv[0],'[rbd report csv file1 file2 file3 ...]'
+    sys.exit(1)
 
 wb  = Workbook()
 ws  = wb.active 

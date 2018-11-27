@@ -1,19 +1,22 @@
 #!/bin/bash
 
 #job_group=quicknormal
+timestamp=$(date +%Y%m%d)
+output_excel_name="test_fio_"$timestamp'.xlsx'
 job_group=allmode
 if [[ -z $1 ]] ;then
-    echo "test the group in grouplist single and/or parallel (default jobs: $job_group)."
-    echo "Usage: nohup $0  <-s|-p|-all>  &>logfile.log" && exit 1
+    echo "function: test the group in grouplist single and/or parallel"
+    echo "default fio test job group: $job_group "
+    echo "default excel report name : $output_excel_name"
+    echo -e "Usage: \vnohup $0  <-s|-p|-all>  <output excel file name>  &>logfile.log &" && exit 1
 fi
-
-timestamp=$(date +%Y%m%d)
+[[ -n $2 ]] && output_excel_name="$2"
 
 function group_test(){
     mode=$1
     [[ $mode == "single" ]] && mode_arg="-s"
     for i in $(cat grouplist);do
-        nohup ./cfiojobs -g $i -b $i -j $job_group -f $mode_arg --fio -o $i"_"$mode"_"$timestamp &> $i"_"$mode"_"$timestamp.log &
+        nohup $(dirname $0)/cfiojobs -g $i -b $i -j $job_group -f $mode_arg --fio -o $i"_"$mode"_"$timestamp &> $i"_"$mode"_"$timestamp.log &
     done
 }
 
@@ -35,7 +38,7 @@ elif [[ $1 == "-all" ]] ;then
     wait_test
     for i in $(cat grouplist);do
         #[[ $(grep -vE "^$|^#" conf/$i'.blk' |sort -u |wc -l) -eq 1 ]] && continue
-        ./cfiojobs.contrast2.sh $i"_parallel_"$timestamp $i"_single_"$timestamp
+        $(dirname $0)/bin/cfiojobs.contrast2.sh $i"_parallel_"$timestamp $i"_single_"$timestamp $output_excel_name 
     done 
     tar czf test_"$timestamp"_report.tar.gz $(find ./ -type f -name *_all_host.csv) $(find ./ -type f -name *_all_host-contrast.csv)
     tar czf test_"$timestamp".tar.gz *"$timestamp" *"$timestamp".log 
