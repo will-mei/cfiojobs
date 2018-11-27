@@ -66,8 +66,8 @@ j_conf="$0"".job"
     declare -A VALID_HOST_GROUP_INFO_ARRAY \
                      HOST_GROUP_USER_ARRAY \
                      HOST_GROUP_PORT_ARRAY \
-                     HOST_GROUP_TCMU_ARRAY \
-                     HOST_GROUP_CEPH_ARRAY \
+                     HOST_GROUP_BKND_ARRAY \
+                     HOST_GROUP_SH_MODE_ARRAY \
                      HOST_GROUP_IP_LIST_ARRAY 
 #
     declare -A       HOST_GROUP_RBD_DEV_ARRAY # host_name 
@@ -114,10 +114,13 @@ usage :
             -d             check and give function parameters, also, skip failure
             -f             skip failure and try to continue, if possible
             -p             send commands and copy files execute in parallel
+            --script       execute given scripts on host groups (sep with comma) 
+            --argument     pass given arguments(double quote multiple args) to each given script  
 
     Example: 
    
             $0 -q -g grp1,grp2,grp3,grp4 \"systemctl status sshd ;ls abc\" -x 172.18.211.105
+            $0 -q -g grp1,grp2,grp3,grp4 --script ./tmp/install.sh --argument \"-stable\" -x 172.18.211.105
 
     tips:
     say you want run the command:
@@ -133,6 +136,7 @@ usage :
 
             $0 \"ls -i\" -g vmg1,grp3 -t -d
 
+    if you have scripts with different argument to pass in, you'd better execute them separately.
 
 3. Example of Some more complex situation. (how to use double/single quote to pass the complete cmd to script):
 
@@ -255,7 +259,7 @@ function _make_conf_example(){
 # The IP address delimiter is a coma ','
 # tcmu/ceph backend can be an ip address or 'none' 
 #
-#grp        user    port    tcmu_bknd               ceph_bknd               ip_addr
+#grp        user    port    bknd_grps               bknd_mode               ip_addr
 grp0        root    5000    root,22,172.18.211.132  root,22,172.18.211.62   --     # use $(dirname $0)/conf/grp0.grp as ip list 
 grp1        root    22      172.18.211.132          none                    172.18.211.133,172.18.211.134  #running on esxi 
 
@@ -549,8 +553,8 @@ job  name: $job_name
 fio   cmd: $fio_cmd
 host_user: $host_user
 host_port: $host_port
-tcmu_bknd: ${tcmu_bknd}
-ceph_bknd: ${ceph_bknd}
+bknd_grps: ${bknd_grps}
+bknd_mode: ${bknd_mode}
 host list: ${ip_list}
 "
 #---------------------------------------------
@@ -750,6 +754,45 @@ function _get_all_host_group(){
         |sed ':label;N;s/\n/\ /;b label'
     )
 }
+function _group_check(){
+    # $1 host_group_name
+    local host_group_name=$1
+    local index_name_array=("host group name" "ssh user" "ssh port" "backend group" "backend script execute mode" "host ip list")
+        #get group info from conf file with keywords in column one.
+        local group_info=($(_format_conf $g_conf |grep ^$host_group_name[' '] ))
+                # 1. group_info check, more then 4 culumns, 
+                if [[ ${#group_info[@]} -gt 5 ]] ;then
+                # 2. if no missing columns, store into global array
+                       VALID_HOST_GROUP_INFO_ARRAY[$host_group_name]=${group_info[@]}
+                             HOST_GROUP_USER_ARRAY[$host_group_name]=${group_info[1]}
+                             HOST_GROUP_PORT_ARRAY[$host_group_name]=${group_info[2]}
+                             HOST_GROUP_BKND_ARRAY[$host_group_name]=${group_info[3]//,/ }
+                          HOST_GROUP_SH_MODE_ARRAY[$host_group_name]=${group_info[4]}
+                    # find ip list in config dir "conf/xxx.grp"
+                    if [[ ${group_info[5]} == '--' ]] ;then
+                        local host_conf=$(dirname $0)/conf/$host_group_name".grp"
+                        if [[ -f $host_conf ]] ;then
+                            HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ))
+                        else
+                            echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf\" is missing "
+                        fi
+                    else
+                          HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list ${group_info[5]//,/ })
+                    fi
+    #echo ${HOST_GROUP_IP_LIST_ARRAY[$host_group_name]}
+                else
+                # if group info lost, skip or exit
+                # 3. check from last, find last missing info index, and print its name.
+                    for index in {1..5} ;do
+                       [[ -z ${group_info[$index]} ]] && echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ${index_name_array[$index]} info missing!"
+                    done
+                    grp_stat=1
+                    # remove from host_group_list
+                    host_group_list=${host_group_list/$host_group_name/}
+                    _error_interrupt
+                fi
+            #group check done
+}
 function _host_group_check(){
 #veirify all host group from input, then store in array
 # grp_stat, 0: ok, 1: part failed, 2: all failed.
@@ -764,45 +807,11 @@ function _host_group_check(){
                 host_group_list=${host_group_list/$x_group/}
             done
         fi
-        index_name_array=("host group name" "ssh user" "ssh port" "tcmu backend" "ceph backend" "host ip list")
     #check group result after remove X group
         if [[ -n ${host_group_list// /} ]] ;then
             #validate every host group availability
             for host_group_name in ${host_group_list} ;do 
-            #get group info from conf file with keywords in column one.
-            group_info=($(_format_conf $g_conf |grep ^$host_group_name[' '] ))
-            # 1. group_info check, more then 4 culumns, 
-            if [[ ${#group_info[@]} -gt 5 ]] ;then
-            # 2. if no missing columns, store into global array
-                   VALID_HOST_GROUP_INFO_ARRAY[$host_group_name]=${group_info[@]}
-                         HOST_GROUP_USER_ARRAY[$host_group_name]=${group_info[1]}
-                         HOST_GROUP_PORT_ARRAY[$host_group_name]=${group_info[2]}
-                         HOST_GROUP_TCMU_ARRAY[$host_group_name]=${group_info[3]}
-                         HOST_GROUP_CEPH_ARRAY[$host_group_name]=${group_info[4]}
-                # find ip list in config dir "conf/xxx.grp"
-                if [[ ${group_info[5]} == '--' ]] ;then
-                    local host_conf=$(dirname $0)/conf/$host_group_name".grp"
-                    if [[ -f $host_conf ]] ;then
-                        HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ))
-                    else
-                        echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf\" is missing "
-                    fi
-                else
-                      HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list ${group_info[5]//,/ })
-                fi
-#echo ${HOST_GROUP_IP_LIST_ARRAY[$host_group_name]}
-            else
-            # if group info lost, skip or exit
-            # 3. check from last, find last missing info index, and print its name.
-                for index in {1..5} ;do
-                   [[ -z ${group_info[$index]} ]] && echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ${index_name_array[$index]} info missing!"
-                done
-                grp_stat=1
-                # remove from host_group_list
-                host_group_list=${host_group_list/$host_group_name/}
-                _error_interrupt
-            fi
-            #group check done
+                _group_check $host_group_name 
             done
             #after group check, if valid host group exists
             if [[ -z ${host_group_list// /} ]] ;then
@@ -1249,8 +1258,8 @@ function _parse_host_info(){
         current_host_group="$1"
         host_user="${HOST_GROUP_USER_ARRAY[$current_host_group]}"
         host_port="${HOST_GROUP_PORT_ARRAY[$current_host_group]}"
-        tcmu_bknd="${HOST_GROUP_TCMU_ARRAY[$current_host_group]}"
-        ceph_bknd="${HOST_GROUP_CEPH_ARRAY[$current_host_group]}"
+        bknd_grps="${HOST_GROUP_BKND_ARRAY[$current_host_group]}"
+        bknd_mode="${HOST_GROUP_SH_MODE_ARRAY[$current_host_group]}"
           ip_list="${HOST_GROUP_IP_LIST_ARRAY[$current_host_group]}"
 #echo $ip_list
           fio_cmd="${job_batch}"
@@ -1402,107 +1411,112 @@ if [[ -n $CMD ]] ;then
 fi
 }
 ##############################################################################################
-function _ssh_send_bknd(){
-    if [[ $# -lt 1 ]] ;then
-        echo "${FUNCNAME[@]} warning: no command to send!" 
-        continue
-    else
-        #ssh -t -q -n -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $bknd_user $bknd_ip -p $bknd_port "$@" 
-        ssh -T -q -n -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $bknd_user $bknd_ip -p $bknd_port "$@" 
-    fi 
-}
-function _ssh_bknd(){
-# input :
-#        $1 with 3 field : user,port,ip_of_backen_server(sep with comma)
-#        $2 is the source file and target dir 
-#        $3 is the command.
-#        $4 is the output file name.
-    # format completion
-    if [[ -n $1 ]]
-    then
-        [[ -z $2 ]] && echo "lost scripts info to send to backend server" && exit 1
-        [[ -z $3 ]] && echo "lost command info to send to backend server" && exit 1
-        [[ -z $4 ]] && echo "lost output log filename for backend server" && exit 1
-        if [[ $1 != "none" ]]
-        then
-            if [[ $(echo $1 |grep -o '\,'|wc -l) -eq 2 ]]
-            # 3 field, separated with 2 comma
-            then
-                # full format.
-                bknd_ip=${1##*,}
-                bknd_user=${1%%,*}
-                bknd_port=$(echo $1 |cut -d, -f2)
-            elif [[ ! $1 =~ "," ]]
-            # defautl user root, port 22
-            then 
-                # format completion for default field.
-                bknd_ip=${1}
-                bknd_user="root"
-                bknd_port=22
+function _host_ssh_script(){
+    # running script on remote host.
+if [[ -f $1 ]];then
+    local script_file=$1
+    if ping -c2 $host_ip  &>/dev/null ;then
+    # network and ssh connection test.
+        if _ssh_send "echo ssh ok" &>/dev/null ;then
+            #ssh -t -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$@"
+            if [[ $quiet_mode == "True" ]] ;then
+                cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "cat - |bash -s $2" &>/dev/null 
+                local script_stat=$?
+                echo "  $host_ip stat: $script_stat"
+                _update_check_stat $script_stat $tmpfile_script_host_out 
             else
-            # another barbarism format!!
-                echo "host group backend info, format error, $1"
+#                echo "1:$1 2:$2"
+                cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "cat - |bash -s $2"
+                local script_stat=$?
+                _update_check_stat $script_stat $tmpfile_script_host_out 
             fi
-#           shift
-            _unquiet "    send cmd/file to backend $bknd_ip ..."
-            # network and ssh connection test.
-            if ping -c2 $bknd_ip  &>/dev/null ;then
-                if _ssh_send_bknd "echo ssh ok" &>/dev/null ;then
-                    # copy file and run command after net and ssh test.
-                    file_stat=$(_ssh_send_bknd "test -f ${2#*[ ]}/${2%[ ]*}; echo $?")
-                    [[ $file_stat -eq 0 ]] || scp -P $bknd_port ${2%[ ]*} $bknd_user@$bknd_ip:${2#*[ ]} 
-                    #
-                    _ssh_send_bknd "${3}" &>"$4" &
-                    _unquiet "    task pid $! in background..." || echo "    task pid:$!"
-                else
-                    _red "bknd server $bknd_ip ssh connection failed!"
-                fi
-            else
-                _red "bknd server $bknd_ip is unreachable!"
-                #_error_interrupt
-            fi
-            _verbose bknddetail && _blue "\
-file: ${2%[ ]*}
-dir : ${2#*[ ]}
-cmd : $3
-log : $4
-" \
-&& _waiting "reading" 5
+        else
+            _sshfail
+            _update_check_stat 1 $tmpfile_script_host_out 
         fi
     else
-        echo "no host group backend server info recived!"
+        _pingfail
+        _update_check_stat 1 $tmpfile_script_host_out 
     fi
+else
+    _red "script file: $1 missing."
+fi
+}
+function _group_ssh_script(){
+# input :
+#        $1 host_group_name 
+#        $2 script file name 
+#          the output file name.
+_tmp_quiet "on"
+    _yellow "exec script:"
+    _parse_host_info "$1"
+    tmpfile_script_host_out=$(mktemp)
+    echo 0 > $tmpfile_script_host_out 
+    for host_ip in $ip_list;do 
+        if [[ $p_exec == "True" ]] || [[ $send_fio == "True" ]];then
+            _host_ssh_script $2 $3 &
+        else
+            _host_ssh_script $2 $3
+        fi
+#        echo "1:$1 2:$2 3:$3"
+    done && wait 
+    check_stat=$(sort -nr $tmpfile_script_host_out |head -1)
+    rm -rf $tmpfile_script_host_out
+    _unquiet "$1: execute script done." || echo " group stat : $check_stat"
+_tmp_quiet "off"
 }
 ####################################################
 # change for a different backend change this part
 ####################################################
-function _record_backend(){
-# collect backend tcmu and ceph
-# works when tcmu_bknd/ceph_bknd was set
-# no input.
-    if [[ -n ${JOB_RUNTIME_ARRAY[$job_group_name]} ]] 
-    then 
-        tcmu_runtime="$(expr ${JOB_RUNTIME_ARRAY[$job_group_name]} - 50 )"
-        ceph_runtime="${JOB_RUNTIME_ARRAY[$job_group_name]}"
-    else
-        echo "job group $job_group_name, job runtime recived err, value empty!"
-        exit 1
-    fi
-    tcmu_load_logfile=$job_name-tcmu_load.log
-    tcmu_iops_logfile=$job_name-tcmu_iops.log
-    ceph_iobw_logfile=$job_name-ceph_iobw.log
-    if [[ $tcmu_bknd != "none" ]] ;then
-        _ssh_bknd "$tcmu_bknd" "bin/cal_cpu_mem.sh /root/"         "bash /root/cal_cpu_mem.sh $tcmu_runtime"         "$log_dir/$tcmu_load_logfile"
-        _ssh_bknd "$tcmu_bknd" "bin/cal_tcmu_total_iops.sh /root/" "bash /root/cal_tcmu_total_iops.sh $tcmu_runtime" "$log_dir/$tcmu_iops_logfile"
-    else 
-        echo "    bknd partially skiped"
-    fi
-    if [[ $ceph_bknd != "none" ]] ;then
-        _ssh_bknd "$ceph_bknd" "bin/cal_ceph_bw_iops.sh /root/"    "bash /root/cal_ceph_bw_iops.sh $ceph_runtime"    "$log_dir/$ceph_iobw_logfile"
-    else 
-        echo "    bknd partially skiped"
-    fi
+function _record_bknd(){
+# $1 host_group_name 
+# works when bknd_grps/bknd_mode were set
+# run script on certain host group and there output will be collected with a name like: blk_group_name host_group_name job_group_name / pattern_name bknd_host script_name '.log' 
+# collect backend info like tcmu and ceph
+    _yellow "check bknd:"
+    _parse_host_info "$1"
+    # check bknd group name
     _verbose "bkndinfo" && _waiting "reading" 5
+    if [[ -n $bknd_grps ]] && [[ $bknd_grps != "none" ]] ;then 
+        if [[ -n ${JOB_RUNTIME_ARRAY[$job_group_name]} ]] ;then 
+            bknd_runtime="${JOB_RUNTIME_ARRAY[$job_group_name]}"
+        else
+            echo "job group $job_group_name, job runtime value empty!"
+            exit 1
+        fi
+#---------|add needed info which you want to pass to your script|-----------------------
+        #local bknd_sh_pass_in='' 
+        local bknd_sh_pass_in=$bknd_runtime 
+#----------------------------------------------------------------
+        for bknd_grp in $bknd_grps ;do 
+            # get host group info format 
+            _group_check $bknd_grp 
+            # get script info
+            local bknd_mode=${HOST_GROUP_SH_MODE_ARRAY[$bknd_grp]}
+            # check config file and content
+            local bknd_sh_conf=$(dirname $0)/conf/$bknd_grp'.bsh'
+            if [[ -f $bknd_sh_conf ]] ;then
+                local bknd_sh_list=$(grep -vE "^$|^#" $bknd_sh_conf)
+                if [[ -z ${bknd_sh_list// /} ]] ;then 
+                    _red "  bknd group:$bknd_grp script list conf empty, skiped."
+                    continue
+                fi 
+            else
+                _red "  bknd group:$bknd_grp scripts list file missing, skiped."
+                continue 
+            fi
+            # run script 
+            if [[ $bknd_mode == "local" ]] ;then
+                for i in ${bknd_sh_list} ;do
+                    bash $i $bknd_sh_pass_in &>/dev/null &
+                done
+            elif [[ $bknd_mode == "remote" ]] ;then 
+                for i in ${bknd_sh_list} ;do
+                    _group_ssh_script "$bknd_grp" "$i" "$bknd_sh_pass_in"
+                done 
+            fi
+        done
+    fi
 }
 ##############################################################################################
 function _host_fio_check(){
@@ -1630,10 +1644,6 @@ function _send_fio(){
                 || sed -i "s/^blk:.*$/&\,${BLK//\//}/g" $log_dir/fio-batch".log"
             #
             done
-            if [[ $tcmu_bknd != "none" ]] || [[ $ceph_bknd != "none" ]] ;then
-                _unquiet "  connect bknd server ..."
-                _record_backend
-            fi
         else
             _update_check_stat 1 $tmpfile_exec
             _red "   $host_ip, fio is not ready !"
@@ -1705,6 +1715,7 @@ function _group_execute(){
         # rm tmpfile_exec_out till fio test end, but clean content each round of test 
         [[ $send_fio == "True" ]] && echo -n "" >$tmpfile_exec_out 
         #echo  mkfile $tmpfile_exec_out 
+        # test host 
         echo 0 > $tmpfile_exec
         for host_ip in $ip_list ;do
              #ping check
@@ -2261,9 +2272,11 @@ function _execute_job_batch(){
                 _verbose "roundinfo" && _waiting "reading" 5
                 if [[ -z $1 ]] && [[ $group_mode == "parallel" ]];then 
                     for host_group_name in $host_group_list ;do
+                        _record_bknd $host_group_name 
                         _group_execute $host_group_name 
                     done && wait && _blue "round $job_batch_index all jobs distributed."
                 else
+                    _record_bknd $1
                     _group_execute $1
                     _blue "round $job_batch_index all jobs distributed."
                 fi 
@@ -2693,6 +2706,26 @@ while [ $# -gt 0 ] ;do
             fi
             shift
             ;;
+        "--script" )
+            if [ $# -lt 2 ]
+            then
+                echo "$0: --script requires a script file list.  multi names separated by comma."
+                STATUS=1
+                exit
+            fi
+            script_file_list_list+=" ${2}"
+            shift
+            ;;
+        "--argument" )
+            if [ $# -lt 2 ]
+            then
+                echo "$0: --argument requires a arg list.  multi args should be double quoted."
+                STATUS=1
+                exit
+            fi
+            script_argument_list+=" ${2}"
+            shift
+            ;;
         "--version" )
             echo "$0 $script_version"
             exit 0
@@ -2833,6 +2866,15 @@ done
         done
         # cleanning 
         rm -f $tmpfile_exec_out 
+    elif [[ -n ${script_file_list_list// /} ]] ;then
+        #
+        for host_group_name in $host_group_list ;do
+            _yellow "script: $script_file_list_list"
+            [[ -n $script_argument_list ]] && _yellow "argument: $script_argument_list"
+            for script_file_name in $script_file_list_list;do
+                _group_ssh_script $host_group_name $script_file_name "$script_argument_list" 
+            done
+        done
     else 
         _yellow "imcomplete agrs recived, nothing to do."
     fi

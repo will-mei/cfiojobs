@@ -28,10 +28,13 @@ usage :
             -d             check and give function parameters, also, skip failure
             -f             skip failure and try to continue, if possible
             -p             send commands and copy files execute in parallel
+            --script       execute given scripts on host groups (sep with comma) 
+            --argument     pass given arguments(double quote multiple args) to each given script  
 
     Example: 
    
             ./cfiojobs -q -g grp1,grp2,grp3,grp4 "systemctl status sshd ;ls abc" -x 172.18.211.105
+            ./cfiojobs -q -g grp1,grp2,grp3,grp4 --script ./tmp/install.sh --argument "-stable" -x 172.18.211.105
 
     tips:
     say you want run the command:
@@ -47,6 +50,7 @@ usage :
 
             ./cfiojobs "ls -i" -g vmg1,grp3 -t -d
 
+    if you have scripts with different argument to pass in, you'd better execute them separately.
 
 3. Example of Some more complex situation. (how to use double/single quote to pass the complete cmd to script):
 
