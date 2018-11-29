@@ -31,7 +31,8 @@ function _close_pipe(){
 	exec 100<&-
 }
 
-for ((n=1;n<=100;n++))
+#for ((n=1;n<=100;n++))
+for ((n=1;n<=30;n++))
 do
 	echo >&100
 done
