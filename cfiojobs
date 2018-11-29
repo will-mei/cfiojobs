@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.36
+script_version=0.12.37
 
 STATUS=0
 function _stop_test(){
@@ -1380,6 +1380,8 @@ if [[ -n $CMD ]] ;then
         _update_check_stat $cmd_stat $tmpfile_exec 
         #echo $tmpfile_exec_out 
         #[[ -f $tmpfile_exec_out ]] || echo ${FUNCNAME[@]} $tmpfile_exec_out is missing 
+        if [[ $cmd_stat -eq 0 ]] && [[ $(wc -l <$tmpfile_exec_host_out) -eq 0 ]] ;then 
+            :
         if [[ $cmd_stat -eq 0 ]] && [[ $(wc -l <$tmpfile_exec_out) -eq 0 ]] ;then 
             cat $tmpfile_exec_host_out > $tmpfile_exec_out 
             #_ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
@@ -1727,6 +1729,9 @@ function _group_execute(){
         done && wait 
         # read stat after all exec done
         check_stat=$(sort -nr $tmpfile_exec |head -1)
+        if [[ $check_stat -eq 0 ]] && [[ $(wc -l <$tmpfile_exec_out) -eq 0 ]] ;then 
+            echo "  group output is empty."
+        fi
         rm -rf $tmpfile_exec
         #echo rm file  $tmpfile_exec_out
         # rm tmpfile_exec_out after one round execution
