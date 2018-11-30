@@ -66,6 +66,7 @@ dev_name_index  = {'hdd':'dev',
                   }
 
 # calculate omit values in bs dict
+# 2k/50:256k/40:4m/,4k/50:8k/10,16k/ 
 def cal_omit_bs(bs_dic):
     count = 0
     total = 0

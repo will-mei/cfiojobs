@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.37
+script_version=0.12.38
 
 STATUS=0
 function _stop_test(){
@@ -34,6 +34,9 @@ if [[ $send_fio == "True" ]]  ;then
     done
 fi
     for i in ${!tmpfile*} ;do eval rm \$"$i" &>/dev/null ;done
+    for k in $(awk '{print$2}' $tmpfile_exec_diff) ;do 
+        [[ -f /tmp/$k ]] && rm -f /tmp/$k
+    done
 }
 trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _stop_test; exit $STATUS" 1 2 3 15
 #date=$(date "+%Y-%m-%d_%H:%M:%S")
@@ -1375,29 +1378,21 @@ if [[ -n $CMD ]] ;then
         tmpfile_exec_host_out=$(mktemp)
         #use virtual terminal and recive tty input.
         # echo "$host_ip :"
-        ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" &>$tmpfile_exec_host_out
+        ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
         local cmd_stat=$?
         _update_check_stat $cmd_stat $tmpfile_exec 
-        #echo $tmpfile_exec_out 
-        #[[ -f $tmpfile_exec_out ]] || echo ${FUNCNAME[@]} $tmpfile_exec_out is missing 
-        if [[ $cmd_stat -eq 0 ]] && [[ $(wc -l <$tmpfile_exec_host_out) -eq 0 ]] ;then 
-            :
-        if [[ $cmd_stat -eq 0 ]] && [[ $(wc -l <$tmpfile_exec_out) -eq 0 ]] ;then 
-            cat $tmpfile_exec_host_out > $tmpfile_exec_out 
-            #_ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
-            _segline "group: \"$current_host_group\" command std output"
-            cat $tmpfile_exec_host_out
-            _segline "group: \"$current_host_group\" command output end"
-            echo ""
-        elif [[ -n $(diff $tmpfile_exec_out $tmpfile_exec_host_out) ]] ;then
-            _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
-            _segline "$host_ip  stdout"
-            cat $tmpfile_exec_host_out
-            _segline "$host_ip cmd end"
-            echo ""
+    #if [[ -n $(cat $tmpfile_exec_host_out) ]] ;then _green not empty ;else  echo empty log file ;fi
+        # empty output 
+        if [[ $(wc -l <$tmpfile_exec_host_out) -eq 0 ]] ;then 
+                echo "$host_ip empty $cmd_stat" >> $tmpfile_exec_diff 
+                touch /tmp/empty 
+        # not empty output 
         else
-            _blue "  $host_ip same output as common" # "group: \"$current_host_group\" \n"
-        fi
+            local content_sum=$(cat $tmpfile_exec_host_out |md5sum |awk '{print$1}')
+            echo "$host_ip $content_sum $cmd_stat" >> $tmpfile_exec_diff 
+            touch /tmp/$content_sum
+            flock /tmp/$content_sum cat $tmpfile_exec_host_out > /tmp/$content_sum 
+        fi 
         rm -rf $tmpfile_exec_host_out 
     else 
         # do not merge output 
@@ -1407,6 +1402,7 @@ if [[ -n $CMD ]] ;then
         local cmd_stat=$?
         _update_check_stat $cmd_stat $tmpfile_exec 
         _segline "$host_ip cmd end"
+        echo "$host_ip empty $cmd_stat" >> $tmpfile_exec_diff 
     fi
 #else
 #    _unquiet "    no command to run."
@@ -1706,6 +1702,27 @@ function _exec_all(){
         _update_check_stat 1 $tmpfile_exec
     fi
 }
+function _count_return(){
+    # ip + filename + result sum value + cmd_stat 
+    # calculate output of different host  
+    local sum_list=$(awk '{print$2}' $tmpfile_exec_diff |sort -u )
+    local sn=0
+    for k in $sum_list ;do
+        sn=$[sn + 1]
+        # count content_sum 
+        local host_k="$(grep $k $tmpfile_exec_diff |awk '{print$1}')"
+        # give ip list which share a same content_sum
+        local host_num_k=$(grep $k $tmpfile_exec_diff |wc -l )
+        # output this type of content 
+        _yellow "\n $host_num_k host returned same as No. $sn"
+        for i in ${host_k};do echo -ne "$i\t" ;done ;echo ""
+        _segline "output No. $sn"
+            cat /tmp/$k 
+        _segline "end of No. $sn "
+        echo ""
+        # rm tmpfile 
+    done 
+}
 function _group_execute(){
 # files/command/jobs was set
 # blk_group_name was set (when lunch a test on cluster.)
@@ -1713,10 +1730,7 @@ function _group_execute(){
     _yellow "execute:"
     _parse_host_info "$1"
         tmpfile_exec=$(mktemp)
-        [[ -z $tmpfile_exec_out ]] && tmpfile_exec_out=$(mktemp)
-        # rm tmpfile_exec_out till fio test end, but clean content each round of test 
-        [[ $send_fio == "True" ]] && echo -n "" >$tmpfile_exec_out 
-        #echo  mkfile $tmpfile_exec_out 
+        [[ -z $tmpfile_exec_diff ]] && tmpfile_exec_diff=$(mktemp)
         # test host 
         echo 0 > $tmpfile_exec
         for host_ip in $ip_list ;do
@@ -1729,13 +1743,14 @@ function _group_execute(){
         done && wait 
         # read stat after all exec done
         check_stat=$(sort -nr $tmpfile_exec |head -1)
-        if [[ $check_stat -eq 0 ]] && [[ $(wc -l <$tmpfile_exec_out) -eq 0 ]] ;then 
-            echo "  group output is empty."
-        fi
-        rm -rf $tmpfile_exec
-        #echo rm file  $tmpfile_exec_out
-        # rm tmpfile_exec_out after one round execution
-        #[[ $send_fio != "True" ]] && rm -rf $tmpfile_exec_out # remove it in the end of script .
+        # show different output 
+        _count_return
+        # clean up tmp file 
+        for k in $(awk '{print$2}' $tmpfile_exec_diff) ;do 
+            [[ -f /tmp/$k ]] && rm -f /tmp/$k
+        done
+#cat $tmpfile_exec_diff
+        rm -rf $tmpfile_exec $tmpfile_exec_diff
         #if some failed, read done, show status
         [[ $check_stat -eq 1 ]] && echo "$1 group execution partially failed." && _error_interrupt
     _unquiet "$1: execute action done." || echo " group stat : $check_stat"
@@ -2852,7 +2867,6 @@ done
 
         # cleanning recover log when test is done 
         rm -f $output_dir/recover.log  
-        rm -f $tmpfile_exec_out 
         _fio_group_report 
 
         # end info
@@ -2872,7 +2886,6 @@ done
             _group_execute $host_group_name
         done
         # cleanning 
-        rm -f $tmpfile_exec_out 
     elif [[ -n ${script_file_list_list// /} ]] ;then
         #
         for host_group_name in $host_group_list ;do

@@ -206,6 +206,23 @@ def save_csv(result, output_file):
             line = ','.join(map(lambda x : str(x), line)) + '\n'
             csv_out.write(line)
 
+def test_json_log():
+    #
+    pass 
+
+def load_json_log():
+    #
+    pass 
+
+def parse_rw():
+    #
+    pass 
+
+def parse_bs():
+    #
+    pass
+
+
 #####################################################################################
 
 if __name__ == '__main__':
