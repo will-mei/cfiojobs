@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #job_group=quicknormal
+job_group=quicknormal
 timestamp=$(date +%Y%m%d)
 output_excel_name="test_fio_"$timestamp'.xlsx'
-job_group=allmode
 if [[ -z $1 ]] ;then
     echo "function: test the group in grouplist single and/or parallel"
     echo "default fio test job group: $job_group "

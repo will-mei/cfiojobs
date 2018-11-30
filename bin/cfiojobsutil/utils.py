@@ -14,7 +14,7 @@ def array2dic(sheet_array, key_index_list):
     # key range set to field 1-3
     tmp_dic = dict()
     for line in sheet_array:
-        if len(line) < len(key_index_list):
+        if len(line) < max(key_index_list):
             continue 
         # key = ip + dev(filename) + bs_pattern
         tmp_list=list()
@@ -77,6 +77,75 @@ def decimal2alphabet(i):
         return alphabet_list[n -1]
     else:
         return (decimal2alphabet(int(n//26)) + alphabet_list[n%26 -1 ]).upper()
+
+def ip2num(ip):
+    if ip.replace('.','').isdigit():
+        return int(''.join(map(lambda x : x.rjust(3, str(0)), ip.split('.') )) )
+    else:
+        return 300000000
+
+# return a sorted ip list 
+def ip_sort(ipl):
+    return sorted(ipl, key = lambda x: ip2num(x) )
+
+def ip_cmp(ip1, ip2):
+    #sorted(ipl, cmp=ip_cmp )
+    return ip2num(ip1) - ip2num(ip2)
+
+# < 6
+def unit2num(unit_name):
+    unit_list = ['b','k','m','g','p','e']
+    if unit_name.lower() in unit_list:
+        return unit_list.index(unit_name.lower())
+    else:
+        return len(unit_list) + 1
+
+# < 9
+def pattern2num(pattern_name):
+    pattern_list = ['read','write','trim','randread','randwrite','randtrim','randtrim','rw']
+    if pattern_name in pattern_list:
+        return pattern_list.index(pattern_name)
+    else:
+        return len(pattern_list) + 1
+
+# 4krandwrite -> m 4 randwrite
+# bs_size(num + unit) + pattern_name to number
+def bp2num(bp, return_str=False):
+    # unit 
+    try:
+        bu  = ''.join(re.split(r'[^A-Za-z]', bp))[0].lower()
+        bun = unit2num(bu)
+    except:
+        bun = 7
+    # unit number
+    try :
+        bsn = ''.join(re.split(r'[^0-9]', bp)).rjust(4, str(0))
+    except:
+        bsn = '9999'
+    # pattern 
+    pt  = ''.join(re.split(r'[^A-Za-z]', bp))[1:].lower()
+    ptn = pattern2num(pt)
+    if return_str == True:
+        return ''.join( [str(bun), bsn, str(ptn)]  )
+    else:
+        return int( ''.join( [str(bun), bsn, str(ptn)] ) )
+
+def bp_sort(bp_str_list):
+    return sorted(bp_str_list, key=lambda x : bp2num(x) )
+
+# store report to dict instead of list 
+def report_to_sortable_dic(sheet_array):
+    # key range set to field 1-3
+    tmp_dic = dict()
+    for line in sheet_array:
+        if len(line) < 3 :
+            continue 
+        # key = ip + dev(filename) + bs_pattern
+        k  = str(ip2num(line[0]) )
+        k += line[1] 
+        k += bp2num(line[2], return_str=True)
+        tmp_dic[k]=line 
+    return tmp_dic 
 
 # load csv, remove title 
 def load_csv(csv_file, sort_sheet=False, sort_column_index=0, reverse=True):

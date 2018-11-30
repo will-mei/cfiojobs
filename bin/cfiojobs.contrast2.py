@@ -53,7 +53,9 @@ stat_pool  = [ok_stat,bad_stat,err_stat]
 def tweens_report(dic_p, dic_s, ref_index, stat_list):
     result_array = list()
     # get parallel mode info
-    for i in dic_p:
+    #for i in sorted(dic_p.keys(), reverse=True):
+    #for i in sorted(dic_p.keys())[-1:] and sorted(dic_p.keys())[:-1]: 
+    for i in sorted(dic_p.keys())[-1:] + sorted(dic_p.keys())[:-1]:
         row = list()
         # get single mode info
         if dic_s.has_key(i):
@@ -77,17 +79,20 @@ def tweens_report(dic_p, dic_s, ref_index, stat_list):
 
 # load data form csv
 parallel_report = cu.load_csv(parallel_csv)
-parallel_dict   = cu.array2dic(parallel_report, key_index_list)
+#parallel_dict   = cu.array2dic(parallel_report, key_index_list)
+parallel_dict   = cu.report_to_sortable_dic(parallel_report)
 
 single_report   = cu.load_csv(single_csv)
-single_dict     = cu.array2dic(single_report, key_index_list)
+#single_dict     = cu.array2dic(single_report, key_index_list)
+single_dict     = cu.report_to_sortable_dic(single_report)
 
 # contrast paralle to single
 result_sheet = tweens_report(parallel_dict, single_dict, reference_index, stat_pool)
 #print(result_sheet)
-result_sheet.sort(key=lambda x : x[0], reverse=True )
 
+#result_sheet.sort(key=lambda x : x[0], reverse=True )
 
+#print(map(lambda x : cu.bp2num(x[2]), result_sheet[0:10]))
 
 ####################################################################
 #wb=Workbook()
@@ -97,10 +102,6 @@ result_sheet.sort(key=lambda x : x[0], reverse=True )
 h_list   = map(lambda x: x[0], result_sheet)
 u_list   = {}.fromkeys(h_list).keys()
 h_count  = len(u_list) -1 
-
-#b_list   = map(lambda x: x[1], result_sheet)
-#ub_list  = {}.fromkeys(b_list).keys()
-#b_count  = len(ub_list)
 
 # change a new name 
 tmp_sheet_name = cu.get_file_name(single_csv)[1][0:30].split('_')[0] + '(' + str(h_count) + u'台' +  ')'
