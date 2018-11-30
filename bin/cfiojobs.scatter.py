@@ -60,7 +60,7 @@ except:
     sys.exit(1)
 
 key_column_index = key_column_num -1
-key_column       = cu.decimal2alphabet(key_column_num)
+key_column       = cu.num2letter(key_column_num)
 try:
     outputfile       = './' + cu.get_file_name(sys.argv[1])[1][0:30] + '-ScatterChart' + '.xlsx'
 except:
@@ -172,12 +172,12 @@ def draw_lateral_pattern_scatterchart(data_work_book, data_columns_list):
     # plot chart 
     column_num = 0
     for data_column in data_columns_list:
-        #column_position = cu.decimal2alphabet(column_num *8 +1)
-        column_position = cu.decimal2alphabet(column_num *9 +1)
+        #column_position = cu.num2letter(column_num *8 +1)
+        column_position = cu.num2letter(column_num *9 +1)
         column_num = column_num +1
         # get pattern info in sheets combined together. 
         pattern_num = 0 
-        for pattern_name in cu.pattern_filter(tmp_dict.keys()):
+        for pattern_name in cu.bp_sort(tmp_dict.keys(), screening=True):
             # 4mwrite
             #row_position = str(pattern_num *16 +1)
             #row_position = str(pattern_num *22 +1)
@@ -193,7 +193,7 @@ def draw_lateral_pattern_scatterchart(data_work_book, data_columns_list):
             chart.title = str(pattern_name)
             chart.legend.position = 't'
             tmp_sheet = tmp_dict[pattern_name].keys()[0]
-            chart.x_axis.title = wb[tmp_sheet][str(cu.decimal2alphabet(data_column)) + '1'].value 
+            chart.x_axis.title = wb[tmp_sheet][str(cu.num2letter(data_column)) + '1'].value 
             chart.y_axis.title = 'latency(ms)'
             # turn majorGridlines off using shapes.GraphicalProperties and drawing.LineProperties
             #chart.y_axis.majorGridlines.spPr = GraphicalProperties(noFill = 'True')
@@ -228,14 +228,15 @@ def draw_pattern_surfacechart(data_work_book, data_columns_list ):
         if data_work_sheet.title in ['Lateral Contrast LineChart', 'ScatterChart','SurfaceChart']:
             #print(work_sheet.title)
             continue 
-        if data_work_sheet[cu.decimal2alphabet(surface_columns[-1]) + '1'].value == None:
+        if data_work_sheet[cu.num2letter(surface_columns[-1]) + '1'].value == None:
             continue 
-        column_position = cu.decimal2alphabet(column_num *8 +1)
+        column_position = cu.num2letter(column_num *8 +1)
         column_num = column_num +1
         pattern_num = 0 
         # get pattern rows range 
         pattern_rows_range_dict = get_uniq_column_info(key_column, data_work_sheet )
-        for pattern_name in cu.pattern_filter(pattern_rows_range_dict.keys()):
+        for pattern_name in cu.bp_sort(pattern_rows_range_dict.keys(), screening=True) :
+        #for pattern_name in cu.bp_sort(pattern_rows_range_dict.keys()) :
             row_position = str(pattern_num *25 +1)
             pattern_num = pattern_num +1
             chart_position = column_position + row_position
@@ -264,10 +265,10 @@ def draw_pattern_surfacechart(data_work_book, data_columns_list ):
             # add data to chart 
             pattern_name_row_range = pattern_rows_range_dict[pattern_name]
             #range_str = data_work_sheet.title + '!'
-            #range_str += cu.decimal2alphabet(data_columns_list[0]) + str(pattern_name_row_range[0]) + ':'
-            #range_str += cu.decimal2alphabet(data_columns_list[-1]) + str(pattern_name_row_range[-1]) + ','
-            #range_str += cu.decimal2alphabet(data_columns_list[0]) + '1:' 
-            #range_str += cu.decimal2alphabet(data_columns_list[-1]) + '1'
+            #range_str += cu.num2letter(data_columns_list[0]) + str(pattern_name_row_range[0]) + ':'
+            #range_str += cu.num2letter(data_columns_list[-1]) + str(pattern_name_row_range[-1]) + ','
+            #range_str += cu.num2letter(data_columns_list[0]) + '1:' 
+            #range_str += cu.num2letter(data_columns_list[-1]) + '1'
             #print(range_str)
             #data_ref  = Reference(data_work_sheet, range_string=range_str)
             #chart.add_data(data_ref, from_rows=True, titles_from_data=True)
@@ -306,11 +307,11 @@ for csv in sys.argv[1:]:
     pattern_rows_range_dict = get_uniq_column_info(key_column, wb[tmp_sheet_name])
     #print(pattern_rows_range_dict.keys())
     # one sheet one column 
-    chart_column_position = cu.decimal2alphabet(csv_num * 8 + 1)
+    chart_column_position = cu.num2letter(csv_num * 8 + 1)
     csv_num = csv_num + 1
     chart_num = 0
-    #print(cu.pattern_filter(pattern_rows_range_dict.keys()))
-    for pattern_name in cu.pattern_filter(pattern_rows_range_dict.keys()):
+    #print(cu.bp_sort(pattern_rows_range_dict.keys(), screening=True))
+    for pattern_name in cu.bp_sort(pattern_rows_range_dict.keys(), screening=True):
         # count chart number
     #    chart_num=len(wb.chartsheets) * 10 + 1
         # chart default width(8 columns) 15 height 7.5(16cells) 
@@ -322,7 +323,7 @@ for csv in sys.argv[1:]:
 
 s=0
 for data_work_sheet in wb.worksheets:
-    if data_work_sheet[cu.decimal2alphabet(surface_columns[-1]) + '1'].value != None:
+    if data_work_sheet[cu.num2letter(surface_columns[-1]) + '1'].value != None:
         s = 1
 if s != 0 :
     draw_pattern_surfacechart(wb, surface_columns)

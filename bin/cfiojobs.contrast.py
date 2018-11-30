@@ -11,7 +11,7 @@ try:
     output_file   = os.path.splitext(source_csv)[0] + '-contrast.csv'
     ref_json      = sys.argv[2]
 except IndexError:
-    print("this script contrast fio csv report with json report, new report name: the_same_dir_as_inputfile/'xxx-contrast.csv'.\nand it requires: \n\t1. csv report name \n\t2. json report name\n please pass in these names first.")
+    print("this script contrast fio csv report with json(avg vlues) report, new report name: the_same_dir_as_inputfile/'xxx-contrast.csv'.\nand it requires: \n\t1. csv report name \n\t2. json report name\n please pass in these names first.")
     exit()
 
 nvme_ref_index  = 0.9

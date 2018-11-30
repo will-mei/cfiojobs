@@ -14,7 +14,7 @@ try:
     single_csv      = sys.argv[2]
 #    output_file     = './test.xlsx'
 except IndexError:
-    print("this script contrast fio sing mode test report with parallel mode report, new report name: ./'test-contrast.csv'.\nand it requires: \n\t1. parallel mode report csv filee \n\t2. single mode report csv file \n3. disk type \n4. excel name :xxx.xlsx \nplease pass in these names first.")
+    print("this script contrast fio parallel mode test report with single mode report, default output file name: './<your csv file name>-report.xlsx'.\nand it requires: \n\t1. parallel mode report csv filee \n\t2. single mode report csv file \n3. disk type \n4. excel name :xxx.xlsx \nplease pass in these names first.")
     exit()
 
 try:
@@ -41,8 +41,6 @@ except:
 reference_index = 0.9
 key_index_list  = [0,1,2]
 
-#ok_stat    = u'○'.encode('GB2312')
-#bad_stat   = u'●'.encode('GB2312')
 #err_stat   = u'…'.encode('GB2312')
 ok_stat    = u'○'
 bad_stat   = u'●'
@@ -55,7 +53,9 @@ def tweens_report(dic_p, dic_s, ref_index, stat_list):
     # get parallel mode info
     #for i in sorted(dic_p.keys(), reverse=True):
     #for i in sorted(dic_p.keys())[-1:] and sorted(dic_p.keys())[:-1]: 
-    for i in sorted(dic_p.keys())[-1:] + sorted(dic_p.keys())[:-1]:
+    #for i in sorted(dic_p.keys())[-1:] + sorted(dic_p.keys())[:-1]:
+    k = sorted(dic_p.keys())
+    for i in k[-1:] + k[:-1]:
         row = list()
         # get single mode info
         if dic_s.has_key(i):
@@ -90,8 +90,6 @@ single_dict     = cu.report_to_sortable_dic(single_report)
 result_sheet = tweens_report(parallel_dict, single_dict, reference_index, stat_pool)
 #print(result_sheet)
 
-#result_sheet.sort(key=lambda x : x[0], reverse=True )
-
 #print(map(lambda x : cu.bp2num(x[2]), result_sheet[0:10]))
 
 ####################################################################
@@ -117,7 +115,7 @@ for row in result_sheet:
         ws.append(row)
 
 # set title format 
-title_cell = 'A1:' + cu.decimal2alphabet(ws.max_column) + '1'
+title_cell = 'A1:' + cu.num2letter(ws.max_column) + '1'
 #print(title_cell)
 
 ####################################################################
