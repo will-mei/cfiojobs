@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 
 from __future__ import print_function
+import cfiojobsutil.utils as cu 
 import re
 import os
 import sys
@@ -19,7 +20,7 @@ try:
     #nvme
 #    peak_name = sys.argv[3]
 except IndexError:
-    print("script Usage: \nsys.argv[0] <cluster fiolog dir> <nocompare|rbd> \nplease pass in directory name first, the other options can be omitted.")
+    print("script Usage: \n",sys.argv[0]," <cluster fiolog dir>  <nocompare|rbd> \nplease pass in directory name first, the other options can be omitted.")
     exit()
 try:
     test_blk_type = sys.argv[2]
@@ -28,14 +29,41 @@ except IndexError:
 
 host_list   = os.listdir(logdir)
 # bs pattern - value - max/min/avg
-max_info    = {'value':0.0,'hostname':'','filename':''}
-min_info    = {'value':10**10,'hostname':'','filename':''}
-peak_value  = {'max':copy.deepcopy(max_info),'min':copy.deepcopy(min_info),'sum':0.0,'sample':0}
-key_index   = {'iodepth':0,'numjobs':0,'util':0,'size':0,'runtime':0,'bw':copy.deepcopy(peak_value),'iops':copy.deepcopy(peak_value),'latency_max':copy.deepcopy(peak_value),'latency_avg':copy.deepcopy(peak_value),'latency_min':copy.deepcopy(peak_value),'latency_stddev':copy.deepcopy(peak_value)}
+max_info    = {'value':0.0,
+               'hostname':'',
+               'filename':''
+              }
+min_info    = {'value':10**10,
+               'hostname':'',
+               'filename':''
+              }
+peak_value  = {'max':copy.deepcopy(max_info),
+               'min':copy.deepcopy(min_info),
+               'sum':0.0,
+               'sample':0
+              }
+key_index   = {'iodepth':0,
+               'numjobs':0,
+               'util':0,
+               'size':0,
+               'runtime':0,
+               'bw':copy.deepcopy(peak_value),
+               'iops':copy.deepcopy(peak_value),
+               'latency_max':copy.deepcopy(peak_value),
+               'latency_avg':copy.deepcopy(peak_value),
+               'latency_min':copy.deepcopy(peak_value),
+               'latency_stddev':copy.deepcopy(peak_value)
+              }
 
 # the performance threshold value
-dev_weak_index  = {'hdd':0.9,'nvme':0.6,'rbd':0.6}
-dev_name_index  = {'hdd':'dev','nvme':'nvme','rbd':'rbd'}
+dev_weak_index  = {'hdd':0.9,
+                   'nvme':0.6,
+                   'rbd':0.6
+                  }
+dev_name_index  = {'hdd':'dev',
+                   'nvme':'nvme',
+                   'rbd':'rbd'
+                  }
 
 # calculate omit values in bs dict
 def cal_omit_bs(bs_dic):
@@ -83,8 +111,8 @@ def peak_value_sheet(peak):
     title         = 'bs_pattern,iodepth,bw(MiB/s),iops,latency_max(ms),latency_avg(ms)'
     #print(title)
     result.append(title)
-    for i in pattern_sort(sum_report.keys()) :
-        #pattern
+    for i in cu.bp_sort(sum_report.keys()) :
+        #pattern 4k read 
         line = str(i)
         title = 'bs_pattern'
         for j in list_index :
@@ -129,56 +157,6 @@ def update_value(pattern,p_index,p_value,p_hostname,p_filename):
         sum_report[pattern][p_index]['sum'] = float(p_value)
         sum_report[pattern][p_index]['sample'] = 1
 
-# sort string with data size unit
-def byte_sort(str_list):
-    result    = list()
-    tmp_dic   = dict()
-    unit_list = ['b','k','m','g','p','e']
-    #print(str_list)
-    for s in str_list:
-        # '128krandread'
-        unit_name = ''.join(re.split(r'[^A-Za-z]', s))[0].lower()
-        # say unit 'k'
-        for unit in unit_list:
-            # b k m ...
-            if unit_name == unit :
-                # tmp_dic['k'] += '128krandread'
-                if tmp_dic.has_key(unit):
-                    tmp_dic[unit].append(s)
-                else:
-                    tmp_dic[unit] = list()
-                    tmp_dic[unit].append(s)
-                #print(tmp_dic)
-    #print(tmp_dic)
-    for unit in unit_list:
-        # k m g ...
-        if tmp_dic.has_key(unit):
-            result += sorted(tmp_dic[unit],key=lambda x :int(re.findall("\d+",x)[0]) )
-    return result
-
-# sort with fio pattern then data size
-def pattern_sort(str_list):
-    #print(str_list)
-    result       = list()
-    tmp_dic      = dict()
-    pattern_list = ['read','write','trim','randread','randwrite','randtrim','randtrim','rw']
-    match_list   = sorted(pattern_list)
-    for w in str_list :
-        # 256krandwrite
-        for pattern in match_list:
-            #print('word:',w,'pattern:',pattern,'len:',len(pattern),'keyword:',w[0 - len(pattern):])
-            if w[0 - len(pattern):] == pattern :
-                if tmp_dic.has_key(pattern):
-                    tmp_dic[pattern].append(w)
-                else:
-                    tmp_dic[pattern] = list()
-                    tmp_dic[pattern].append(w)
-                break
-    for pattern in pattern_list:
-        if tmp_dic.has_key(pattern):
-            result += byte_sort(tmp_dic[pattern])
-    return result
-
 # get info from json and store to global dict
 def store_to_global(log_dict,key_index):
     #key_index = [rw_mode,pattern_name,_hostname]
@@ -200,8 +178,7 @@ def store_to_global(log_dict,key_index):
     # get special index name
     rw_mode     = key_index[0]
     pattern_name= key_index[1]
-    _hostname   = key_index[2]
-    #
+    _hostname   = key_index[2]   #
     _bw         = float(log_dict['jobs'][0][rw_mode]['bw']) / 1024
     _iops       = log_dict['jobs'][0][rw_mode]['iops']
     lat_max     = log_dict['jobs'][0][rw_mode]['lat_ns']['max'] /1000000
@@ -233,20 +210,39 @@ def store_to_global(log_dict,key_index):
     # store log info to global perf list
     #omit_stat   = '○'
     omit_stat   = u'○'.encode('GB2312')
-    perf_info = {'hostname':_hostname,'filename':_filename,'pattern_name':pattern_name,'iodepth':_iodepth,'bw':_bw,'iops':_iops,'stat':omit_stat,'lat_avg':lat_mean,'lat_max':lat_max,'lat_min':lat_min,'lat_stddev':lat_stddev,'util':_util,'size':_size,'runtime':_runtime,'direct':_direct,'numjobs':_numjobs,'ioengine':_ioengine,'clat_ms_seq_str':clat_ms_seq_str}
+    perf_info = {'hostname':_hostname,
+                 'filename':_filename,
+                 'pattern_name':pattern_name,
+                 'iodepth':_iodepth,
+                 'bw':_bw,
+                 'iops':_iops,
+                 'stat':omit_stat,
+                 'lat_avg':lat_mean,
+                 'lat_max':lat_max,
+                 'lat_min':lat_min,
+                 'lat_stddev':lat_stddev,
+                 'util':_util,
+                 'size':_size,
+                 'runtime':_runtime,
+                 'direct':_direct,
+                 'numjobs':_numjobs,
+                 'ioengine':_ioengine,
+                 'clat_ms_seq_str':clat_ms_seq_str
+                }
     perf_list.append(perf_info)
         
 # get value from json
-def parse_json(fio_json_log):
+def load_json_log(fio_json_log):
     with open(fio_json_log,'r') as log_file:
+        # load json 
         try:
             log_dict = json.load(log_file)
         except ValueError:
             print('warning:',fio_json_log,'load fio json log failed, skiped!')
             return 0
-        #print(log_dict)
-        if log_dict.has_key('disk_util'):
-            pass
+        # check util stat  
+        if log_dict.has_key('disk_util') and float(log_dict['disk_util'][0]['util']) > 0.0 :
+            _util       = log_dict['disk_util'][0]['util']
         else:
             print('warning:',fio_json_log,'status abnormal, util value missing, skiped!')
             return 0
@@ -261,10 +257,9 @@ def parse_json(fio_json_log):
         # hdd/rbd time , skip nvme 
         elif blk_info == 'nvme':
             return 0
-        #util,pattern_percentage,bs_percentage,iodepth,bw,iops,latency_max,latency_avg
-        _util       = log_dict['disk_util'][0]['util']
-        _rw         = log_dict['global options']['rw']
+        # get rw mode from expr 
         _hostname   = host_name.split('-')[-1]
+        _rw         = log_dict['global options']['rw']
         # mixed read and write
         if _rw == "randrw":
             # pattern : percentage
@@ -295,6 +290,7 @@ def parse_json(fio_json_log):
             #print('string of bs list:', bs_re2str(bs_rw))
             bs_percentage    = {'read':bs_rw,'write':bs_rw}
             # only two rw mode, store data of each mode
+# pattern_name : bs + pattern 
             for rw_mode in ["read","write"]:
                 _bs          = bs_re2str(bs_percentage[rw_mode])
                 _pattern     = pattern_percentage[rw_mode]
@@ -393,22 +389,24 @@ for blk_type in ['hdd','nvme','rbd']:
     perf_list   = list()
     # different disk different standerd
     weak_index  = dev_weak_index[blk_type]
-# analyse all json log in subdir
+    # walk through dir and analyse all json log in subdir
     for host_name in host_list :
         if host_name == '_report' :
             continue
         json_dir = os.path.join(logdir,host_name)
+        # skip single file 
         if os.path.isdir(json_dir):
             for file_name in os.listdir(json_dir):
+                # load json 
                 if os.path.splitext(file_name)[1] == '.json' :
                     logfile = os.path.join(json_dir,file_name)
-                    parse_json(logfile)
+                    load_json_log(logfile)
                     if dev_name_index[blk_type] in logfile:
                         blk_log_stat = 0
-# if no nvme log then skip the rest.
+    # skip untested type .
     if blk_log_stat == 1:
         continue
-# save result to json 
+    # save result to json 
     json_output_file = './' + logdir.split('/')[-1] + '_' + blk_type + '.json' 
     json_data        = json.dumps(sum_report,indent=4)
     with open(json_output_file,'w') as sum_json:
@@ -422,20 +420,15 @@ for blk_type in ['hdd','nvme','rbd']:
             for line in peak_value_sheet(i):
                 line = line + '\n'
                 f_peak.write(line)
-    # compare bw and iops value with global avg and give shortfall report
+    # compare bw and iops value with global avg 
     perf_list = compare_with_global(perf_list)
-    # set out put keys and title
-    sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值(公式:(D2/E2)*100%),"筛选状态(该盘测试带宽值/同批次测试主机的所有同类型磁盘的带宽平均值;低于90%标为●否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
-    #sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值,"该盘带宽/同组所有磁盘带宽平均值筛选状态(低于90%标为●，否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'
-    #sheet_title = '主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),该测试带宽相对平均带宽的比值,同组筛选状态,该测试iops,测试iops平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'
-    #sheet_title = 'hostname,device,bs_pattern,bw(MiB/s),bw_global,deviation(%),stat,iops,iops_global,lat_avg(ms),lat_avg_global(ms),lat_max(ms),lat_min(ms),iodepth,numjobs,util,size,runtime,ioengine\n'
-    #sheet_title  = 'hostname,filename,bs/pattern,bw(MiB/s),bw_global(MiB/s),deviation,stat,iops,iops_global,lat_avg(ms),lat_avg_global,lat_max,lat_min,iodepth,numjobs,util,size,runtime,ioengine\n'
+    # set output value keys and title then give a report
     sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','deviation','stat','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
+    #sheet_title = ','.join(sheet_keys)
+    sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值(公式:(D2/E2)*100%),"筛选状态(该盘测试带宽值/同批次测试主机的所有同类型磁盘的带宽平均值;低于90%标为●否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
     if test_blk_type == 'rbd':
         #clat_ms_seq_key = [0.0, 1.0, 10.0, 20.0, 30.0, 40.0, 5.0, 50.0, 60.0, 70.0, 80.0, 90.0, 95.0, 99.0, 99.5, 99.9, 99.95, 99.99]
         #clat_ms_seq_key = ''join(map(lambda x: str(x) + '%,', clat_ms_seq_key))[:-1]
-        #clat_ms_seq_key = '0.0,1.0,10.0,20.0,30.0,40.0,5.0,50.0,60.0,70.0,80.0,90.0,95.0,99.0,99.5,99.9,99.95,99.99'
-        #clat_ms_seq_key = '0.0%,1.0%,10.0%,20.0%,30.0%,40.0%,5.0%,50.0%,60.0%,70.0%,80.0%,90.0%,95.0%,99.0%,99.5%,99.9%,99.95%,99.99%'
         clat_ms_seq_key = '99.0%,90.0%,80.0%,70.0%,60.0%,95.0%,50.0%,40.0%,30.0%,20.0%,10.0%,5.0%,1.0%,0.5%,0.1%,0.05%,0.01%'
         sheet_title_str = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),延迟值离散度(stdev),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎'
         sheet_title = sheet_title_str.encode('GB2312') + ',' + clat_ms_seq_key + '\n'
@@ -447,5 +440,3 @@ for blk_type in ['hdd','nvme','rbd']:
     output_csv  = './' + logdir.split('/')[-1] + '_' + blk_type + '_all_host.csv'
     printf_perf_list(perf_list,sheet_keys,sheet_title,output_csv)
 
-#print(byte_sort(sum_report.keys()))
-#print(pattern_sort(sum_report.keys()))
