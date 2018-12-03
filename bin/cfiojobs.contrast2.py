@@ -27,7 +27,7 @@ except:
 try:
     output_file = sys.argv[4]
 except:
-    output_file = cu.get_file_name(single_csv)[1][0:30].split('_')[0] + n + '.xlsx'
+    output_file = cu.get_file_name(parallel_csv)[1][0:30].split('_')[0] + n + '.xlsx'
 # if output file an existing excel file 
 try:
     # load and create a new 
