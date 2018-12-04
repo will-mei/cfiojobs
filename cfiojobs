@@ -1582,23 +1582,25 @@ function _send_fio(){
             do
                 # check blk file
                 if _ssh_send "ls $BLK" &>/dev/null ;then
-                    log_name=$job_name-${BLK//\//}".log.json"
                     # check sata disk with smartctl, nvme disks are not supported
                     local blk_name=${BLK##*/}
                     if [[ $rbd_mode == "True" ]] ;then
+                        log_name="rbd-"$job_name-${BLK//\//}".log.json"
                         # skip rbd check   
-                        :
+                        #:
                     elif [[ ${blk_name//nvme/} != "${blk_name}" ]] ;then
+                        log_name="nvme-"$job_name-${BLK//\//}".log.json"
                         # skip nvme
-                        :
+                        #:
                     elif [[ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ]] ;then
+                        log_name="hdd-"$job_name-${BLK//\//}".log.json"
                         # if smartmontools installed, check status.
                         blk_stats=$(_ssh_send "smartctl -H $BLK |grep 'SMART Health Status:' |awk '{print\$NF}' ")
                         [[ $blk_stats != "OK" ]] && _verbose &&"info: $host_ip \"$BLK\" smartmontools check failed."
                     fi
                 elif [[ $rbd_mode == "True" ]] ;then
                     #
-                    log_name=$job_name-${BLK//\//}".log.json"
+                    log_name="rbd-"$job_name-${BLK//\//}".log.json"
                     _verbose && echo "log name: $log_name"
                 else
                     #_red "host: $host_ip, blk or file : \"$BLK\" is not available on host!"
