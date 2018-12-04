@@ -526,7 +526,7 @@ BLK  name:$BLK
 ##############################################
 $fio_cmd \
 -filename=$BLK \
--name=$log_name &>$log_dir/$log_name
+-name=$num_jobs-$host_ip-$log_name &>$log_dir/$log_name
 "
 #---------------------------------------------
     elif [[ $infotype == "bkndinfo" ]] 
@@ -1608,23 +1608,23 @@ function _send_fio(){
                 # ready to send
                 _verbose "jobinfo" && _waiting "reading" 15
                 if [[ $test_mode == "single" ]] ;then
-                    #_ssh_send "$fio_cmd -filename=$BLK -name=$log_name " &>$log_dir/$log_name
+                    #_ssh_send "$fio_cmd -filename=$BLK -name=$num_jobs-$host_ip-$log_name " &>$log_dir/$log_name
                     # wait previous 
                     _host_fio_check
                     if [[ $rbd_mode == "True" ]];then 
-                        _ssh_send "$fio_cmd -rbdname=$BLK -name=$num_jobs-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -rbdname=$BLK -name=$num_jobs-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd -rbdname=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -rbdname=$BLK -name=$num_jobs-$host_ip-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     else 
-                        _ssh_send "$fio_cmd -filename=$BLK -name=$num_jobs-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$num_jobs-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd -filename=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     fi
                 else
                     if [[ $rbd_mode == "True" ]];then
-                        _ssh_send "$fio_cmd -rbdname=$BLK -name=$num_jobs-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -rbdname=$BLK -name=$num_jobs-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd -rbdname=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -rbdname=$BLK -name=$num_jobs-$host_ip-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     else
-                        _ssh_send "$fio_cmd -filename=$BLK -name=$num_jobs-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$num_jobs-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd -filename=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     fi
                 fi
                 #record job bs, pattern, blk
