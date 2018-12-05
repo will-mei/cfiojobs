@@ -74,9 +74,9 @@ mv $OUTPUTDIR/*.csv $OUTPUTDIR/*.tar $OUTPUTDIR/*.json $OUTPUTDIR/old_report/ &>
 # make a report of the whole test.
 if python2 $(dirname $0)/cfiojobs.log.py $LOGDIR $blk_type ;then
     # remove empty csv
-    for i in $(ls "${LOGDIR##*/}"*.csv) ;do
-        [[ $(wc -l < $i) -le 1 ]] && rm -rf $i
-    done
+    #for i in $(ls "${LOGDIR##*/}"*.csv) ;do
+    #    [[ $(wc -l < $i) -le 1 ]] && rm -rf $i
+    #done
     #tar -cf $OUTPUTDIR/"$LOGDIR"_peak_value.csv.tar "$LOGDIR"_hdd*.csv "$LOGDIR"_nvme*.csv
     tar -cf $OUTPUTDIR/"${LOGDIR##*/}"_peak_value.csv.tar "${LOGDIR##*/}"_*.csv
     mv "${LOGDIR##*/}"_*.csv $OUTPUTDIR/ &>/dev/null

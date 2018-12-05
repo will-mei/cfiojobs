@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # coding=utf-8
+from __future__ import print_function
 import re 
 import os 
+import json
+import time 
 
 'csv , pattern_name functions and filters'
 
@@ -25,14 +28,15 @@ def array2dic(sheet_array, key_index_list):
     return tmp_dic 
 
 #####################################################################################
-
+# ./abc/def.h 
+# ('./abc', 'def', '.h')
 def get_file_name(filename):
     (filepath,tmpfilename) = os.path.split(filename)
     (shortname,extension)  = os.path.splitext(tmpfilename)
     return filepath,shortname,extension
 
+# dict to text sheet 
 def print_dic(dic):
-    #print('dict')
     sep = '+'
     title =  content = '|'
     for i in dic:
@@ -162,7 +166,7 @@ def report_to_sortable_dic(sheet_array):
         tmp_dic[k]=line 
     return tmp_dic 
 
-# load csv, remove title 
+# load csv ('GB2312'), sort certain column  
 def load_csv(csv_file, sort_sheet=False, sort_column_index=0, reverse=True):
     with open(csv_file,'r') as f :
         sheet_csv  = list()
@@ -200,27 +204,216 @@ def load_csv(csv_file, sort_sheet=False, sort_column_index=0, reverse=True):
 #    return sep.join(line)
 
 # save array of list  as csv
-def save_csv(result, output_file):
-    with open(output_file,'w') as csv_out :
-        for i in result:
-            line = ','.join(map(lambda x : str(x), line)) + '\n'
-            csv_out.write(line)
+def save_csv(result_array, output_file, mode='w'):
+    with open(output_file, mode) as result_csv :
+        map(lambda line : result_csv.write( ','.join(map(lambda x : str(x), line)) + '\n'  ), result_array )
 
-def test_json_log():
-    #
-    pass 
+#####################################################################################
+# get value from json
+def load_json_log(fio_json_log):
+    with open(fio_json_log,'r') as log_file:
+        # load json 
+        try:
+            log_dict = json.load(log_file)
+        except ValueError:
+            print('warning:',fio_json_log,'load fio json log failed, skiped!')
+            return 0
+        # check util stat > 0 
+        if log_dict.has_key('disk_util') and float(log_dict['disk_util'][0]['util']) > 0.0 :
+            _util       = log_dict['disk_util'][0]['util']
+        else:
+            print('warning:',fio_json_log,'status abnormal, util value missing, skiped!')
+            return 0
+    return log_dict 
 
-def load_json_log():
-    #
-    pass 
+# check 
+#1: hdd/rbd
+#2: nvme
+def confirm_disk_type(log_dict, blk_type):
+    # get type info form log 
+    try :
+        blk_info = log_dict['global options']['filename'].split('/')[-1][0:4]
+    except KeyError:
+        blk_info = log_dict['global options']['rbdname']
+    # nvme log, but want hdd/rbd 
+    if blk_type == 'nvme' and blk_info != blk_type:
+        return False
+    # hdd/rbd log, but want nvme 
+    elif blk_info == 'nvme':
+        return False 
+    else:
+        return True
+ 
+# transform str 2 a acertain int / 0
+def s2int(s):
+    if len(s) == 0:
+        return 0
+    else:
+        try:
+            return int(s)
+        except:
+            return 0
 
-def parse_rw():
-    #
-    pass 
+# 1: '4k/', 40
+# 2: '4k/50, 40'
+# 1: "'4k':40" 
+# 2: "'4k':50"
+def bsjust(bs_iterm, n):
+    l = bs_iterm.split('/')
+    if len(l[1]) > 0:
+        return "'" + l[0] + "':" + l[1]
+    else:
+        return "'" + l[0] + "':" + str(n)
 
-def parse_bs():
-    #
-    pass
+# bs expr - dic
+# input : u'4k/50:256k/20:4m/30'
+# dict output: {'256k': 40, '4m': 10, '4k': 50}
+# str  output: '4m(10%) 256k(40%) 4k(50%)'
+def parse_bs_expr(expr_str, dict_result=True ):
+    # 1 remove empty space and split with ':'
+    s = expr_str.replace(' ','').split(':')
+    # ['4k/50', '8k/10', '4m/']
+    num_all = len(s)
+    # 2 calculate num of omited bs 
+    num_omit = map(lambda x: len(x.split('/')[1]), s).count(0)
+    if num_omit == 0 :
+        result = eval('{' + ', '.join( map(lambda x: "'" + x.replace('/',"':"), s) ) + '}')
+    else:
+        # 3 calculate percentage of not omited 
+        sum_omit = 100 - sum(map(lambda x : s2int(x.split('/')[1]), s))
+        avg_left = sum_omit/num_omit
+        result = eval('{' + ', '.join( map(lambda x: bsjust(x, avg_left), s) ) +'}')
+    # result format 
+    if dict_result == True :
+        return result
+    else:
+        return ' '.join(map(lambda x: x[0] + '(' + str(x[1]) + '%)', result.items()))
+
+# get mixed read and write rw mode from expr 
+# bssplit info, bs read + bs write, sep:",", and bs set of rw can be omited, only the first group is for read io.
+# input : 2k/50:256k/40:4m/,4k/50:8k/10,16k/  
+# means : a workload that has 50% 2k reads, 40% 256k reads and 10% 4m reads, while having 50% 4k writes and 10% 8k writes and 16k for the rest 40%.
+# output: ['read 70%: 256k(40%) 4m(10%) 4k(50%)', 'write 30%: 16k(40%) 8k(10%) 4k(50%)']
+def parse_mixrw(log_dict):
+    _rw         = log_dict['global options']['rw']
+    # pattern : percentage
+    if log_dict['global options'].has_key('rwmixread') :
+        pct_r = log_dict['global options']['rwmixread']
+        pct_w = str(100 - float(r_pct))
+    else:
+        pct_w = log_dict['global options']['rwmixwrite']
+        pct_r = str(100 - float(log_dict['global options']['rwmixwrite']))
+# pattern 
+    pattern_percentage={'read':pct_r, 'write':pct_w}
+    # parse read expr 
+    bs_split    = log_dict['global options']['bssplit'].split(',')
+    bs_r = parse_bs_expr(bs_split[0], dict_result=False)
+    # str output : '4m(10%) 256k(40%) 4k(50%)'
+    # check write expr if omited 
+    if len(bs_split) > 1 :
+        bs_w = parse_bs_expr(bs_split[1], dict_result=False)
+    else:
+        bs_w = bs_rd
+# bs 
+    bs_percentage    = {'read':bs_r, 'write':bs_w}
+# pattern_name : bs + pattern = 'read 70%: 256k(40%) 4m(10%) 4k(50%)'
+    # only two rw mode, store data of each mode
+    bs_pattern_info = dict()
+    for rw_mode in ['read', 'write']:
+        _pattern_pct     = ' ' + pattern_percentage[rw_mode] + '%: '
+        _bs_pct          = bs_percentage[rw_mode] 
+        bs_pattern_info[rw_mode] = rw_mode + _pattern_pct + _bs_pct 
+    return bs_pattern_info 
+
+# get info from json and store to global dict
+def flattern_log_dict(log_dict, rw_mode, with_private_name=True):
+    # general info
+    _version    = log_dict['fio version']
+    _util       = log_dict['disk_util'][0]['util']
+    #_rw         = log_dict['global options']['rw']
+    _size       = log_dict['global options']['size']
+    _direct     = log_dict['global options']['direct']
+    _runtime    = log_dict['global options']['runtime']
+    _iodepth    = log_dict['global options']['iodepth']
+    _ioengine   = log_dict['global options']['ioengine']
+    try :
+        _filename   = log_dict['global options']['filename']
+    except KeyError:
+        _filename   = log_dict['global options']['rbdname']
+    # parse private options 
+    if with_private_name:
+        _job_name   = log_dict['jobs'][0]['job options']['name'].split('-')
+        _numjobs    = _job_name[0]
+        _host_name  = _job_name[1]
+        _blk_type   = _job_name[2]
+    # calculate
+    _date       = time.strftime("%y%m%d",time.localtime(log_dict['timestamp']))
+    _bw         = float(log_dict['jobs'][0][rw_mode]['bw']) / 1024
+    _iops       = log_dict['jobs'][0][rw_mode]['iops']
+    lat_max     = log_dict['jobs'][0][rw_mode]['lat_ns']['max'] /1000000
+    lat_min     = log_dict['jobs'][0][rw_mode]['lat_ns']['min'] / 1000000
+    lat_mean    = log_dict['jobs'][0][rw_mode]['lat_ns']['mean'] / 1000000
+    lat_stddev  = log_dict['jobs'][0][rw_mode]['lat_ns']['stddev'] / 1000000
+    #clat_ns_key= log_dict['jobs'][0]['rw_mode']['clat_ns']['percentile'].values()
+    #clat_ms_seq_key =  map(lambda x: float(x), sorted(clat_ns_key))
+    #[0.0, 1.0, 10.0, 20.0, 30.0, 40.0, 5.0, 50.0, 60.0, 70.0, 80.0, 90.0, 95.0, 99.0, 99.5, 99.9, 99.95, 99.99]
+    clat_ns_seq = log_dict['jobs'][0][rw_mode]['clat_ns']['percentile'].values()
+    clat_ms_seq = map(lambda x: float(x) /1000000, sorted(clat_ns_seq))
+    #print(clat_ms_seq[0])
+    if clat_ms_seq[0] == 0.0 :
+        clat_ms_seq_str = ''.join(map(lambda x: ',' + str(x), clat_ms_seq[1:]))[1:]
+    else:
+        clat_ms_seq_str = ''.join(map(lambda x: ',' + str(x), clat_ms_seq))[1:]
+    # store log info to result dict
+    #omit_stat   = '○'
+    #omit_stat   = u'○'.encode('GB2312')
+    flattern_log_dict = {'version':_version,
+                         'util':_util,
+                         'size':_size,
+                         'direct':_direct,
+                         'runtime':_runtime,
+                         'iodepth':_iodepth,
+                         'ioengine':_ioengine,
+                         'filename':_filename,
+                         #'pattern_name':pattern_name,
+                         'datetime':_date,
+                         'bw':_bw,
+                         'iops':_iops,
+                         #'stat':omit_stat,
+                         'lat_max':lat_max,
+                         'lat_min':lat_min,
+                         'lat_avg':lat_mean,
+                         'lat_stddev':lat_stddev,
+                         'clat_ms_seq_str':clat_ms_seq_str
+                        }
+    if with_private_name:
+        flattern_log_dict['numjobs']  = _numjobs
+        flattern_log_dict['hostname'] = _host_name
+        flattern_log_dict['blk_type'] = _blk_type
+    return flattern_log_dict  
+
+# get performance info from fio log dict return a list of dict 
+def parse_log_dict(log_dict):
+    # read/randread/write/randwrite/randrw
+    _rw         = log_dict['global options']['rw']
+    # normal
+    if _rw != "randrw":
+        _bs          = log_dict['global options']['bs']
+        # read / write 
+        rw_mode      = _rw.split('rand')[-1:][0]
+        # get a flattern_log_dict 
+        perf_dict    = flattern_log_dict(log_dict, rw_mode)
+        perf_dict['pattern_name'] = _bs + _rw
+        return [ perf_dict ]
+    #mixed
+    else:
+        result = list()
+        bs_pattern_info = parse_mixrw(log_dict)
+        for rw_mode in ['read', 'write']:
+            perf_dict       = flattern_log_dict(log_dict, rw_mode)
+            perf_dict['pattern_name'] = bs_pattern_info[rw_mode]
+            result.append( perf_dict )
+        return result 
 
 
 #####################################################################################
