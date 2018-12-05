@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.38
+script_version=0.12.39
 
 STATUS=0
 function _stop_test(){
@@ -526,7 +526,7 @@ BLK  name:$BLK
 ##############################################
 $fio_cmd \
 -filename=$BLK \
--name=$num_jobs-$host_ip-$log_name &>$log_dir/$log_name
+-name=$tag-$log_name &>$log_dir/$log_name
 "
 #---------------------------------------------
     elif [[ $infotype == "bkndinfo" ]] 
@@ -1375,12 +1375,24 @@ if [[ -n $CMD ]] ;then
         echo "  $host_ip stat: $cmd_stat"
         _update_check_stat $cmd_stat $tmpfile_exec 
     elif  [[ $p_exec == "True" ]] ;then 
-        tmpfile_exec_host_out=$(mktemp)
+        local tmpfile_exec_host_out=$(mktemp)
         #use virtual terminal and recive tty input.
         # echo "$host_ip :"
         ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
         local cmd_stat=$?
         _update_check_stat $cmd_stat $tmpfile_exec 
+    else 
+        local tmpfile_exec_host_out=$(mktemp)
+        # do not merge output 
+        _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
+        _segline "$host_ip  stdout"
+        ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
+        local cmd_stat=$?
+        _update_check_stat $cmd_stat $tmpfile_exec 
+        _segline "$host_ip cmd end"
+        #echo "$host_ip empty $cmd_stat" >> $tmpfile_exec_diff 
+        #touch /tmp/empty 
+    fi
     #if [[ -n $(cat $tmpfile_exec_host_out) ]] ;then _green not empty ;else  echo empty log file ;fi
         # empty output 
         if [[ $(wc -l <$tmpfile_exec_host_out) -eq 0 ]] ;then 
@@ -1394,16 +1406,6 @@ if [[ -n $CMD ]] ;then
             flock /tmp/$content_sum cat $tmpfile_exec_host_out > /tmp/$content_sum 
         fi 
         rm -rf $tmpfile_exec_host_out 
-    else 
-        # do not merge output 
-        _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
-        _segline "$host_ip  stdout"
-        ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD"
-        local cmd_stat=$?
-        _update_check_stat $cmd_stat $tmpfile_exec 
-        _segline "$host_ip cmd end"
-        echo "$host_ip empty $cmd_stat" >> $tmpfile_exec_diff 
-    fi
 #else
 #    _unquiet "    no command to run."
 fi
@@ -1582,25 +1584,28 @@ function _send_fio(){
             do
                 # check blk file
                 if _ssh_send "ls $BLK" &>/dev/null ;then
+                    log_name=$job_name-${BLK//\//}".log.json"
                     # check sata disk with smartctl, nvme disks are not supported
                     local blk_name=${BLK##*/}
                     if [[ $rbd_mode == "True" ]] ;then
-                        log_name="rbd-"$job_name-${BLK//\//}".log.json"
+                        local tag=$num_jobs-$host_ip-rbd  
                         # skip rbd check   
                         #:
                     elif [[ ${blk_name//nvme/} != "${blk_name}" ]] ;then
-                        log_name="nvme-"$job_name-${BLK//\//}".log.json"
+                        local tag=$num_jobs-$host_ip-nvme 
                         # skip nvme
                         #:
-                    elif [[ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ]] ;then
-                        log_name="hdd-"$job_name-${BLK//\//}".log.json"
-                        # if smartmontools installed, check status.
-                        blk_stats=$(_ssh_send "smartctl -H $BLK |grep 'SMART Health Status:' |awk '{print\$NF}' ")
-                        [[ $blk_stats != "OK" ]] && _verbose &&"info: $host_ip \"$BLK\" smartmontools check failed."
-                    fi
+                    else
+                        local tag=$num_jobs-$host_ip-hdd  
+                        if [[ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ]] ;then
+                            # if smartmontools installed, check status.
+                            blk_stats=$(_ssh_send "smartctl -H $BLK |grep 'SMART Health Status:' |awk '{print\$NF}' ")
+                            [[ $blk_stats != "OK" ]] && _verbose &&"info: $host_ip \"$BLK\" smartmontools check failed."
+                        fi
+                    fi 
                 elif [[ $rbd_mode == "True" ]] ;then
+                    local tag=$num_jobs-$host_ip-rbd 
                     #
-                    log_name="rbd-"$job_name-${BLK//\//}".log.json"
                     _verbose && echo "log name: $log_name"
                 else
                     #_red "host: $host_ip, blk or file : \"$BLK\" is not available on host!"
@@ -1610,23 +1615,23 @@ function _send_fio(){
                 # ready to send
                 _verbose "jobinfo" && _waiting "reading" 15
                 if [[ $test_mode == "single" ]] ;then
-                    #_ssh_send "$fio_cmd -filename=$BLK -name=$num_jobs-$host_ip-$log_name " &>$log_dir/$log_name
+                    #_ssh_send "$fio_cmd -filename=$BLK -name=$tag-$log_name " &>$log_dir/$log_name
                     # wait previous 
                     _host_fio_check
                     if [[ $rbd_mode == "True" ]];then 
-                        _ssh_send "$fio_cmd -rbdname=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -rbdname=$BLK -name=$num_jobs-$host_ip-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd -rbdname=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -rbdname=$BLK -name=$tag-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     else 
-                        _ssh_send "$fio_cmd -filename=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     fi
                 else
                     if [[ $rbd_mode == "True" ]];then
-                        _ssh_send "$fio_cmd -rbdname=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -rbdname=$BLK -name=$num_jobs-$host_ip-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd -rbdname=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -rbdname=$BLK -name=$tag-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     else
-                        _ssh_send "$fio_cmd -filename=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$num_jobs-$host_ip-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     fi
                 fi
                 #record job bs, pattern, blk
@@ -1731,8 +1736,8 @@ function _group_execute(){
 # host_group_name was set
     _yellow "execute:"
     _parse_host_info "$1"
-        tmpfile_exec=$(mktemp)
-        [[ -z $tmpfile_exec_diff ]] && tmpfile_exec_diff=$(mktemp)
+        local tmpfile_exec=$(mktemp)
+        [[ -z $tmpfile_exec_diff ]] && local tmpfile_exec_diff=$(mktemp)
         # test host 
         echo 0 > $tmpfile_exec
         for host_ip in $ip_list ;do
