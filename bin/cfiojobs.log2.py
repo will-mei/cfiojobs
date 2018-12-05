@@ -14,9 +14,9 @@ except IndexError:
     print("script Usage: \n",sys.argv[0]," <cluster fiolog dir>  <nocompare|rbd> \nplease pass in directory name first, the other options can be omitted.")
     exit()
 try:
-    test_mode = sys.argv[2]
+    output_mode = sys.argv[2]
 except IndexError:
-    test_mode = 'normal'
+    output_mode = 'normal'
 
 # special index  ['bw', 'iops', 'lat_max', 'lat_avg', 'lat_min', 'lat_stddev']
 avg_index   = ['bw', 'iops', 'lat_avg']
@@ -74,7 +74,7 @@ peak_dict = dict()
 bs_pattern_list = list(set(map(lambda x : x['pattern_name'], perf_list)))
 #print(bs_pattern_list)
 # calculate vag values for each pattern 
-if test_mode in ['normal', 'rbd']:
+if output_mode in ['normal', 'rbd']:
     # cont and give sum value
     for bp in bs_pattern_list:
         peak_dict[bp]  = dict()
@@ -98,14 +98,14 @@ def save_perf_list(perf_list, keys_of_column, csv_title, csv_name):
     cu.save_csv(result_array, csv_name, mode='a')
 
 # set output value keys and title then give a report
-if test_mode == 'normal':
+if output_mode == 'normal':
     sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','deviation','stat','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
     #sheet_title = ','.join(sheet_keys) + '\n'
     sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值(公式:(D2/E2)*100%),"筛选状态(该盘测试带宽值/同批次测试主机的所有同类型磁盘的带宽平均值;低于90%标为●否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
-elif test_mode == 'nocompare':
+elif output_mode == 'nocompare':
     sheet_keys  = ['hostname','filename','pattern_name','bw','iops','lat_avg','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
     sheet_title = u'主机名,测试设备,块大小/模式,测试带宽(MiB/s),每秒读写(iops),平均延迟(ms),最大延迟(ms),最低延迟(ms),iodepth,numjobs,util,size,runtime,ioengine\n'.encode('GB2312')
-elif test_mode == 'rbd':
+elif output_mode == 'rbd':
     sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','lat_stddev','iodepth','numjobs','util','size','runtime','ioengine','clat_ms_seq_str']
     #clat_ms_seq_key = [0.0, 1.0, 10.0, 20.0, 30.0, 40.0, 5.0, 50.0, 60.0, 70.0, 80.0, 90.0, 95.0, 99.0, 99.5, 99.9, 99.95, 99.99]
     #clat_ms_seq_key = ''join(map(lambda x: str(x) + '%,', clat_ms_seq_key))[:-1]
