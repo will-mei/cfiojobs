@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+#from multiprocessing.dummy import Pool as ThreadPool
 from subprocess import Popen, PIPE
 import cfiojobsutil.utils as cu 
 import os
@@ -17,6 +18,8 @@ try:
     output_mode = sys.argv[2]
 except IndexError:
     output_mode = 'normal'
+
+#pool = ThreadPool()
 
 # special index  ['bw', 'iops', 'lat_max', 'lat_avg', 'lat_min', 'lat_stddev']
 avg_index   = ['bw', 'iops', 'lat_avg']
@@ -68,6 +71,15 @@ for logfile in get_json_list(logdir):
     for perf_log in cu.parse_log_dict(log_dict):
         perf_list.append(perf_log)
 #print(perf_list)
+
+#def add_log(logfile):
+#    global perf_list 
+#    log_dict = cu.load_json_log(logfile)
+#    map(lambda perf_log: perf_list.append(perf_log),  cu.parse_log_dict(log_dict))
+
+#pool.map(add_log, get_json_list(logdir))
+#pool.close()
+#pool.join()
 
 peak_dict = dict()
 # get bs_pattern list set 
