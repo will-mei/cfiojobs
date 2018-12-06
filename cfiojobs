@@ -13,10 +13,10 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.41
+script_version=0.12.43
 
 STATUS=0
-function _stop_test(){
+function _test_abort(){
 if [[ $send_fio == "True" ]]  ;then
     runner=$(whoami)
     # fio test 
@@ -34,11 +34,8 @@ if [[ $send_fio == "True" ]]  ;then
     done
 fi
     for i in ${!tmpfile*} ;do eval rm \$"$i" &>/dev/null ;done
-    for k in $(awk '{print$2}' $tmpfile_exec_diff) ;do 
-        [[ -f /tmp/$k ]] && rm -f /tmp/$k
-    done
 }
-trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _stop_test; exit $STATUS" 1 2 3 15
+trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; exit $STATUS" 1 2 3 15
 #date=$(date "+%Y-%m-%d_%H:%M:%S")
 date="$(date +%Y%m%d%H%M)"
 g_conf="$0"".grp"
@@ -475,7 +472,7 @@ function _error_interrupt(){
     # 2. exit none pdebug
         echo "$(_red " ERROR"): $(date "+%Y-%m-%d_%H:%M:%S"): partially failure occured, script breaks here: $( _yellow "${FUNCNAME[@]:1}")."
         _blue "you can use '-f' or '-d' option to skip the failed part."
-        _stop_test && exit 1
+        _test_abort && exit 1
     fi
 }
 # debug tools 
@@ -1757,9 +1754,10 @@ function _group_execute(){
         # clean up tmp file 
         for k in $(awk '{print$2}' $tmpfile_exec_diff) ;do 
             [[ -f /tmp/$k ]] && rm -f /tmp/$k
-        done
+        done 
 #cat $tmpfile_exec_diff
         rm -rf $tmpfile_exec $tmpfile_exec_diff
+        #unset tmpfile_exec_diff 
         #if some failed, read done, show status
         [[ $check_stat -eq 1 ]] && echo "$1 group execution partially failed." && _error_interrupt
     _unquiet "$1: execute action done." || echo " group stat : $check_stat"
