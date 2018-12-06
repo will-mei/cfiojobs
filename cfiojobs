@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.43
+script_version=0.12.44
 
 STATUS=0
 function _test_abort(){
@@ -484,8 +484,8 @@ function _verbose(){
 # print info help testing script
 # return 1 when pdebug is True
 if [[ $pdebug == "True" ]] && [[ -n $1 ]] ;then
-    _blue "function :${FUNCNAME[@]:1} \
-info:
+    echo "function :${FUNCNAME[@]:1}"
+    _blue "info:
 ##############################################"
     infotype=$1
 #---------------------------------------------
@@ -1159,10 +1159,17 @@ function _get_iodepth_from_table(){
     echo "$IODEPTH"
 }
 function _give_size(){
-    if [[ ${JOB_DATA_SIZE_ARRAY[$job_group_name]} != "none" ]] ;then
+    if [[ ${JOB_DATA_SIZE_ARRAY[$job_group_name]} == "none" ]] ;then
+        :
+    elif [[ ${JOB_DATA_SIZE_ARRAY[$job_group_name]} == "random" ]] ;then
+        :
+    else
         echo "-size=${JOB_DATA_SIZE_ARRAY[$job_group_name]}"
-    #else
-    #    :
+    fi
+}
+function _give_runtime(){
+    if [[ ${JOB_RUNTIME_ARRAY[$job_group_name]} != "none" ]] ;then
+        echo "-runtime=${JOB_RUNTIME_ARRAY[$job_group_name]}"
     fi
 }
 function _give_bs(){
@@ -1199,10 +1206,10 @@ function _fio_job_expansion(){
                 #store job batch in global list
                 JOB_BATCH_ARRAY[$total_round]="\
 fio \
-$(_give_bs) \
+$(_give_runtime) \
 $(_give_size) \
+$(_give_bs) \
 -rw=$PATTERN \
--runtime=${JOB_RUNTIME_ARRAY[$job_group_name]} \
 ${JOB_ARGS_ARRAY[$job_group_name]} "
                 JOB_BATCH_NAME_ARRAY[$total_round]=$job_group_name-$BS-$PATTERN
             done
@@ -1604,6 +1611,7 @@ function _send_fio(){
                     fi 
                 elif [[ $rbd_mode == "True" ]] ;then
                     local tag=$num_jobs-$host_ip-rbd 
+                    log_name=$job_name-${BLK//\//}".log.json"
                     #
                     _verbose && echo "log name: $log_name"
                 else
@@ -1612,6 +1620,13 @@ function _send_fio(){
                     _verbose "jobinfo"
                 fi
                 # ready to send
+                # update data size to a random value 
+#---------|add random info which you want to add |-----------------------
+                # local rand_arg="-iodepth=${RANDOM:0:1}"
+#------------------------------------------------------------------------
+                if [[ ${JOB_DATA_SIZE_ARRAY[$job_group_name]} == "random"  ]] ;then
+                    fio_cmd="$fio_cmd -size=${RANDOM:0:2}% $rand_arg"
+                fi
                 _verbose "jobinfo" && _waiting "reading" 15
                 if [[ $test_mode == "single" ]] ;then
                     #_ssh_send "$fio_cmd -filename=$BLK -name=$tag-$log_name " &>$log_dir/$log_name
