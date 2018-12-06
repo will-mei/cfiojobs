@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.40
+script_version=0.12.41
 
 STATUS=0
 function _stop_test(){
@@ -1374,25 +1374,26 @@ if [[ -n $CMD ]] ;then
         local cmd_stat=$?
         echo "  $host_ip stat: $cmd_stat"
         _update_check_stat $cmd_stat $tmpfile_exec 
-    elif  [[ $p_exec == "True" ]] ;then 
-        local tmpfile_exec_host_out=$(mktemp)
-        #use virtual terminal and recive tty input.
-        # echo "$host_ip :"
-        ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
-        local cmd_stat=$?
-        _update_check_stat $cmd_stat $tmpfile_exec 
     else 
-        local tmpfile_exec_host_out=$(mktemp)
-        # do not merge output 
-        _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
-        _segline "$host_ip  stdout"
-        ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
-        local cmd_stat=$?
-        _update_check_stat $cmd_stat $tmpfile_exec 
-        _segline "$host_ip cmd end"
-        #echo "$host_ip empty $cmd_stat" >> $tmpfile_exec_diff 
-        #touch /tmp/empty 
-    fi
+        if  [[ $p_exec == "True" ]] ;then 
+            local tmpfile_exec_host_out=$(mktemp)
+            #use virtual terminal and recive tty input.
+            # echo "$host_ip :"
+            ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
+            local cmd_stat=$?
+            _update_check_stat $cmd_stat $tmpfile_exec 
+        else 
+            local tmpfile_exec_host_out=$(mktemp)
+            # do not merge output 
+            _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
+            _segline "$host_ip  stdout"
+            ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
+            local cmd_stat=$?
+            _update_check_stat $cmd_stat $tmpfile_exec 
+            _segline "$host_ip cmd end"
+            #echo "$host_ip empty $cmd_stat" >> $tmpfile_exec_diff 
+            #touch /tmp/empty 
+        fi
     #if [[ -n $(cat $tmpfile_exec_host_out) ]] ;then _green not empty ;else  echo empty log file ;fi
         # empty output 
         if [[ $(wc -l <$tmpfile_exec_host_out) -eq 0 ]] ;then 
@@ -1406,6 +1407,7 @@ if [[ -n $CMD ]] ;then
             flock /tmp/$content_sum cat $tmpfile_exec_host_out > /tmp/$content_sum 
         fi 
         rm -rf $tmpfile_exec_host_out 
+    fi 
 #else
 #    _unquiet "    no command to run."
 fi
@@ -1751,7 +1753,7 @@ function _group_execute(){
         # read stat after all exec done
         check_stat=$(sort -nr $tmpfile_exec |head -1)
         # show different output 
-        _count_return
+        [[ $quiet_mode != "True" ]] && _count_return
         # clean up tmp file 
         for k in $(awk '{print$2}' $tmpfile_exec_diff) ;do 
             [[ -f /tmp/$k ]] && rm -f /tmp/$k
