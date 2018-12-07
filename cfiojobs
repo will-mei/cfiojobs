@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.44
+script_version=0.12.45
 
 STATUS=0
 function _test_abort(){
@@ -2366,11 +2366,11 @@ function _fio_group_report(){
             # loop through multy jobgroup 
             if [[ $multy_job_group == "True" ]] ;then 
                 for job_group_dir in $(ls $path_flyover/* -d) ;do 
-                    bash $(dirname $0)/bin/cfiojobs.log.sh $job_group_dir
+                    bash $(dirname $0)/bin/cfiojobs.log2.py $job_group_dir
                     [[ $? -ne 0 ]] && _red "dir: \"$job_group_dir\" status abnormal!" 
                 done
             else
-                bash $(dirname $0)/bin/cfiojobs.log.sh $path_flyover 
+                bash $(dirname $0)/bin/cfiojobs.log2.py $path_flyover 
                 [[ $? -ne 0 ]] && _red "dir: \"$path_flyover\" status abnormal!" 
             fi
         done
