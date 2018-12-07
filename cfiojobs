@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.45
+script_version=0.12.46
 
 STATUS=0
 function _test_abort(){
@@ -509,7 +509,7 @@ current    host: $host_ip "
 #---------------------------------------------
     elif [[ $infotype == "jobinfo" ]] 
 then
-_blue"\
+_blue "\
 send_fio :$send_fio
 blk group:$blk_group_name
 job group:$job_group_name
@@ -1625,7 +1625,7 @@ function _send_fio(){
                 # local rand_arg="-iodepth=${RANDOM:0:1}"
 #------------------------------------------------------------------------
                 if [[ ${JOB_DATA_SIZE_ARRAY[$job_group_name]} == "random"  ]] ;then
-                    fio_cmd="$fio_cmd -size=${RANDOM:0:2}% $rand_arg"
+                    local size_info="-size=$(($RANDOM%100+1))%"
                 fi
                 _verbose "jobinfo" && _waiting "reading" 15
                 if [[ $test_mode == "single" ]] ;then
@@ -1633,19 +1633,19 @@ function _send_fio(){
                     # wait previous 
                     _host_fio_check
                     if [[ $rbd_mode == "True" ]];then 
-                        _ssh_send "$fio_cmd -rbdname=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -rbdname=$BLK -name=$tag-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     else 
-                        _ssh_send "$fio_cmd -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     fi
                 else
                     if [[ $rbd_mode == "True" ]];then
-                        _ssh_send "$fio_cmd -rbdname=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -rbdname=$BLK -name=$tag-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     else
-                        _ssh_send "$fio_cmd -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
+                        _ssh_send "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
+                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
                     fi
                 fi
                 #record job bs, pattern, blk
@@ -1954,13 +1954,13 @@ function _group_test_stop(){
         _update_check_stat 0 $tmpfile_stop
         for host_ip in $ip_list ;do
             # stop local process
-            local host_pid=$(ps aux |grep $(whoami) |grep $host_ip |grep ssh |grep -v grep |awk '{print$2}')
+            local host_pid=$(ps aux |grep $(whoami) |grep $host_ip |grep ssh |grep fio |grep -v grep |awk '{print$2}')
             [[ -n $host_pid ]] && kill $host_pid 
             # stop fio on host
             if ping -c2 $host_ip &>/dev/null ;then
                 if _ssh_send 'echo ssh ok' &>/dev/null ;then
-                    if _ssh_send 'ps aux |grep fio|grep filename |grep -v grep' &>/dev/null ;then
-                        _ssh_send 'kill $(ps aux |grep fio|grep filename |grep -v grep|awk "{print\$2}") ' \
+                    if _ssh_send 'ps aux |grep fio|grep -E "filename|rbdname" |grep -v grep' &>/dev/null ;then
+                        _ssh_send 'kill $(ps aux |grep fio|grep -E "filename|rbdname" |grep -v grep|awk "{print\$2}") ' \
                         && _unquiet " $(_blue "host: $host_ip") fio process killed successfully."
                     else
                         _unquiet " $(_blue "host: $host_ip") no fio running"
@@ -2366,11 +2366,11 @@ function _fio_group_report(){
             # loop through multy jobgroup 
             if [[ $multy_job_group == "True" ]] ;then 
                 for job_group_dir in $(ls $path_flyover/* -d) ;do 
-                    bash $(dirname $0)/bin/cfiojobs.log2.py $job_group_dir
+                    python2 $(dirname $0)/bin/cfiojobs.log2.py $job_group_dir
                     [[ $? -ne 0 ]] && _red "dir: \"$job_group_dir\" status abnormal!" 
                 done
             else
-                bash $(dirname $0)/bin/cfiojobs.log2.py $path_flyover 
+                python2 $(dirname $0)/bin/cfiojobs.log2.py $path_flyover 
                 [[ $? -ne 0 ]] && _red "dir: \"$path_flyover\" status abnormal!" 
             fi
         done
