@@ -259,9 +259,9 @@ function _make_conf_example(){
 # The IP address delimiter is a coma ','
 # tcmu/ceph backend can be an ip address or 'none' 
 #
-#grp        user    port    bknd_grps               bknd_mode               ip_addr
-grp0        root    5000    root,22,172.18.211.132  root,22,172.18.211.62   --     # use $(dirname $0)/conf/grp0.grp as ip list 
-grp1        root    22      172.18.211.132          none                    172.18.211.133,172.18.211.134  #running on esxi 
+#grp        user    port    bknd_grps    bknd_mode    ip_addr
+grp0        root    5000    grp1         remote       --     # use $(dirname $0)/conf/grp0.grp as ip list 
+grp1        root    22      none         none         172.18.211.133,172.18.211.134  #running on esxi 
 
 EOF
 [[ -f $b_conf ]] && echo "blk group config file exist."  \
@@ -523,6 +523,7 @@ BLK  name:$BLK
 ##############################################
 $fio_cmd \
 -filename=$BLK \
+$size_info $rand_arg
 -name=$tag-$log_name &>$log_dir/$log_name
 "
 #---------------------------------------------
@@ -649,88 +650,70 @@ function _check_ip(){
     ip="$1"
         #pure number and dot
         if echo $ip |grep -q [^0-9,'.'] ;then
-            _stat_check;echo "unknown ip  format: $ip" ;STAT=1 ;check_stat=1
+            return 1
         #not 0 started
         elif echo $ip |grep -q ^0 ;then
-            _stat_check;echo "illegal ip  format: $ip" ;STAT=1 ;check_stat=1
+            return 1
         #less than 256
         else 
             for net in $(echo $ip |sed s/\\./\ /g) ;do
                 if [[ $net -gt 255 ]] ;then
-                    _stat_check;echo "illegal ip  format: $ip" ;STAT=1 ;check_stat=1
+                    return 1
                 fi
             done
         fi
+        return 0
 }
 function _check_port(){
 # input : a ssh port number
     if echo $1 |grep -q [^0-9] || [[ $1 -ge 65535 ]] ;then
-       _stat_check;echo "illegal ssh   port: $1" 
-       STAT=1
-       check_stat=1
-    fi
-}
-function _check_missing(){
-# input : 1 index, 2 content.
-    # this array shows the supported check options.
-    index_name_array=("host group name" "ssh user" "ssh port" "tcmu backend" "ceph backend" "host ip list")
-    # check if content lost.
-    if [[ -z $2 ]] ;then
-        _stat_check && echo "lost ${index_name_array[$1]} info" 
-        STAT=1
-        check_stat=1
-        continue
-    fi
-    # different part, different check work.
-    if [[ $1 -eq 2 ]] ;then
-        _check_port $2
-    elif [[ $1 -eq 3 ]] || [[ $1 -eq 4 ]] ;then
-        if [[ $2 != "none" ]] ;then
-             #check port and ip address.
-             echo $2 |grep -q "," && _check_port $(echo $2 |cut -d, -f2)
-             _check_ip ${2##*,}
-        fi
-    elif [[ $1 -eq 5 ]] ;then
-        for ip in ${2//,/ } ;do
-            _check_ip "$ip"
-        done
-    fi
+       return 1
+   else
+       return 0
+    fi 
 }
 function _grp_conf_check(){
-    function _stat_check(){
-        # confirm last time check status.
-        # 0, not checked or all fine till the last time, so we know it's the first err on this group, and print the group name with err info.
-        # 1, some part already failed, we don't need to reprint the group name.
-        [[ $STAT -eq 1 ]] && printf "%-15s" " " || printf "\n%-7s\e[31m%-8s\e[0m" "group:" "$f1, "
-    }
     if [ -f $g_conf ] ;then
         #check start.
-        dublicated_name=$(_format_conf $g_conf |awk '{print$1}' |uniq -d)
+        local dublicated_name=$(_format_conf $g_conf |awk '{print$1}' |uniq -d)
         if [[ -n $dublicated_name ]] ;then
-            echo "group name conflicted: $dublicated_name"
+            echo "group name conflicted: $(_red "$dublicated_name")"
+            exit 1
         fi
         #echo "$(_format_conf $g_conf)"
-        #line_no=0
+        index_name_array=("host group name" "ssh user" "ssh port" "backend group" "bknd execute mode" "host ip list")
         #read line with 7 fields
-        while read f1 f2 f3 f4 f5 f6 f7
-        do
-            #line_no=$(($line_no + 1))
+        while read f1 f2 f3 f4 f5 f6 f7 ;do
+            missing_info=''
             #skip empty line
-            #[[ -z ${f1} ]] && continue
-            STAT=0
-            group_info=($f1 $f2 $f3 $f4 $f5 $f6 $f7)
-            for index in {1..5}
-            do 
-                _check_missing $index ${group_info[$index]}
+            local group_info=($f1 $f2 $f3 $f4 $f5 $f6 $f7)
+            for index in {1..5} ;do 
+                if [[ -z ${group_info[$index]} ]] ;then
+                    local missing_info+=" ${index_name_array[$index]},"
+                elif [[ $index -eq 2 ]] ;then 
+                    if _check_port ${group_info[$index]} ;then
+                        :
+                    else 
+                        echo "group :$f1, illegal ssh port ${group_info[$index]} "
+                        local check_stat=1 
+                    fi
+                elif [[ $index -eq 5 ]] && [[ ${group_info[$index]} == "--" ]] ;then
+                    local grp_file=$(dirname $0)/conf/$f1'.grp'
+                    if [[ -f $grp_file ]] ;then
+                        for i in  $(_format_conf $grp_file);do
+                            if ! _check_ip $i ;then
+                                echo "group :$f1, illegal ip format $i"
+                                local check_stat=1 
+                            fi
+                        done
+                    fi
+                fi 
             done
-            if [[ -n $f7 ]] ;then
-                _stat_check && echo "unknown extra info: $f7"
-            fi
-            #echo "group: $f1, username:$f2, port:$f3, tcmu:$f4, ceph:$f5, ipaddr:$f6"
+            [[ -n $missing_info ]] && echo "group :$f1, missing $missing_info info" && local check_stat=1
         done  << EOF
 $(_format_conf $g_conf)
 EOF
-        [[ $check_stat -eq 1 ]] && exit $check_stat || echo "host group config file checked ok."
+        [[ $check_stat -ne 1 ]] && echo "host group config file checked ok." || exit 1
     else
         echo "host list file not fond."
     fi
