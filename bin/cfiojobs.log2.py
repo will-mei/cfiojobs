@@ -11,8 +11,13 @@ try:
     #remove last '/'
     if logdir[-1] == '/' :
         logdir=logdir[:-1]
+    output_dir = logdir + '/_report/'
+    try:
+        os.mkdir(output_dir)
+    except:
+        pass 
 except IndexError:
-    print("script Usage: \n",sys.argv[0]," <cluster fiolog dir>  <nocompare|rbd> \nplease pass in directory name first, the other options can be omitted.")
+    print "script Usage: \n",sys.argv[0]," <cluster fiolog dir>  <nocompare|rbd> \nplease pass in directory name first, the other options can be omitted."
     exit()
 try:
     output_mode = sys.argv[2]
@@ -116,7 +121,7 @@ if output_mode == 'normal':
     sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值(公式:(D2/E2)*100%),"筛选状态(该盘测试带宽值/同批次测试主机的所有同类型磁盘的带宽平均值;低于90%标为●否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
 elif output_mode == 'nocompare':
     sheet_keys  = ['hostname','filename','pattern_name','bw','iops','lat_avg','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
-    sheet_title = u'主机名,测试设备,块大小/模式,测试带宽(MiB/s),每秒读写(iops),平均延迟(ms),最大延迟(ms),最低延迟(ms),iodepth,numjobs,util,size,runtime,ioengine\n'.encode('GB2312')
+    sheet_title = '主机名,测试设备,块大小/模式,测试带宽(MiB/s),每秒读写(iops),平均延迟(ms),最大延迟(ms),最低延迟(ms),iodepth,numjobs,util,size,runtime,ioengine\n'
 elif output_mode == 'rbd':
     sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','lat_stddev','iodepth','numjobs','util','size','runtime','ioengine','clat_ms_seq_str']
     #clat_ms_seq_key = [0.0, 1.0, 10.0, 20.0, 30.0, 40.0, 5.0, 50.0, 60.0, 70.0, 80.0, 90.0, 95.0, 99.0, 99.5, 99.9, 99.95, 99.99]
@@ -127,7 +132,8 @@ elif output_mode == 'rbd':
 
 # save all type of log to csv file
 for test_blk_type in ['hdd', 'nvme', 'rbd']:
-    csv_name = './' + logdir.split('/')[-1] + '_' + test_blk_type + '_all_host.csv'
+    csv_name = output_dir + logdir.split('/')[-1] + '_' + test_blk_type + '_all_host.csv'
     perf_list_type = filter(lambda log_dict: log_dict['blk_type'] == test_blk_type, perf_list)
     if len(perf_list_type) > 0 :
-        save_perf_list(perf_list_type, sheet_keys, sheet_title, csv_name )
+        save_perf_list(sorted(perf_list_type, key=lambda x : x['filename']), sheet_keys, sheet_title, csv_name )
+        print csv_name, 'report generating success!'
