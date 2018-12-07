@@ -1,6 +1,0 @@
-# bg long test
-nohup ./cfiojobs -g lasa2 -b lasa -j durable -o lasa_durable_$(date +%m%d) --fio -f & 
-# fg short test
-./cfiojobs -g grp2 -b file8 -j short -o D_911 --fio -f 
-# list cluster fio test status
-./cfiojobs -g grp2 --fio-list -p
