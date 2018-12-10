@@ -333,7 +333,10 @@ def flattern_log_dict(log_dict, rw_mode, with_private_name=True):
     #_rw         = log_dict['global options']['rw']
     _size       = log_dict['global options']['size']
     _direct     = log_dict['global options']['direct']
-    _runtime    = log_dict['global options']['runtime']
+    try:
+        _runtime    = log_dict['global options']['runtime']
+    except:
+        _runtime    = 'NA'
     _iodepth    = log_dict['global options']['iodepth']
     _ioengine   = log_dict['global options']['ioengine']
     try :
