@@ -217,13 +217,13 @@ def load_json_log(fio_json_log):
             log_dict = json.load(log_file)
         except ValueError:
             print('warning:',fio_json_log,'load fio json log failed, skiped!')
-            return 0
+            return {}
         # check util stat > 0 
         if log_dict.has_key('disk_util') and float(log_dict['disk_util'][0]['util']) > 0.0 :
             _util       = log_dict['disk_util'][0]['util']
         else:
             print('warning:',fio_json_log,'status abnormal, util value missing, skiped!')
-            return 0
+            return {}
     return log_dict 
 
 # check 

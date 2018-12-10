@@ -73,6 +73,8 @@ perf_list   = list()
 for logfile in get_json_list(logdir):
     # host ip, dev(file name) , pattern 
     log_dict = cu.load_json_log(logfile)
+    if len(log_dict) == 0 :
+        continue
     for perf_log in cu.parse_log_dict(log_dict):
         perf_list.append(perf_log)
 #print(perf_list)
