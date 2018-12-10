@@ -1611,28 +1611,16 @@ function _send_fio(){
                     local size_info="-size=$(($RANDOM%100+1))%"
                 fi
                 _verbose "jobinfo" && _waiting "reading" 15
-                #if [[ $test_mode == "single" ]] ;then
-                    #_ssh_send "$fio_cmd -filename=$BLK -name=$tag-$log_name " &>$log_dir/$log_name
                     # wait previous 
-                #    _host_fio_check
-                    if [[ $rbd_mode == "True" ]];then 
-                        [[ $test_mode == "single" ]] && _host_fio_check 
-                        _ssh_send "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name  --output=$log_dir/$log_name &>>$log_dir/fio-err.log &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name   --output=$log_dir/$log_name &>>$log_dir/fio-err.log &" >>$log_dir/fio-batch".log"
-                    else 
-                        [[ $test_mode == "single" ]] && _host_fio_check 
-                        _ssh_send "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  --output=$log_dir/$log_name &>>$log_dir/fio-err.log &"
-                        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  --output=$log_dir/$log_name &>>$log_dir/fio-err.log &" >>$log_dir/fio-batch".log"
-                    fi
-                #else
-                #    if [[ $rbd_mode == "True" ]];then
-                #        _ssh_send "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
-                #        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name   &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
-                #    else
-                #        _ssh_send "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name &"
-                #        echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  &>$log_dir/$log_name" >>$log_dir/fio-batch".log"
-                #    fi
-                #fi
+                if [[ $rbd_mode == "True" ]];then 
+                    [[ $test_mode == "single" ]] && _host_fio_check 
+                    _ssh_send "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name  --output=$log_dir/$log_name &>>$log_dir/fio-err.log &"
+                    echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name   --output=$log_dir/$log_name &>>$log_dir/fio-err.log &" >>$log_dir/fio-batch".log"
+                else 
+                    [[ $test_mode == "single" ]] && _host_fio_check 
+                    _ssh_send "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  --output=$log_dir/$log_name &>>$log_dir/fio-err.log &"
+                    echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  --output=$log_dir/$log_name &>>$log_dir/fio-err.log &" >>$log_dir/fio-batch".log"
+                fi
                 #record job bs, pattern, blk
                 #bs info
                 grep  "^bs:.*$" $log_dir/fio-batch".log" \
