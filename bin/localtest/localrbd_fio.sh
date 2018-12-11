@@ -16,6 +16,9 @@ fio -v &>/dev/null || yum -y install fio || exit 1
 mkdir -p $outputdir 
 pattern_list="read randread write randwrite"
 #rbd_list=$(for i in {021..040};do echo rbd$i ;done)
+numjobs=2
+hostname=$HOSTNAME
+blk_type='rbd'
 
 function wait_rbd_fio(){
 	#t=0
@@ -43,12 +46,13 @@ fio \
 -clientname=admin \
 -pool=rbd \
 -direct=1 \
--numjobs=2 \
+-numjobs=$numjobs \
 -ramp_time=30 \
 -time_based \
 -group_reporting \
 --output-format=json  \
--name="2"-"$BS"-"$PATTERN"-"${RBD}".log.json &> "$outputdir"/"$BS"-"$PATTERN"-"${RBD}".log.json $mode
+-name="$numjobs"-"$hostname"-"$blk_type"-"$BS"-"$PATTERN"-"${RBD}".log.json \
+--output="$outputdir"/"$BS"-"$PATTERN"-"${RBD}".log.json &>>$outputdir/fio-err.log $mode
         done <$rbd_list_file
     done
 done 

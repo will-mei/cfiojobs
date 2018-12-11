@@ -7,14 +7,15 @@
 fio -v 1>/dev/null || yum -y install fio
 [[ $? -ne 0 ]] && exit 1
 
-outputdir="$0-test"
+[[ $1 == "-p"  ]] && mode="&" && outputdir="$0-test_parallel" || outputdir="$0-test_single"
 mkdir -p $outputdir 
-[[ $1 == "-p"  ]] && mode="&"
 
 bs_list="4k 256k 4m"
 pattern_list="read randread write randwrite"
 blk_list=$(lsblk -ps |grep disk |grep -v ─ |awk '{print$1}')
 numjobs=2
+hostname=$HOSTNAME
+blk_type='hdd'
 
 echo  "bs: ${bs_list// /,}" > "$outputdir"/fio-batch.log
 echo  "pattern: ${pattern_list// /,}" >> "$outputdir"/fio-batch.log
@@ -33,7 +34,7 @@ for BS in $bs_list ;do
     for PATTERN in $pattern_list ;do
         wait_fio 
         for BLK in $blk_list ;do
-            eval fio -bs=$BS -size=100% -rw=$PATTERN -runtime=600 -ramp_time=30 -iodepth=32 -numjobs=$numjobs -direct=1 -ioengine=libaio -time_based -group_reporting --output-format=json -filename=$BLK -name="$numjobs"-"$BS"-"$PATTERN"-"${BLK//\//}".log.json &>"$outputdir"/"$BS"-"$PATTERN"-"${BLK//\//}".log.json $mode
+            eval fio -bs=$BS -size=100% -rw=$PATTERN -runtime=600 -ramp_time=30 -iodepth=32 -numjobs=$numjobs -direct=1 -ioengine=libaio -time_based -group_reporting --output-format=json -filename=$BLK -name="$numjobs"-"$hostname"-"$blk_type"-"$BS"-"$PATTERN"-"${BLK//\//}".log.json --output="$outputdir"/"$BS"-"$PATTERN"-"${BLK//\//}".log.json &>>"$outputdir"/fio-err.log $mode
         done
     done
 done
