@@ -51,7 +51,7 @@ def peak_filter(perf_log, bp, key_index):
 
 # compare with avg and add a tag of data stat 
 def update_compare_tag(perf_log, perf_filter='bw'):
-    global perf_list 
+    global perf_list_type 
     global peak_dict 
     no = perf_list.index(perf_log)
     # confirm bp and blk type 
@@ -60,9 +60,11 @@ def update_compare_tag(perf_log, perf_filter='bw'):
     # update compare tag : ['deviation','stat']
     perf_list[no]['deviation'] = str(round(float(perf_log[perf_filter]) / peak_dict[bp][perf_filter] *100, 2)) +'%'
     if float(perf_log[perf_filter]) < float(peak_dict[bp][perf_filter]) * dev_perf_index[blk_type]:
-        perf_list[no]['stat']  = 'X'
+        #perf_list[no]['stat']  = 'X'
+        perf_list[no]['stat']  = u'●'.encode('GB2312')
     else:
-        perf_list[no]['stat']  = 'O'
+        #perf_list[no]['stat']  = 'O'
+        perf_list[no]['stat']  = u'○'.encode('GB2312')
     # add avg_value : ['bw_global','iops_global','lat_avg_global',]
     for index in avg_index : 
         perf_list[no][index + '_global'] = float(peak_dict[bp][index])
@@ -88,24 +90,9 @@ for logfile in get_json_list(logdir):
 #pool.close()
 #pool.join()
 
-peak_dict = dict()
 # get bs_pattern list set 
 bs_pattern_list = list(set(map(lambda x : x['pattern_name'], perf_list)))
 #print(bs_pattern_list)
-# calculate vag values for each pattern 
-if output_mode in ['normal', 'rbd']:
-    # cont and give sum value
-    for bp in bs_pattern_list:
-        peak_dict[bp]  = dict()
-        # log screening
-        bp_list    = filter(lambda x : x['pattern_name'] == bp , perf_list)
-        for index in avg_index:
-            index_values   = map(lambda x : float(x[index]), bp_list)
-            peak_dict[bp][index] = reduce(lambda x, y: x + y , index_values)/len(bp_list)
-#print(peak_dict)
-    # compare bw and iops value with global avg 
-    map(update_compare_tag , perf_list)
-#cu.print_dic(perf_list[1])
 
 # save performance dict list to csv sheet 
 def save_perf_list(perf_list, keys_of_column, csv_title, csv_name):
@@ -132,10 +119,32 @@ elif output_mode == 'rbd':
     sheet_title_str = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),延迟值离散度(stdev),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎'
     sheet_title = sheet_title_str.encode('GB2312') + ',' + clat_ms_seq_key + '\n'
 
+
 # save all type of log to csv file
 for test_blk_type in ['hdd', 'nvme', 'rbd']:
-    csv_name = output_dir + logdir.split('/')[-1] + '_' + test_blk_type + '_all_host.csv'
+    global perf_list_type
+    global peak_dict 
+    # screening by type 
     perf_list_type = filter(lambda log_dict: log_dict['blk_type'] == test_blk_type, perf_list)
-    if len(perf_list_type) > 0 :
+    print test_blk_type, 'logs:', len(perf_list_type)
+    # calculate avg by bs+pattern 
+    # a dict for avg, max and min 
+    peak_dict = dict()
+    if output_mode in ['normal', 'rbd'] and len(perf_list_type) > 0:
+        # cont and give sum value
+        for bp in bs_pattern_list:
+            # store peak value for each bs + pattern
+            peak_dict[bp]  = dict()
+            # bs+pattern log screening
+            bp_list    = filter(lambda x : x['pattern_name'] == bp , perf_list_type)
+            # calculating
+            for index in avg_index:
+                index_values   = map(lambda x : float(x[index]), bp_list)
+                peak_dict[bp][index] = reduce(lambda x, y: x + y , index_values) / len(bp_list)
+    #print(peak_dict)
+        # compare bw and iops value with global avg 
+        map(update_compare_tag , perf_list_type)
+    #cu.print_dic(perf_list[1])
+        csv_name = output_dir + logdir.split('/')[-1] + '_' + test_blk_type + '_all_host.csv'
         save_perf_list(sorted(perf_list_type, key=lambda x : x['filename']), sheet_keys, sheet_title, csv_name )
         print csv_name, 'report generating success!'
