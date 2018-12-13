@@ -3,6 +3,7 @@
 #from multiprocessing.dummy import Pool as ThreadPool
 from subprocess import Popen, PIPE
 import cfiojobsutil.utils as cu 
+#import stackless 
 import os
 import sys
 
@@ -51,35 +52,44 @@ def peak_filter(perf_log, bp, key_index):
 
 # compare with avg and add a tag of data stat 
 def update_compare_tag(perf_log, perf_filter='bw'):
-    global perf_list_type 
+    global perf_list 
     global peak_dict 
     no = perf_list.index(perf_log)
     # confirm bp and blk type 
     bp = perf_log['pattern_name']
     blk_type = perf_log['blk_type']
     # update compare tag : ['deviation','stat']
-    perf_list[no]['deviation'] = str(round(float(perf_log[perf_filter]) / peak_dict[bp][perf_filter] *100, 2)) +'%'
-    if float(perf_log[perf_filter]) < float(peak_dict[bp][perf_filter]) * dev_perf_index[blk_type]:
-        #perf_list[no]['stat']  = 'X'
-        perf_list[no]['stat']  = u'●'.encode('GB2312')
+    perf_list[no]['deviation'] = str(round(float(perf_log[perf_filter]) / peak_dict[blk_type][bp][perf_filter] *100, 2)) +'%'
+    if float(perf_log[perf_filter]) < float(peak_dict[blk_type][bp][perf_filter]) * dev_perf_index[blk_type]:
+        perf_list[no]['stat']  = 'X'
     else:
-        #perf_list[no]['stat']  = 'O'
-        perf_list[no]['stat']  = u'○'.encode('GB2312')
+        perf_list[no]['stat']  = 'O'
     # add avg_value : ['bw_global','iops_global','lat_avg_global',]
     for index in avg_index : 
-        perf_list[no][index + '_global'] = float(peak_dict[bp][index])
+        perf_list[no][index + '_global'] = float(peak_dict[blk_type][bp][index])
 
 ##################################################################################
 # get an array of all result
 perf_list   = list()
-for logfile in get_json_list(logdir):
+#for logfile in get_json_list(logdir):
     # host ip, dev(file name) , pattern 
-    log_dict = cu.load_json_log(logfile)
-    if len(log_dict) == 0 :
-        continue
-    for perf_log in cu.parse_log_dict(log_dict):
-        perf_list.append(perf_log)
+#    log_dict = cu.load_json_log(logfile)
+#    if len(log_dict) == 0 :
+#        continue
+#    for perf_log in cu.parse_log_dict(log_dict):
+#        perf_list.append(perf_log)
 #print(perf_list)
+
+def add_valid_log(logfile):
+    global perf_list 
+    log_dict = cu.load_json_log(logfile)
+    if len(log_dict) > 0 :
+        for perf_log in cu.parse_log_dict(log_dict):
+            perf_list.append(perf_log)
+
+map(add_valid_log, get_json_list(logdir))
+#map(lambda logfile: stackless.tasklet(add_valid_log)(logfile) ,get_json_list(logdir))
+#stackless.run()
 
 #def add_log(logfile):
 #    global perf_list 
@@ -93,6 +103,35 @@ for logfile in get_json_list(logdir):
 # get bs_pattern list set 
 bs_pattern_list = list(set(map(lambda x : x['pattern_name'], perf_list)))
 #print(bs_pattern_list)
+
+peak_dict = dict()
+type_perf_list = dict()
+
+for test_blk_type in ['hdd', 'nvme', 'rbd']:
+    # log screening
+    blk_list = filter(lambda x : x['blk_type'] == test_blk_type, perf_list)
+    blk_log_amount = len(blk_list)
+    if blk_log_amount > 0:
+        print test_blk_type, 'logs:', blk_log_amount 
+        peak_dict[test_blk_type]=dict()
+        # add to type dict 
+        type_perf_list[test_blk_type] = blk_list 
+        for bp in bs_pattern_list:
+            blk_bp_list = filter(lambda x : x['pattern_name'] == bp, blk_list)
+            log_amount = len(blk_bp_list)
+            if log_amount > 0:
+                peak_dict[test_blk_type][bp]  = dict()
+                # cont and give sum value
+                for index in avg_index:
+                    index_values   = map(lambda x : float(x[index]), blk_bp_list)
+                    peak_dict[test_blk_type][bp][index] = reduce(lambda x, y: x + y , index_values) /log_amount
+#print(peak_dict)
+
+# calculate vag values for each pattern 
+if output_mode in ['normal', 'rbd']:
+    # compare bw and iops value with global avg 
+    map(update_compare_tag, perf_list)
+#cu.print_dic(perf_list[1])
 
 # save performance dict list to csv sheet 
 def save_perf_list(perf_list, keys_of_column, csv_title, csv_name):
@@ -119,32 +158,10 @@ elif output_mode == 'rbd':
     sheet_title_str = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),延迟值离散度(stdev),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎'
     sheet_title = sheet_title_str.encode('GB2312') + ',' + clat_ms_seq_key + '\n'
 
-
 # save all type of log to csv file
-for test_blk_type in ['hdd', 'nvme', 'rbd']:
-    global perf_list_type
-    global peak_dict 
-    # screening by type 
-    perf_list_type = filter(lambda log_dict: log_dict['blk_type'] == test_blk_type, perf_list)
-    print test_blk_type, 'logs:', len(perf_list_type)
-    # calculate avg by bs+pattern 
-    # a dict for avg, max and min 
-    peak_dict = dict()
-    if output_mode in ['normal', 'rbd'] and len(perf_list_type) > 0:
-        # cont and give sum value
-        for bp in bs_pattern_list:
-            # store peak value for each bs + pattern
-            peak_dict[bp]  = dict()
-            # bs+pattern log screening
-            bp_list    = filter(lambda x : x['pattern_name'] == bp , perf_list_type)
-            # calculating
-            for index in avg_index:
-                index_values   = map(lambda x : float(x[index]), bp_list)
-                peak_dict[bp][index] = reduce(lambda x, y: x + y , index_values) / len(bp_list)
-    #print(peak_dict)
-        # compare bw and iops value with global avg 
-        map(update_compare_tag , perf_list_type)
-    #cu.print_dic(perf_list[1])
-        csv_name = output_dir + logdir.split('/')[-1] + '_' + test_blk_type + '_all_host.csv'
+for test_blk_type in type_perf_list:
+    perf_list_type = type_perf_list[test_blk_type]
+    csv_name = output_dir + logdir.split('/')[-1] + '_' + test_blk_type + '_all_host.csv'
+    if len(perf_list_type) > 0 :
         save_perf_list(sorted(perf_list_type, key=lambda x : x['filename']), sheet_keys, sheet_title, csv_name )
         print csv_name, 'report generating success!'
