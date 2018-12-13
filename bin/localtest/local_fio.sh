@@ -15,7 +15,6 @@ pattern_list="read randread write randwrite"
 blk_list=$(lsblk -ps |grep disk |grep -v ─ |awk '{print$1}')
 numjobs=2
 hostname=$HOSTNAME
-blk_type='hdd'
 
 echo  "bs: ${bs_list// /,}" > "$outputdir"/fio-batch.log
 echo  "pattern: ${pattern_list// /,}" >> "$outputdir"/fio-batch.log
@@ -34,6 +33,7 @@ for BS in $bs_list ;do
     for PATTERN in $pattern_list ;do
         wait_fio 
         for BLK in $blk_list ;do
+            [[ ${BLK/nvme/} == $BLK ]] && blk_type='hdd' || blk_type='nvme'
             eval fio -bs=$BS -size=100% -rw=$PATTERN -runtime=600 -ramp_time=30 -iodepth=32 -numjobs=$numjobs -direct=1 -ioengine=libaio -time_based -group_reporting --output-format=json -filename=$BLK -name="$numjobs"-"$hostname"-"$blk_type"-"$BS"-"$PATTERN"-"${BLK//\//}".log.json --output="$outputdir"/"$BS"-"$PATTERN"-"${BLK//\//}".log.json &>>"$outputdir"/fio-err.log $mode
         done
     done
