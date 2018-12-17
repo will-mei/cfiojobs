@@ -7,7 +7,7 @@ set password [ lindex $argv 3 ]
 set cmd [ lindex $argv 4 ]
 set timeout 10
 #spawn ssh root@$ip
-spawn ssh -p $port $user@$ip "$cmd"
+spawn ssh -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -p $port $user@$ip "$cmd"
 expect {
  "*yes/no" { send "yes\r"; exp_continue}
  "*password:" { send "$password\r";exp_continue }

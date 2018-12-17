@@ -757,7 +757,7 @@ function _group_check(){
                         if [[ -f $host_conf ]] ;then
                             HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ))
                         else
-                            echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf\" is missing "
+                            echo "Warning: host group config file: $g_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf\" is missing "
                         fi
                     else
                           HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list ${group_info[5]//,/ })
@@ -767,7 +767,7 @@ function _group_check(){
                 # if group info lost, skip or exit
                 # 3. check from last, find last missing info index, and print its name.
                     for index in {1..5} ;do
-                       [[ -z ${group_info[$index]} ]] && echo "Warning: host group config file: $j_conf, group name: \"$host_group_name\" , ${index_name_array[$index]} info missing!"
+                       [[ -z ${group_info[$index]} ]] && echo "Warning: host group config file: $g_conf, group name: \"$host_group_name\" , ${index_name_array[$index]} info missing!"
                     done
                     grp_stat=1
                     # remove from host_group_list
@@ -1296,9 +1296,13 @@ function _ssh_send(){
         echo "${FUNCNAME[@]} warning: no command info to send!" 
         continue
     else
-        #ssh -n -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -l $host_user $host_ip -p $host_port "$@"
-        ssh -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$@"
-        #expect -v &>/dev/null && expect bin/expect_ssh2vm.exp $host_user $host_ip $host_port $host_pwd "$@"
+        if expect -v &>/dev/null ;then 
+            $(dirname $0)/bin/login/expect_ssh2vm.exp $host_user $host_ip $host_port 'www.123.com' "$@"
+            #exddpect -v &>/dev/null && expect bin/expect_ssh2vm.exp $host_user $host_ip $host_port $host_pwd "$@"
+        else 
+            #ssh -n -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -l $host_user $host_ip -p $host_port "$@"
+            ssh -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -l $host_user $host_ip -p $host_port "$@"
+        fi 
     fi
 }
 function _send_file(){
