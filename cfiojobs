@@ -2122,14 +2122,16 @@ function _group_blk_detect(){
                     local host_root_info=($(grep /$ $tmpfile_host_blk_detected))
                     echo ${host_root_info[@]} |grep -q disk || local host_root_info=($(grep /$ -A1 $tmpfile_host_blk_detected|tail -1))
                     echo ${host_root_info[@]} |grep -q disk || local host_root_info=($(grep /$ -A2 $tmpfile_host_blk_detected|tail -1))
-                    #[[ ${host_root_info[-2]} != "disk" ]] && local host_root_info=($(grep /$ -A1 $tmpfile_host_blk_detected|tail -1))
-                    #[[ ${host_root_info[-2]} != "disk" ]] && local host_root_info=($(grep /$ -A2 $tmpfile_host_blk_detected|tail -1))
                 #echo root info: ${host_root_info[@]}
                     local host_root_disk=${host_root_info[0]//[^a-z,'/']/}
                 #echo root name: $host_root_disk
                     # get size info of root disk 
                     local host_root_size=$(grep $host_root_disk'\ ' $tmpfile_host_blk_detected |sort -u |awk '{if(NR==1)print$4}' )
                 #echo root size: $host_root_size
+                    # check if other data disk same size as root (unparted disk)
+                    local RootSize_nu=$(grep ^/ $tmpfile_host_blk_detected |grep $host_root_size|grep disk |wc -l)
+#               echo same root size disk number: $RootSize_nu
+                    local AllDisk_nu=$(grep ^/ $tmpfile_host_blk_detected |grep disk |wc -l)
                     # check all detected disks on host 
                     for i in $host_blk_detected ;do
                         # add new disk when it's not in detected blk dev list.
@@ -2139,13 +2141,8 @@ function _group_blk_detect(){
                             [[ $tmp_blk_size == $host_root_size ]] && local disk_note=" # same size as disk of root partition"
                             # [[ $? -eq 0 ]] && echo $i size $tmp_blk_size
                             echo $i"," "$disk_note" >> $tmpfile_grp_blk_detected  && disk_note=''
-                            # check if other data disk same size as root 
-                            local RootSize_nu=$(grep ^/ $tmpfile_host_blk_detected |grep $host_root_size|grep disk |wc -l)
-#                            echo same root size disk number: $RootSize_nu
-#                            grep ^/ $tmpfile_host_blk_detected |grep $host_root_size|grep disk 
-                            local AllDisk_nu=$(grep ^/ $tmpfile_host_blk_detected |grep disk |wc -l)
-                            #only one blk same size as root, and others not  
-                            if [[ $RootSize_nu -eq 1 ]] && [[ $AllDisk_nu -ge $RootSize_nu ]] ;then 
+                            #only this (one) unparted blk same size as root, and others not  
+                            if [[ $tmp_blk_size == $host_root_size  ]] && [[ $RootSize_nu -eq 1 ]] && [[ $AllDisk_nu -ge $RootSize_nu ]] ;then 
                                 sed -i "/^${i//\//\\/}/s/^/#/" $tmpfile_grp_blk_detected
                             fi 
                         fi
