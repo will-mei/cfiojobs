@@ -14,7 +14,7 @@ try:
     single_csv      = sys.argv[2]
 #    output_file     = './test.xlsx'
 except IndexError:
-    print("this script contrast fio parallel mode test report with single mode report, default output file name: './<your csv file name>-report.xlsx'.\nand it requires: \n\t1. parallel mode report csv filee \n\t2. single mode report csv file \n3. disk type \n4. excel name :xxx.xlsx \nplease pass in these names first.")
+    print("this script contrast fio parallel mode test report with single mode report, default output file name: './<your csv file name>-report.xlsx'.\nand it requires: \n\t1. parallel mode report csv file \n\t2. single mode report csv file \n3. disk type \n4. excel name :xxx.xlsx \nplease pass in these names first.")
     exit()
 
 try:
@@ -78,17 +78,20 @@ def tweens_report(dic_p, dic_s, ref_index, stat_list):
 
 
 # load data form csv
-parallel_report = cu.load_csv(parallel_csv)
-#parallel_dict   = cu.array2dic(parallel_report, key_index_list)
-parallel_dict   = cu.report_to_sortable_dic(parallel_report)
-
 single_report   = cu.load_csv(single_csv)
-#single_dict     = cu.array2dic(single_report, key_index_list)
-single_dict     = cu.report_to_sortable_dic(single_report)
-
-# contrast paralle to single
-result_sheet = tweens_report(parallel_dict, single_dict, reference_index, stat_pool)
-#print(result_sheet)
+# check disk number (include title)
+disk_count = len(set(map(lambda x: x[1], single_report)))
+if disk_count > 2:
+    parallel_report = cu.load_csv(parallel_csv)
+    #single_dict     = cu.array2dic(single_report, key_index_list)
+    #parallel_dict   = cu.array2dic(parallel_report, key_index_list)
+    single_dict     = cu.report_to_sortable_dic(single_report)
+    parallel_dict   = cu.report_to_sortable_dic(parallel_report)
+    # contrast paralle to single
+    result_sheet = tweens_report(parallel_dict, single_dict, reference_index, stat_pool)
+    #print(result_sheet)
+else:
+    result_sheet = map(lambda x : x[0:7], single_report)
 
 #print(map(lambda x : cu.bp2num(x[2]), result_sheet[0:10]))
 
@@ -101,9 +104,9 @@ h_list   = map(lambda x: x[0], result_sheet)
 u_list   = {}.fromkeys(h_list).keys()
 h_count  = len(u_list) -1 
 
-# change a new name 
+# give a new name of worksheet
 tmp_sheet_name = cu.get_file_name(single_csv)[1][0:30].split('_')[0] + '(' + str(h_count) + u'台' +  ')'
-# check same name worksheet 
+# check name confliction in worksheet 
 if tmp_sheet_name in wb.sheetnames:
     same_name_num=map(lambda x : tmp_sheet_name in x.title , wb).count(True)
     tmp_sheet_name = tmp_sheet_name + str(same_name_num)
@@ -111,11 +114,13 @@ if tmp_sheet_name in wb.sheetnames:
 else:
     ws.title = tmp_sheet_name 
 
+# add sheet to Workbook
 for row in result_sheet:
         ws.append(row)
 
 # set title format 
-title_cell = 'A1:' + cu.num2letter(ws.max_column) + '1'
+column_max = cu.num2letter(ws.max_column)
+title_cell = 'A1:' + column_max + '1'
 #print(title_cell)
 
 ####################################################################
@@ -134,15 +139,18 @@ title_dict = {
 'L1':'最终筛选状态'
 }
 for k in title_dict:
-    ws[k].value = title_dict[k]
+    if k[0] <= column_max:
+        ws[k].value = title_dict[k]
 
 ####################################################################
 # width = Chinese characters number * 2
 # width = ascii characters number * 1.1
 line_width_dict = {
     'A':14.38,
-    'B':8.88,
-    'c':11.5,
+#    'B':8.88,
+    'B':13.25,
+#    'c':11.5,
+    'C':14.38,
     'D':16.63,
     'E':18.13,
     'F':28.25,
@@ -154,7 +162,8 @@ line_width_dict = {
     'L':13.5
 }
 for k in line_width_dict:
-    ws.column_dimensions[k].width = line_width_dict[k]
+    if k[0] <= column_max:
+        ws.column_dimensions[k].width = line_width_dict[k]
 
 
 ####################################################################
@@ -170,8 +179,8 @@ bd_round = Border(left=bd, top=bd, right=bd, bottom=bd)
 #highlight.font = Font(bold=True)
 #highlight.border = bd_round
 
-#for cell in ws[title_cell][0]:
-for cell in ws['A1:L1'][0]:
+#for cell in ws['A1:L1'][0]:
+for cell in ws[title_cell][0]:
 #    print(cell) 
     cell.fill = title_fill
     cell.border = bd_round
@@ -186,7 +195,8 @@ font_dict = {
     'L1':bold_font
 }
 for k in font_dict:
-    ws[k].font = font_dict[k]
+    if k[0] <= column_max:
+        ws[k].font = font_dict[k]
 
 ####################################################################
 # must be unicode 
@@ -197,10 +207,11 @@ comment_dict = {
     'L1':u'该盘并行测试带宽值/\n单盘独立测试的平均带宽值;\n低于90%标为●否则记为○'
 }
 for k in comment_dict:
-    t         = comment_dict[k]
-    cmt       = Comment(t, 'note')
-    cmt.width = 300
-    ws[k].comment = cmt 
+    if k[0] <= column_max:
+        t         = comment_dict[k]
+        cmt       = Comment(t, 'note')
+        cmt.width = 300
+        ws[k].comment = cmt 
 
 ####################################################################
 # freeze the first line 

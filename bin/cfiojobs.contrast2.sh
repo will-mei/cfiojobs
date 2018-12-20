@@ -32,11 +32,11 @@ for i in $(ls "$source_report_dir/_report/$source_report_name"*_all_host.csv) ;d
     reference_report=$(ls "$reference_report_dir/_report/$reference_report_name"*_all_host.csv |grep $type)
 	if [[ -f $reference_report ]] ;then
         #$(dirname $0)/cfiojobs.contrast2.py $i $reference_report $type $excel_name 
-        $(dirname $0)/cfiojobs.contrast2 $i $reference_report $type $excel_name 
+        $(dirname $0)/cfiojobs.contrast2.py $i $reference_report $type $excel_name 
 	else
 		echo "$reference_report_name missing or mismatch."
 		echo "please check content in dir: $reference_report_dir/_report/ ."
-        echo "you can try to rebuild json report with cmd: $(dirname $0)/cfiojobs.log.sh $reference_report_dir"
+        echo "you can try to rebuild json report with cmd: $(dirname $0)/cfiojobs.log2.py $reference_report_dir"
 		continue
 	fi
 done
