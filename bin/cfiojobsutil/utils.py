@@ -313,7 +313,7 @@ def parse_mixrw(log_dict):
     if len(bs_split) > 1 :
         bs_w = parse_bs_expr(bs_split[1], dict_result=False)
     else:
-        bs_w = bs_rd
+        bs_w = bs_r
 # bs 
     bs_percentage    = {'read':bs_r, 'write':bs_w}
 # pattern_name : bs + pattern = 'read 70%: 256k(40%) 4m(10%) 4k(50%)'
