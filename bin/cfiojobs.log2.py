@@ -61,9 +61,9 @@ def update_compare_tag(perf_log, perf_filter='bw'):
     # update compare tag : ['deviation','stat']
     perf_list[no]['deviation'] = str(round(float(perf_log[perf_filter]) / peak_dict[blk_type][bp][perf_filter] *100, 2)) +'%'
     if float(perf_log[perf_filter]) < float(peak_dict[blk_type][bp][perf_filter]) * dev_perf_index[blk_type]:
-        perf_list[no]['stat']  = u'○'.encode('GB2312')
-    else:
         perf_list[no]['stat']  = u'●'.encode('GB2312')
+    else:
+        perf_list[no]['stat']  = u'○'.encode('GB2312')
     # add avg_value : ['bw_global','iops_global','lat_avg_global',]
     for index in avg_index : 
         perf_list[no][index + '_global'] = float(peak_dict[blk_type][bp][index])
