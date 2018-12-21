@@ -2212,7 +2212,7 @@ if [[ -f $grp_blk_conf ]] ;then
         done && wait 
         # show blk list after recheck 
         _yellow "currently valid blk list of $1:"
-        grep -v "^#" $grp_blk_conf || _red "  $grp_blk_conf :No valid block device for group: $1 !" 
+        grep -v "^#" $grp_blk_conf |sed "$ s/\,//g" || _red "  $grp_blk_conf :No valid block device for group: $1 !" 
     else
         _red "  $grp_blk_conf contains no valid block devices."
     fi
