@@ -379,8 +379,8 @@ function _segline(){
     echo -e "\e[34m$delimiter\e[0m"
 }
 function _unit_time(){
-# add time unit to a time value (sec)
-    local time_in=$1
+# add time unit to a time value (sec) int 
+    local time_in=${1%%.*}
         if   [[ $time_in -ge 86400 ]] ;then
             time_out=$(echo $time_in |awk '{printf("%.2f\n",$1/86400)}')"Day(s)"
         elif [[ $time_in -ge 3600 ]] ;then
