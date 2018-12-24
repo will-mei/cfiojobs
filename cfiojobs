@@ -14,6 +14,7 @@
 ###########################################################
 
 script_version=0.12.51
+ssh_timeout=15
 
 STATUS=0
 function _test_abort(){
@@ -114,6 +115,7 @@ usage :
             -d             check and give function parameters, also, skip failure
             -f             skip failure and try to continue, if possible
             -p             send commands and copy files execute in parallel
+            --cpid         copy ssh pub id to given host groups 
             --script       execute given scripts on host groups (sep with comma) 
             --argument     pass given arguments(double quote multiple args) to each given script  
 
@@ -1300,8 +1302,8 @@ function _ssh_send(){
         #    $(dirname $0)/bin/login/expect_ssh2vm.exp $host_user $host_ip $host_port 'www.123.com' "$@"
             #exddpect -v &>/dev/null && expect bin/expect_ssh2vm.exp $host_user $host_ip $host_port $host_pwd "$@"
         #else 
-            #ssh -n -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -l $host_user $host_ip -p $host_port "$@"
-            ssh -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
+            #ssh -n -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -l $host_user $host_ip -p $host_port "$@"
+            ssh -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
         #fi 
     fi
 }
@@ -1309,12 +1311,12 @@ function _send_file(){
 if [[ -n $file_group_list ]] ;then
     _unquiet "  $host_ip send files..."
     if [[ $quiet_mode == "True" ]] ;then
-        scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
+        scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
         local scp_stat=$?
         echo "  $host_ip stat: $scp_stat"
         _update_check_stat $scp_stat $tmpfile_exec 
     else
-        scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
+        scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
         local scp_stat=$?
         _update_check_stat $scp_stat $tmpfile_exec 
     fi
@@ -1331,24 +1333,24 @@ if [[ -n ${harvest_file_group_list//,/} ]] ;then
     # one file or dir to harvest
     if [[ ${harvest_file_group_list//,/} == ${harvest_file_group_list} ]] ;then
         if [[ $quiet_mode == "True" ]] ;then
-            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir/ &>/dev/null                                                        
+            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir/ &>/dev/null                                                        
             local hvst_stat=$?
             echo "  $host_ip stat: $hvst_stat"
             _update_check_stat $hvst_stat $tmpfile_exec 
         else
-            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir && echo "  $host_ip done"
+            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir && echo "  $host_ip done"
             local hvst_stat=$?
             _update_check_stat $hvst_stat $tmpfile_exec 
         fi
     # multy files
     else
         if [[ $quiet_mode == "True" ]] ;then
-            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir/ &>/dev/null                                                        
+            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir/ &>/dev/null                                                        
             local hvst_stat=$?
             echo "  $host_ip stat: $hvst_stat"
             _update_check_stat $hvst_stat $tmpfile_exec 
         else
-            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir && echo "  $host_ip done"
+            eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir && echo "  $host_ip done"
             local hvst_stat=$?
             _update_check_stat $hvst_stat $tmpfile_exec 
         fi
@@ -1370,7 +1372,7 @@ if [[ -n $CMD ]] ;then
             local tmpfile_exec_host_out=$(mktemp)
             #use virtual terminal and recive tty input.
             # echo "$host_ip :"
-            ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
+            ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
             local cmd_stat=$?
             _update_check_stat $cmd_stat $tmpfile_exec 
         else 
@@ -1378,7 +1380,7 @@ if [[ -n $CMD ]] ;then
             # do not merge output 
             _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
             _segline "$host_ip  stdout"
-            ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
+            ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
             local cmd_stat=$?
             _update_check_stat $cmd_stat $tmpfile_exec 
             _segline "$host_ip cmd end"
@@ -1411,15 +1413,15 @@ if [[ -f $1 ]];then
     if ping -c2 $host_ip  &>/dev/null ;then
     # network and ssh connection test.
         if _ssh_send "echo ssh ok" &>/dev/null ;then
-            #ssh -t -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
+            #ssh -t -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
             if [[ $quiet_mode == "True" ]] ;then
-                cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s $2" &>/dev/null 
+                cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s $2" &>/dev/null 
                 local script_stat=$?
                 echo "  $host_ip stat: $script_stat"
                 _update_check_stat $script_stat $tmpfile_script_host_out 
             else
 #                echo "1:$1 2:$2"
-                cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s $2"
+                cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s $2"
                 local script_stat=$?
                 _update_check_stat $script_stat $tmpfile_script_host_out 
             fi
@@ -1457,6 +1459,36 @@ _tmp_quiet "on"
     rm -rf $tmpfile_script_host_out
     _unquiet "$1: execute script done." || echo " group stat : $check_stat"
 _tmp_quiet "off"
+}
+function _group_ssd_cpid(){
+# input :
+#        $1 host_group_name 
+#        $2 ssh_passwd 
+    if [[ -n $ssh_passwd ]] ;then 
+        _tmp_quiet "on"
+        _yellow "initializing ssh connections:"
+        _parse_host_info "$1"
+        tmpfile_init_host_out=$(mktemp)
+        echo 0 > $tmpfile_init_host_out 
+        for host_ip in $ip_list;do 
+            if ping -c2 $host_ip  &>/dev/null ;then
+                # network and ssh connection test.
+                timeout 45 sshpass -p $ssh_passwd ssh-copy-id -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout $host_user@$host_ip -p $host_port 
+                local init_stat=$?
+                [[ $init_stat -ne 0 ]] &&  _sshfail
+                _update_check_stat $init_stat $tmpfile_init_host_out 
+            else
+                _pingfail 
+                _update_check_stat 1 $tmpfile_init_host_out 
+            fi 
+        done && wait 
+        check_stat=$(sort -nr $tmpfile_init_host_out |head -1)
+        rm -rf $tmpfile_init_host_out
+        _unquiet "$1: initialization done." || echo " group stat : $check_stat"
+        _tmp_quiet "off"
+    else
+        echo "$1: ssh password not specified, skip initializing."
+    fi
 }
 ####################################################
 # change for a different backend change this part
@@ -1728,6 +1760,7 @@ function _group_execute(){
     _yellow "execute:"
     _parse_host_info "$1"
         local tmpfile_exec=$(mktemp)
+        local tmpfile_exec_out=''
         [[ -z $tmpfile_exec_diff ]] && local tmpfile_exec_diff=$(mktemp)
         # test host 
         echo 0 > $tmpfile_exec
@@ -1854,7 +1887,7 @@ if [[ -n $output_dir  ]] ;then
 #sleep 30
                     # stop scp from coping "/" from remote, when output dir missing
                     if [[ -n $output_dir ]] && [[ $output_dir != '/' ]] ;then
-                        scp -q -r -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:$output_dir/* $output_dir/ 
+                        scp -q -r -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:$output_dir/* $output_dir/ 
                         _update_check_stat $? $tmpfile_hvst 
                         # wait
                         _ssh_send "rm -rf $output_dir/"
@@ -2023,7 +2056,7 @@ function _group_pre_check(){
                         version=$(_ssh_send "fio -v |awk -F[-.] '{print\$2}'")
                     fi
                     if [[ $version -ge 3 ]]  ;then
-                        _unquiet "  host:$host_ip fio check ok"
+                        _verbose  &&  echo "  host:$host_ip fio check ok"
                     else
                         _unquiet "$(_yellow "warning"): host:$host_ip fio version: $version, version 3+ will be better."
                     fi
@@ -2065,14 +2098,14 @@ function _group_pre_check(){
         # abckend process parameters lost  
         check_stat=$(sort -nr $tmpfile_precheck |head -1)
         if grep -q 2 $tmpfile_precheck ;then 
-            # if recheck , count number abort at 5
+            # if recheck , count number abort at 3
             if [[ -n $recheck ]] ;then 
-                # stop recheck after 5 round recheck
-                if [[ $recheck -eq 5 ]] ;then 
+                # stop recheck after 3 round recheck
+                if [[ $recheck -eq 3 ]] ;then 
                     if grep -q 0 $tmpfile_precheck ;then 
                         _red "host group \"$1\" fio installation failed after $recheck round recheck!!"
-                        # skip this group 
-                        _error_interrupt && continue 
+                        # skip this group and continue 
+                        _error_interrupt
                         return 1
                     else
                         _red "ERROR: NO success signal of fio installation recived on \"$1\" ! it is not possible to continue on this group !!"
@@ -2085,7 +2118,7 @@ function _group_pre_check(){
                 fi
             else
                 # first round 
-                local recheck=1
+                local recheck=2
                 _yellow "check status abnormal, start fio installation recheck ..."
             fi
             # clean tmpfile and recheck 
@@ -2190,17 +2223,13 @@ if [[ -f $grp_blk_conf ]] ;then
                     #
                     for blk in $blk_list ;do 
                         _ssh_send "lsblk -p $blk" &>/dev/null 
-                        if [[ $? -ne 0 ]] ;then
+                        if [[ $? -ne 0 ]] || [[ $(_ssh_send "lsblk -p $blk |wc -l") -ne 2  ]] ;then
                             _devfail 
-                            [[ -z $blk_fail_note ]] && local blk_fail_note='# not valid on host:' || blk_fail_note=','
-                            grep -q $host_ip || sed -i "/^${blk//\//\\/}/s/$/ $blk_fail_note$host_ip/" $grp_blk_conf
-                            #sed -i "/^${blk//\//\\/}/s/^/#/" $grp_blk_conf
-                        elif [[ $(_ssh_send "lsblk -p $blk |wc -l") -ne 2 ]] ;then
-                            _devfail 
-                            [[ -z $blk_fail_note ]] && local blk_fail_note='# not valid on host:' || blk_fail_note=','
-                            grep -q $host_ip || sed -i "/^${blk//\//\\/}/s/$/ $blk_fail_note$host_ip/" $grp_blk_conf
+                            grep $blk $grp_blk_conf |grep -q '#' && local blk_fail_note=',' || local blk_fail_note='# not valid on host:'
+                            grep $blk $grp_blk_conf |grep -q $host_ip || sed -i "/^${blk//\//\\/}/s/$/$blk_fail_note$host_ip/" $grp_blk_conf
                             #sed -i "/^${blk//\//\\/}/s/^/#/" $grp_blk_conf
                         fi 
+                        # unset blk after calling _devfail 
                         unset blk 
                     done
                 else
@@ -2418,6 +2447,7 @@ recover_blk_group_name=""
 recover_job_batch_index=""
 command_mode="onece"
 rbd_mode="False"
+ssd_cpid="False"
 #no_sys_blk="False"
 
 }
@@ -2430,6 +2460,7 @@ function _show_info(){
 ##################################
 function :${FUNCNAME[@]}
 info:
+      ssd_cpid: $ssd_cpid 
     conf_check: $conf_check
     quiet_mode: $quiet_mode
       list_fio: $list_fio
@@ -2622,6 +2653,9 @@ while [ $# -gt 0 ] ;do
         "--fio" )
             send_fio="True"
             ;;
+        "--cpid" )
+            ssd_cpid="True"
+            ;;
         "--recover" )
             recover_test="True"
             ;;
@@ -2805,9 +2839,16 @@ done
     # send fio
 
 
-
+# initialize ssh access 
+    if [[ $ssd_cpid == "True" ]] ;then
+        read -p "Please input host ssh password:" ssh_passwd
+        echo "start ssh initializing ..."
+        for host_group_name in $host_group_list ;do
+            _group_ssd_cpid $host_group_name 
+        done
+        unset ssh_passwd 
 # stop jobs of job round running.
-    if [[ $pre_check == "True" ]] ;then
+    elif [[ $pre_check == "True" ]] ;then
         echo "start env precheck ..."
         for host_group_name in $host_group_list ;do
             _group_pre_check $host_group_name
