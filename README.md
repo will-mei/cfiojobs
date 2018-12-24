@@ -28,6 +28,7 @@ usage :
             -d             check and give function parameters, also, skip failure
             -f             skip failure and try to continue, if possible
             -p             send commands and copy files execute in parallel
+            --cpid         copy ssh pub id to given host groups 
             --script       execute given scripts on host groups (sep with comma) 
             --argument     pass given arguments(double quote multiple args) to each given script  
 
