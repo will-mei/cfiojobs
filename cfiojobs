@@ -13,7 +13,7 @@
 # last edit :   20181108
 ###########################################################
 
-script_version=0.12.52
+script_version=0.12.53
 ssh_timeout=15
 
 STATUS=0
@@ -2841,7 +2841,7 @@ done
 
 # initialize ssh access 
     if [[ $ssd_cpid == "True" ]] ;then
-        read -p "Please input host ssh password:" ssh_passwd
+        read -s -p "Please input host ssh password:" ssh_passwd
         echo "start ssh initializing ..."
         for host_group_name in $host_group_list ;do
             _group_ssd_cpid $host_group_name 
