@@ -17,7 +17,17 @@ script_version=0.12.53
 ssh_timeout=15
 
 check_stat=0
-tmpfile_list=''
+tmpfile_list=$(mktemp)
+function _clean_up(){
+    # clean up tmp files
+    for i in $(cat $tmpfile_list);do
+        [[ -f $i ]] && rm -f $i
+    done
+    for i in ${!tmpfile*} ;do
+        local trash_file=$(eval echo \$"$i")
+        [[ -f $trash_file ]] && rm -f $trash_file &>/dev/null
+    done
+}
 function _test_abort(){
     # if fio test were started
     if [[ $send_fio == "True" ]]  ;then
@@ -37,16 +47,8 @@ function _test_abort(){
             kill $(ps aux |grep $runner |grep ssh |grep $kwd |grep -v grep|awk '{print$2}') &>/dev/null
         done
     fi
-    # clean up tmp files
-    for i in $(cat $tmpfile_list);do
-        rm -f $i
-    done
-    for i in ${!tmpfile*} ;do
-        local trash_file=$(eval echo \$"$i")
-        [[ -f $trash_file ]] && rm -f $trash_file &>/dev/null
-    done
 }
-trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; exit $check_stat" 1 2 3 15
+trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; _clean_up; exit $check_stat" 1 2 3 15
 #date=$(date "+%Y-%m-%d_%H:%M:%S")
 date="$(date +%Y%m%d%H%M)"
 g_conf="$0"".grp"
@@ -1807,6 +1809,7 @@ function _host_fio_list(){
         if _ssh_send 'echo ok' &>/dev/null ;then
             tmpfile=$(mktemp)
             tmpfile2=$(mktemp)
+            echo -e "$tmpfile\n$tmpfile2" >>$tmpfile_list
             host_stat=0
             host_name=$(_ssh_send 'echo $HOSTNAME')
             [[ ${#host_name} -gt 18 ]] && host_name="${host_name:0:18}.."
@@ -1847,11 +1850,11 @@ function _host_fio_list(){
                 max_runtime=$(_unit_time "$max_runtime")
             fi
             [[ -z "$disk_list" ]] && disk_list="none"
-          #output
-      else
+            #output
+        else
             host_stat=1
             host_name='ssh inaccessible :('
-      fi 
+        fi 
     else
             host_stat=1
             host_name='ip unreachable :('
@@ -2943,6 +2946,7 @@ done
     else 
         _yellow "imcomplete agrs recived, nothing to do."
     fi
+    _clean_up
 
 #############################################################################################
 # how the blk/job/host groups works in this script.
