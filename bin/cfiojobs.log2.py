@@ -59,7 +59,10 @@ def update_compare_tag(perf_log, perf_filter='bw'):
     bp = perf_log['pattern_name']
     blk_type = perf_log['blk_type']
     # update compare tag : ['deviation','stat']
-    perf_list[no]['deviation'] = str(round(float(perf_log[perf_filter]) / peak_dict[blk_type][bp][perf_filter] *100, 2)) +'%'
+    try:
+        perf_list[no]['deviation'] = str(round(float(perf_log[perf_filter]) / peak_dict[blk_type][bp][perf_filter] *100, 2)) +'%'
+    except:
+        print(perf_log)
     if float(perf_log[perf_filter]) < float(peak_dict[blk_type][bp][perf_filter]) * dev_perf_index[blk_type]:
         perf_list[no]['stat']  = u'●'.encode('GB2312')
     else:
