@@ -2225,7 +2225,7 @@ if [[ -f $grp_blk_conf ]] ;then
                         _ssh_send "lsblk -p $blk" &>/dev/null 
                         if [[ $? -ne 0 ]] || [[ $(_ssh_send "lsblk -p $blk |wc -l") -ne 2  ]] ;then
                             _devfail 
-                            grep $blk $grp_blk_conf |grep -q '#' && local blk_fail_note=',' || local blk_fail_note='# not valid on host:'
+                            grep $blk $grp_blk_conf |grep -q '#' && local blk_fail_note=',' || local blk_fail_note='# invalid on:'
                             grep $blk $grp_blk_conf |grep -q $host_ip || sed -i "/^${blk//\//\\/}/s/$/$blk_fail_note$host_ip/" $grp_blk_conf
                             #sed -i "/^${blk//\//\\/}/s/^/#/" $grp_blk_conf
                         fi 
