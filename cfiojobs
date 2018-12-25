@@ -2,7 +2,7 @@
 ###########################################################
 # Author  : william mei
 # Date    : 20181010
-# version : cfiojobs0.12.13
+# version : cfiojobs0.12.53
 # Test platform:
 #               kernel     : 3.10.0-514.26.2.el7.x86_64
 #               OS release : CentOS 7.3.1611
@@ -10,33 +10,40 @@
 # description  :
 #               send files/command to multy host 
 #               parallel fio test on clusters 
-# last edit :   20181108
+# last edit :   20181225
 ###########################################################
 
 script_version=0.12.53
 ssh_timeout=15
 
-STATUS=0
+check_stat=0
+tmpfile_list=''
 function _test_abort(){
-if [[ $send_fio == "True" ]]  ;then
-    runner=$(whoami)
-    # fio test 
-    [[ -z ${blk_group_list// /} ]] || \
-    for blk_group_name in $ $blk_group_list ;do
-        [[ -z ${host_group_list// /} ]] || \
-        for host_group_name in $host_group_list ;do
-            kill $(ps aux |grep $runner |grep "'--fio'" |grep $blk_group_name |grep $host_group_name |grep -v grep|awk '{print$2}') &>/dev/null
+    # if fio test were started
+    if [[ $send_fio == "True" ]]  ;then
+        runner=$(whoami)
+        # stop fio test 
+        [[ -z ${blk_group_list// /} ]] || \
+        for blk_group_name in $ $blk_group_list ;do
+            [[ -z ${host_group_list// /} ]] || \
+            for host_group_name in $host_group_list ;do
+                # kill local test process 
+                kill $(ps aux |grep $runner |grep "'--fio'" |grep $blk_group_name |grep $host_group_name |grep -v grep|awk '{print$2}') &>/dev/null
+            done
+        done && wait 
+        # bknd ssh process for fio cmd 
+        keywords="fio filename= rbdname="
+        for kwd in $keywords; do
+            kill $(ps aux |grep $runner |grep ssh |grep $kwd |grep -v grep|awk '{print$2}') &>/dev/null
         done
-    done && wait 
-    # bknd process 
-    keywords="fio filename= cal_cpu_mem.sh cal_tcmu_total_iops.sh cal_ceph_bw_iops.sh"
-    for kwd in $keywords; do
-        kill $(ps aux |grep $runner |grep ssh |grep $kwd |grep -v grep|awk '{print$2}') &>/dev/null
+    fi
+    # clean up tmp files
+    for i in ${!tmpfile*} ;do
+        local trash_file=$(eval echo \$"$i")
+        [[ -f $trash_file ]] && rm -f $trash_file &>/dev/null
     done
-fi
-    for i in ${!tmpfile*} ;do eval rm \$"$i" &>/dev/null ;done
 }
-trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; exit $STATUS" 1 2 3 15
+trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; exit $check_stat" 1 2 3 15
 #date=$(date "+%Y-%m-%d_%H:%M:%S")
 date="$(date +%Y%m%d%H%M)"
 g_conf="$0"".grp"
@@ -1209,6 +1216,7 @@ ${JOB_ARGS_ARRAY[$job_group_name]} "
         done
         # make a list of job batch info 
         local tmpfile_expansion=$(mktemp)
+        tmpfile_list+=" $tmpfile_expansion"
         local title="NO"
         local batch="PATTERN"
         if [[ $total_round -le 10 ]];then 
@@ -1370,6 +1378,7 @@ if [[ -n $CMD ]] ;then
     else 
         if  [[ $p_exec == "True" ]] ;then 
             local tmpfile_exec_host_out=$(mktemp)
+            tmpfile_list+=" $tmpfile_exec_host_out"
             #use virtual terminal and recive tty input.
             # echo "$host_ip :"
             ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
@@ -1377,6 +1386,7 @@ if [[ -n $CMD ]] ;then
             _update_check_stat $cmd_stat $tmpfile_exec 
         else 
             local tmpfile_exec_host_out=$(mktemp)
+            tmpfile_list+=" $tmpfile_exec_host_out"
             # do not merge output 
             _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
             _segline "$host_ip  stdout"
@@ -1397,6 +1407,7 @@ if [[ -n $CMD ]] ;then
             local content_sum=$(cat $tmpfile_exec_host_out |md5sum |awk '{print$1}')
             echo "$host_ip $content_sum $cmd_stat" >> $tmpfile_exec_diff 
             touch /tmp/$content_sum
+            tmpfile_list+=" /tmp/$content_sum"
             flock /tmp/$content_sum cat $tmpfile_exec_host_out > /tmp/$content_sum 
         fi 
         rm -rf $tmpfile_exec_host_out 
@@ -1446,6 +1457,7 @@ _tmp_quiet "on"
     _yellow "exec script:"
     _parse_host_info "$1"
     tmpfile_script_host_out=$(mktemp)
+    tmpfile_list+=" $tmpfile_script_host_out"
     echo 0 > $tmpfile_script_host_out 
     for host_ip in $ip_list;do 
         if [[ $p_exec == "True" ]] || [[ $send_fio == "True" ]];then
@@ -1760,8 +1772,8 @@ function _group_execute(){
     _yellow "execute:"
     _parse_host_info "$1"
         local tmpfile_exec=$(mktemp)
-        local tmpfile_exec_out=''
-        [[ -z $tmpfile_exec_diff ]] && local tmpfile_exec_diff=$(mktemp)
+        tmpfile_list+=" $tmpfile_exec"
+        [[ -z $tmpfile_exec_diff ]] && local tmpfile_exec_diff=$(mktemp) && tmpfile_list+=" $tmpfile_exec_diff"
         # test host 
         echo 0 > $tmpfile_exec
         for host_ip in $ip_list ;do
@@ -1878,6 +1890,7 @@ function _group_fio_log_harvest(){
 if [[ -n $output_dir  ]] ;then
     _parse_host_info "$1"
         tmpfile_hvst=$(mktemp)
+        tmpfile_list+=" $tmpfile_hvst"
         echo 0 > $tmpfile_hvst
         for host_ip in $ip_list ;do
             #ping check
@@ -1924,6 +1937,7 @@ function _group_fio_stop(){
     _yellow "fio stop:"
     _parse_host_info "$1"
         tmpfile_stop=$(mktemp)
+        tmpfile_list+=" $tmpfile_stop"
         echo 0 >$tmpfile_stop
         for host_ip in $ip_list ;do
             if ping -c2 $host_ip &>/dev/null ;then
@@ -1960,6 +1974,7 @@ function _group_test_stop(){
 #stop fio jobs
         echo "  stop fio jobs on hosts..."
         tmpfile_stop=$(mktemp)
+        tmpfile_list+=" $tmpfile_stop"
         #echo 0 >$tmpfile_stop
         _update_check_stat 0 $tmpfile_stop
         for host_ip in $ip_list ;do
@@ -2038,6 +2053,7 @@ function _group_pre_check(){
     _parse_host_info "$1"
 #        check_stat=0
         tmpfile_precheck=$(mktemp)
+        tmpfile_list+=" $tmpfile_precheck"
         # echo 0 > $tmpfile_precheck
         for host_ip in $ip_list ;do
             _verbose "hostinfo" && _waiting "reading" 5
@@ -2139,6 +2155,7 @@ function _group_blk_detect(){
     _yellow "group blk detecting:"
     _parse_host_info "$1"
         tmpfile_grp_blk_detected=$(mktemp)
+        tmpfile_list+=" $tmpfile_grp_blk_detected"
         for host_ip in $ip_list ;do
             _verbose "hostinfo" && _waiting "reading" 5
             # network check
@@ -2146,6 +2163,7 @@ function _group_blk_detect(){
                 # ssh check 
                 if _ssh_send 'whoami' &>/dev/null ;then
                     tmpfile_host_blk_detected=$(mktemp)
+                    tmpfile_list+=" $tmpfile_host_blk_detected"
                     # get all blk info form ssh 
                     _ssh_send "lsblk -ps" >$tmpfile_host_blk_detected
                     #check blk device     ## do not quote the slash '─', it's not ascii format ! 
@@ -2225,7 +2243,7 @@ if [[ -f $grp_blk_conf ]] ;then
                         _ssh_send "lsblk -p $blk" &>/dev/null 
                         if [[ $? -ne 0 ]] || [[ $(_ssh_send "lsblk -p $blk |wc -l") -ne 2  ]] ;then
                             _devfail 
-                            grep $blk $grp_blk_conf |grep -q '#' && local blk_fail_note=',' || local blk_fail_note='# invalid on:'
+                            grep $blk $grp_blk_conf |grep -q '#' && local blk_fail_note=',' || local blk_fail_note='#invalid for:'
                             grep $blk $grp_blk_conf |grep -q $host_ip || sed -i "/^${blk//\//\\/}/s/$/$blk_fail_note$host_ip/" $grp_blk_conf
                             #sed -i "/^${blk//\//\\/}/s/^/#/" $grp_blk_conf
                         fi 
@@ -2614,8 +2632,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: -g requires a groupname or group list. multi names separated by comma."
-                STATUS=1
-                exit
+                exit 1
             fi
             host_group_list+=" ${2//,/ }"
             shift
@@ -2624,8 +2641,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: -x requires a hostname or host/ip list. multi names separated by comma."
-                STATUS=1
-                exit
+                exit 1
             fi
             x_host_list+=" ${2//,/ }"
             shift
@@ -2634,8 +2650,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: -X requires a groupname or group list.  multi names separated by comma."
-                STATUS=1
-                exit
+                exit 1
             fi
             #there will be a uniq element check, so redundant delimiter is fine here
             x_group_list+=" ${2//,/ }"
@@ -2663,8 +2678,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: --recover-from requires a Round Number at least"
-                STATUS=1
-                exit
+                exit 1
             fi
             recover_test="True"
             [[ ${2//,/} != ${2} ]] && recover_blk_group_name=${2%,*}
@@ -2678,8 +2692,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: --round-retest requires a Round Number at least"
-                STATUS=1
-                exit
+                exit 1
             fi
             round_retest="True"
             [[ ${2//,/} != ${2} ]] && recover_blk_group_name=${2%,*}
@@ -2690,8 +2703,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: -b requires a blk/file group name or a list of that.  multi names separated by comma."
-                STATUS=1
-                exit
+                exit 1
             fi
             blk_group_list+=" ${2//,/ }"
             shift
@@ -2700,8 +2712,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: -j requires a job group name or a job group list.  multi names separated by comma."
-                STATUS=1
-                exit
+                exit 1
             fi
             job_group_list+=" ${2//,/ }"
             shift
@@ -2710,8 +2721,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: -o requires an output directory to work."
-                STATUS=1
-                exit
+                exit 1
             fi
             #remove the last "/"
             if [[ ${2:0-1:1} == / ]] 
@@ -2726,8 +2736,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: -F requires a file list.  multi names separated by comma."
-                STATUS=1
-                exit
+                exit 1
             fi
             file_group_list+=" ${2//,/ }"
             shift
@@ -2736,8 +2745,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: -C requires a file list.  multi names separated by comma."
-                STATUS=1
-                exit
+                exit 1
             fi
             harvest_file_group_list+="${2}"
             shift
@@ -2746,8 +2754,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: -D requires an output directory to work."
-                STATUS=1
-                exit
+                exit 1
             fi
             #remove the last "/"
             if [[ ${2:0-1:1} == / ]] 
@@ -2762,8 +2769,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: --script requires a script file list.  multi names separated by comma."
-                STATUS=1
-                exit
+                exit 1
             fi
             script_file_list_list+=" ${2}"
             shift
@@ -2772,8 +2778,7 @@ while [ $# -gt 0 ] ;do
             if [ $# -lt 2 ]
             then
                 echo "$0: --argument requires a arg list.  multi args should be double quoted."
-                STATUS=1
-                exit
+                exit 1
             fi
             script_argument_list+=" ${2}"
             shift
