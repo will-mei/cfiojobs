@@ -1744,7 +1744,7 @@ function _count_return(){
         # give ip list which share a same content_sum
         local host_num_k=$(grep $k $tmpfile_exec_diff |wc -l )
         # output this type of content 
-        _yellow "\n $host_num_k host returned same as No. $sn"
+        _yellow "\n $host_num_k host returned as No. $sn"
         for i in ${host_k};do echo -ne "$i\t" ;done ;echo ""
         _segline "output No. $sn"
             cat /tmp/$k 
