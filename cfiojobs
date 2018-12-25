@@ -38,6 +38,9 @@ function _test_abort(){
         done
     fi
     # clean up tmp files
+    for i in $(cat $tmpfile_list);do
+        rm -f $i
+    done
     for i in ${!tmpfile*} ;do
         local trash_file=$(eval echo \$"$i")
         [[ -f $trash_file ]] && rm -f $trash_file &>/dev/null
@@ -1216,7 +1219,7 @@ ${JOB_ARGS_ARRAY[$job_group_name]} "
         done
         # make a list of job batch info 
         local tmpfile_expansion=$(mktemp)
-        tmpfile_list+=" $tmpfile_expansion"
+        echo "$tmpfile_expansion" >>$tmpfile_list
         local title="NO"
         local batch="PATTERN"
         if [[ $total_round -le 10 ]];then 
@@ -1378,7 +1381,7 @@ if [[ -n $CMD ]] ;then
     else 
         if  [[ $p_exec == "True" ]] ;then 
             local tmpfile_exec_host_out=$(mktemp)
-            tmpfile_list+=" $tmpfile_exec_host_out"
+            echo "$tmpfile_exec_host_out" >>$tmpfile_list 
             #use virtual terminal and recive tty input.
             # echo "$host_ip :"
             ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
@@ -1386,7 +1389,7 @@ if [[ -n $CMD ]] ;then
             _update_check_stat $cmd_stat $tmpfile_exec 
         else 
             local tmpfile_exec_host_out=$(mktemp)
-            tmpfile_list+=" $tmpfile_exec_host_out"
+            echo "$tmpfile_exec_host_out" >>$tmpfile_list
             # do not merge output 
             _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
             _segline "$host_ip  stdout"
@@ -1407,7 +1410,7 @@ if [[ -n $CMD ]] ;then
             local content_sum=$(cat $tmpfile_exec_host_out |md5sum |awk '{print$1}')
             echo "$host_ip $content_sum $cmd_stat" >> $tmpfile_exec_diff 
             touch /tmp/$content_sum
-            tmpfile_list+=" /tmp/$content_sum"
+            echo "/tmp/$content_sum" >>$tmpfile_list
             flock /tmp/$content_sum cat $tmpfile_exec_host_out > /tmp/$content_sum 
         fi 
         rm -rf $tmpfile_exec_host_out 
@@ -1457,7 +1460,7 @@ _tmp_quiet "on"
     _yellow "exec script:"
     _parse_host_info "$1"
     tmpfile_script_host_out=$(mktemp)
-    tmpfile_list+=" $tmpfile_script_host_out"
+    echo "$tmpfile_script_host_out" >>$tmpfile_list
     echo 0 > $tmpfile_script_host_out 
     for host_ip in $ip_list;do 
         if [[ $p_exec == "True" ]] || [[ $send_fio == "True" ]];then
@@ -1772,8 +1775,8 @@ function _group_execute(){
     _yellow "execute:"
     _parse_host_info "$1"
         local tmpfile_exec=$(mktemp)
-        tmpfile_list+=" $tmpfile_exec"
-        [[ -z $tmpfile_exec_diff ]] && local tmpfile_exec_diff=$(mktemp) && tmpfile_list+=" $tmpfile_exec_diff"
+        echo "$tmpfile_exec" >>$tmpfile_list
+        [[ -z $tmpfile_exec_diff ]] && local tmpfile_exec_diff=$(mktemp) && echo "$tmpfile_exec_diff" >>$tmpfile_list
         # test host 
         echo 0 > $tmpfile_exec
         for host_ip in $ip_list ;do
@@ -1890,7 +1893,7 @@ function _group_fio_log_harvest(){
 if [[ -n $output_dir  ]] ;then
     _parse_host_info "$1"
         tmpfile_hvst=$(mktemp)
-        tmpfile_list+=" $tmpfile_hvst"
+        echo "$tmpfile_hvst" >>$tmpfile_list
         echo 0 > $tmpfile_hvst
         for host_ip in $ip_list ;do
             #ping check
@@ -1937,7 +1940,7 @@ function _group_fio_stop(){
     _yellow "fio stop:"
     _parse_host_info "$1"
         tmpfile_stop=$(mktemp)
-        tmpfile_list+=" $tmpfile_stop"
+        echo "$tmpfile_stop" >>$tmpfile_list
         echo 0 >$tmpfile_stop
         for host_ip in $ip_list ;do
             if ping -c2 $host_ip &>/dev/null ;then
@@ -1974,7 +1977,7 @@ function _group_test_stop(){
 #stop fio jobs
         echo "  stop fio jobs on hosts..."
         tmpfile_stop=$(mktemp)
-        tmpfile_list+=" $tmpfile_stop"
+        echo "$tmpfile_stop" >>$tmpfile_list
         #echo 0 >$tmpfile_stop
         _update_check_stat 0 $tmpfile_stop
         for host_ip in $ip_list ;do
@@ -2053,7 +2056,7 @@ function _group_pre_check(){
     _parse_host_info "$1"
 #        check_stat=0
         tmpfile_precheck=$(mktemp)
-        tmpfile_list+=" $tmpfile_precheck"
+        echo "$tmpfile_precheck" >>$tmpfile_list
         # echo 0 > $tmpfile_precheck
         for host_ip in $ip_list ;do
             _verbose "hostinfo" && _waiting "reading" 5
@@ -2155,7 +2158,7 @@ function _group_blk_detect(){
     _yellow "group blk detecting:"
     _parse_host_info "$1"
         tmpfile_grp_blk_detected=$(mktemp)
-        tmpfile_list+=" $tmpfile_grp_blk_detected"
+        echo "$tmpfile_grp_blk_detected" >>$tmpfile_list
         for host_ip in $ip_list ;do
             _verbose "hostinfo" && _waiting "reading" 5
             # network check
@@ -2163,7 +2166,7 @@ function _group_blk_detect(){
                 # ssh check 
                 if _ssh_send 'whoami' &>/dev/null ;then
                     tmpfile_host_blk_detected=$(mktemp)
-                    tmpfile_list+=" $tmpfile_host_blk_detected"
+                    echo "$tmpfile_host_blk_detected" >>$tmpfile_list
                     # get all blk info form ssh 
                     _ssh_send "lsblk -ps" >$tmpfile_host_blk_detected
                     #check blk device     ## do not quote the slash '─', it's not ascii format ! 
