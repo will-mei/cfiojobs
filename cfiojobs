@@ -1473,7 +1473,7 @@ function _group_ssd_cpid(){
         for host_ip in $ip_list;do 
             if ping -c2 $host_ip  &>/dev/null ;then
                 # network and ssh connection test.
-                timeout 45 sshpass -p $ssh_passwd ssh-copy-id -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout $host_user@$host_ip -p $host_port 
+                timeout $[ssh_timeout * 2] sshpass -p $ssh_passwd ssh-copy-id -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout $host_user@$host_ip -p $host_port 
                 local init_stat=$?
                 [[ $init_stat -ne 0 ]] &&  _sshfail
                 _update_check_stat $init_stat $tmpfile_init_host_out 
