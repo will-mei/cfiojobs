@@ -14,7 +14,7 @@ bs_list="4k 256k 4m"
 pattern_list="read randread write randwrite"
 blk_list=$(lsblk -ps |grep disk |grep -v ─ |awk '{print$1}')
 numjobs=2
-hostname=$HOSTNAME
+hostname=${HOSTNAME//-/_}
 
 echo  "bs: ${bs_list// /,}" > "$outputdir"/fio-batch.log
 echo  "pattern: ${pattern_list// /,}" >> "$outputdir"/fio-batch.log
