@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.54
+script_version=0.12.55
 ssh_timeout=15
 
 check_stat=0
@@ -2033,10 +2033,10 @@ function _group_fio_check(){
                         done
                     fi
                 else
-                    _sshfail
+                    _sshfail &>/dev/null
                 fi
             else
-                _pingfail 
+                _pingfail  &>/dev/null
                 #_error_interrupt
             fi &
         done && wait
