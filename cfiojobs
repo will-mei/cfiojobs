@@ -308,13 +308,13 @@ DEFAULT     600     100%      4k,256k,4m       read,randread,write,randwrite  Tr
 test        600     60G       4k,256k,4m       randread,randwrite             True
 durable     172800  100%      none             randrw                         False            "-direct=1  -iodepth=32 -numjobs=4 -bssplit=4k/50:256k/40:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
 EOF
-[[ -f $0".iodepth_bs_pattern.csv" ]] && echo $0".iodepth_bs_pattern.csv" exist. \
-||cat >$0".iodepth_bs_pattern.csv" <<EOF
-,read,randread,write,randwrite
-4k,64,64,64,8
-256k,64,64,64,4
-4m,64,64,4,6
-EOF
+#[[ -f $0".iodepth_bs_pattern.csv" ]] && echo $0".iodepth_bs_pattern.csv" exist. \
+#||cat >$0".iodepth_bs_pattern.csv" <<EOF
+#,read,randread,write,randwrite
+#4k,64,64,64,8
+#256k,64,64,64,4
+#4m,64,64,4,6
+#EOF
 }
 
 
@@ -1941,9 +1941,9 @@ function _group_fio_stop(){
                     if _ssh_send 'ps aux |grep fio|grep -E "filename|rbdname" |grep -v grep' &>/dev/null ;then
                         if [[ $tolerate == "True"  ]] ;then
                             _ssh_send 'kill $(ps aux |grep fio|grep -E "rbdname|filename" |grep -v grep|awk "{print\$2}")' \
-                            && sleep 5 \
+                            && sleep 3 \
                             && _ssh_send 'plist=$(ps aux |grep fio|grep -E "rbdname|filename" |grep -v grep|awk "{print\$2}"); [[ -z $plist ]] || kill -2 $plist ' \
-                            && sleep 5 \
+                            && sleep 3 \
                             && _ssh_send 'plist=$(ps aux |grep fio|grep -E "rbdname|filename" |grep -v grep|awk "{print\$2}"); [[ -z $plist ]] || kill -9 $plist ' \
                             && _unquiet " $(_blue "host: $host_ip") fio process are force killed."
                         else
