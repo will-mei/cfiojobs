@@ -2011,31 +2011,33 @@ function _group_fio_check(){
         for host_ip in $ip_list ;do
             _verbose hostinfo && _waiting "reading" 5
             if ping -c1 $host_ip &>/dev/null ;then
-                :
+            # no fio between 15 secends check, three times of send interval
+                if _ssh_send 'whoami' &>/dev/null ;then
+                    if _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;then
+                        while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
+                            sleep 30
+                        done
+                    # rbd test check
+                    elif _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;then
+                        while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
+                            sleep 30
+                        done
+                    else
+                        sleep 15
+                        while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
+                            sleep 30
+                        done
+                        # wait rbd
+                        while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
+                            sleep 30
+                        done
+                    fi
+                else
+                    _sshfail
+                fi
             else
                 _pingfail 
-                continue 
                 #_error_interrupt
-            fi
-# no fio between 15 secends check, three times of send interval
-            if _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;then
-                while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
-                    sleep 30
-                done
-            # rbd test check
-            elif _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;then
-                while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
-                    sleep 30
-                done
-            else
-                sleep 15
-                while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
-                    sleep 30
-                done
-                # wait rbd
-                while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
-                    sleep 30
-                done
             fi &
         done && wait
     #[[ $check_stat -eq 1 ]] && _error_interrupt
