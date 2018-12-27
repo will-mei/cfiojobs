@@ -1930,6 +1930,7 @@ function _group_fio_log_harvest(){
 
 function _group_fio_stop(){
 # stop all existing fio jobs on host group
+# [[ $tolerate == "True" ]]
     _yellow "fio stop:"
     _parse_host_info "$1"
         tmpfile_stop=$(mktemp -p $tmpfile_dir)
@@ -1937,9 +1938,18 @@ function _group_fio_stop(){
         for host_ip in $ip_list ;do
             if ping -c2 $host_ip &>/dev/null ;then
                 if _ssh_send 'echo ssh ok' &>/dev/null ;then
-                    if _ssh_send 'ps aux |grep fio|grep filename |grep -v grep' &>/dev/null ;then
-                        _ssh_send 'kill $(ps aux |grep fio|grep filename |grep -v grep|awk "{print\$2}") ' \
-                        && _unquiet " $(_blue "host: $host_ip") fio process killed successfully."
+                    if _ssh_send 'ps aux |grep fio|grep -E "filename|rbdname" |grep -v grep' &>/dev/null ;then
+                        if [[ $tolerate == "True"  ]] ;then
+                            _ssh_send 'kill $(ps aux |grep fio|grep -E "rbdname|filename" |grep -v grep|awk "{print\$2}")' \
+                            && sleep 5 \
+                            && _ssh_send 'plist=$(ps aux |grep fio|grep -E "rbdname|filename" |grep -v grep|awk "{print\$2}"); [[ -z $plist ]] || kill -2 $plist ' \
+                            && sleep 5 \
+                            && _ssh_send 'plist=$(ps aux |grep fio|grep -E "rbdname|filename" |grep -v grep|awk "{print\$2}"); [[ -z $plist ]] || kill -9 $plist ' \
+                            && _unquiet " $(_blue "host: $host_ip") fio process are force killed."
+                        else
+                            _ssh_send 'kill $(ps aux |grep fio|grep -E "rbdname|filename" |grep -v grep|awk "{print\$2}") &>/dev/null' \
+                            && _unquiet " $(_blue "host: $host_ip") fio process killed successfully."
+                        fi
                     else
                         _unquiet " $(_blue "host: $host_ip") no fio running"
                     fi
