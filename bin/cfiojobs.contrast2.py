@@ -79,8 +79,18 @@ def tweens_report(dic_p, dic_s, ref_index, stat_list):
 
 # load data form csv
 single_report   = cu.load_csv(single_csv)
+d= {13:'iodepth',
+    14:'numjobs',
+    16:'size',
+    17:'runtime',
+    18:'ioengine'
+   }
+job_arg_info = ''.join(map(lambda x: str(d[x]) + '=' + str(int(single_report[1][x])) + '  ' if isinstance(single_report[1][x], float) else str(d[x]) + '=' + str(single_report[1][x]) + '  ', sorted(d.keys()) ))
+
+
 # check disk number (include title)
 disk_count = len(set(map(lambda x: x[1], single_report)))
+
 if disk_count > 2:
     parallel_report = cu.load_csv(parallel_csv)
     #single_dict     = cu.array2dic(single_report, key_index_list)
@@ -201,6 +211,7 @@ for k in font_dict:
 ####################################################################
 # must be unicode 
 comment_dict = {
+    'C1':job_arg_info,
     'E1':u'同一时间同一规格主机上\n测试一块磁盘在某一模式的读写测试，\n所有同批次进行单盘测试主机的\n所有同类型磁盘的带宽平均值',
     'G1':u'该盘单盘独立测试带宽值/\n单盘独立测试的平均带宽值;\n低于90%标为●否则记为○',
     'I1':u'同一时间同一规格主机上\n所有数据磁盘进行同一模式的读写测试,\n所有同批次进行并行测试主机的\n所有同类型磁盘的带宽平均值',

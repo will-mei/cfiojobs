@@ -14,7 +14,7 @@ elif [[ -z $1 ]] || [[ -z $group_list ]];then
     echo "default fio test job group: $job_group "
     echo "default excel report name : $output_excel_name"
     echo "currently valid group list: \"$group_list\""
-    echo -e "Usage: \vnohup $0  <-s|-p|-all>  <output excel file name>  &>logfile.log &"
+    echo -e "Usage: \vnohup $0  <-s|-p|-all>  <output excel file name>  &>grouplist.log &"
     exit 1
 fi
 [[ -n $2 ]] && output_excel_name="$2"
