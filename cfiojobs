@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.56
+script_version=0.12.58
 ssh_timeout=15
 
 check_stat=0
@@ -444,7 +444,7 @@ function _fifo_empty(){
         fifo_name=$1
         line=255
         read line<$fifo_name &
-        p_read=$i 
+        p_read=$1 
         sleep 0.25
         if ps ax |grep -q ^$p_read  ;then
             echo 255 >$fifo_name &   
@@ -462,7 +462,8 @@ function _update_check_stat(){
     # $2 stat_file
     if [[ -n $2 ]] ;then
         if [[ -f $2 ]] ;then 
-            grep -q $1 $2 || echo $1 >>$2
+            #grep -q $1 $2 || echo $1 >>$2
+            echo $1 >>$2
         else
             _verbose "stat file is missing. ${FUNCNAME[@]}"
         fi 
@@ -487,7 +488,33 @@ function _error_interrupt(){
         _test_abort && exit 1
     fi
 }
-# debug tools 
+function _confirm_check_stat(){
+    # $1 stat_file
+    local stat_file="$1"
+    if [[ -f $stat_file ]] ;then
+        local task_no=$(wc -l <$stat_file)
+        local task_survivors=$(grep ^0$ $stat_file |wc -l)
+        if [[ $task_no -eq 0 ]] ;then
+            # empty file
+            local check_stat=0
+        else
+            # check_stat=max_return
+            local check_stat=$(sort -nr $stat_file |head -1)
+        fi
+        echo "$task_no tasks, $task_survivors alive, check stat: $check_stat"
+        # if failed, try to stop
+        if [[ $task_survivors -lt 1 ]] ;then
+            echo -e "\e[1;31m All $task_no Task Failed or No Host Alive! \e[0m"
+            _timeout 15
+            _error_interrupt
+        elif [[ $check_stat -ge 1 ]] ;then
+            echo "Partial Task Failure occured." 
+            _timeout 15
+            _error_interrupt
+        fi
+    fi
+}
+# debug functions 
 function _marker(){
     _segline "marker $1"
     _blue "function :${FUNCNAME[@]:1}"
@@ -1456,7 +1483,7 @@ function _group_ssh_script(){
         _yellow "exec script:"
         _parse_host_info "$1"
         tmpfile_script_host_out=$(mktemp -p $tmpfile_dir)
-        echo 0 > $tmpfile_script_host_out 
+        #echo 0 > $tmpfile_script_host_out 
         for host_ip in $ip_list;do 
             if [[ $p_exec == "True" ]] || [[ $send_fio == "True" ]];then
                 _host_ssh_script $2 $3 &
@@ -1465,9 +1492,9 @@ function _group_ssh_script(){
             fi
     #        echo "1:$1 2:$2 3:$3"
         done && wait 
-        check_stat=$(sort -nr $tmpfile_script_host_out |head -1)
+        _confirm_check_stat $tmpfile_script_host_out
         rm -rf $tmpfile_script_host_out
-        _unquiet "$1: execute script done." || echo " group stat : $check_stat"
+        _unquiet "$1: execute script done."
     _tmp_quiet "off"
 }
 function _group_ssd_cpid(){
@@ -1479,7 +1506,7 @@ function _group_ssd_cpid(){
         _yellow "initializing ssh connections:"
         _parse_host_info "$1"
         tmpfile_init_host_out=$(mktemp -p $tmpfile_dir)
-        echo 0 > $tmpfile_init_host_out 
+        #echo 0 > $tmpfile_init_host_out 
         for host_ip in $ip_list;do 
             if ping -c2 $host_ip  &>/dev/null ;then
                 # network and ssh connection test.
@@ -1490,11 +1517,11 @@ function _group_ssd_cpid(){
             else
                 _pingfail 
                 _update_check_stat 1 $tmpfile_init_host_out 
-            fi 
+            fi &
         done && wait 
-        check_stat=$(sort -nr $tmpfile_init_host_out |head -1)
+        _confirm_check_stat $tmpfile_init_host_out
         rm -rf $tmpfile_init_host_out
-        _unquiet "$1: initialization done." || echo " group stat : $check_stat"
+        _unquiet "$1: initialization done."
         _tmp_quiet "off"
     else
         echo "$1: ssh password not specified, skip initializing."
@@ -1661,10 +1688,14 @@ function _send_fio(){
                 if [[ $rbd_mode == "True" ]];then 
                     [[ $test_mode == "single" ]] && _host_fio_check 
                     _ssh_send "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name  --output=$log_dir/$log_name &>>$log_dir/fio-err.log &"
+                    #local fio_stat=$?
+                    #_update_check_stat $fio_stat $tmpfile_exec
                     echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -rbdname=$BLK -name=$tag-$log_name   --output=$log_dir/$log_name &>>$log_dir/fio-err.log &" >>$log_dir/fio-batch".log"
                 else 
                     [[ $test_mode == "single" ]] && _host_fio_check 
                     _ssh_send "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  --output=$log_dir/$log_name &>>$log_dir/fio-err.log &"
+                    #local fio_stat=$?
+                    #_update_check_stat $fio_stat $tmpfile_exec
                     echo $job_batch_index $(date +%Y%m%d_%H:%M:%S) "$fio_cmd $size_info $rand_arg -filename=$BLK -name=$tag-$log_name  --output=$log_dir/$log_name &>>$log_dir/fio-err.log &" >>$log_dir/fio-batch".log"
                 fi
                 #record job bs, pattern, blk
@@ -1682,8 +1713,9 @@ function _send_fio(){
                 || sed -i "s/^blk:.*$/&\,${BLK//\//}/g" $log_dir/fio-batch".log"
             #
             done
+            #_update_check_stat 0 $tmpfile_exec
         else
-            _update_check_stat 1 $tmpfile_exec
+            _update_check_stat 2 $tmpfile_exec
             _red "   $host_ip, fio is not ready !"
         fi 
     fi
@@ -1731,6 +1763,7 @@ function _exec_all(){
             # file , cmd 
                 _exec_only_oth
             fi
+            _update_check_stat 0 $tmpfile_exec
         else
             _sshfail 
             _update_check_stat 1 $tmpfile_exec
@@ -1772,7 +1805,7 @@ function _group_execute(){
         local tmpfile_exec=$(mktemp -p $tmpfile_dir)
         [[ -z $tmpfile_exec_diff ]] && local tmpfile_exec_diff=$(mktemp -p $tmpfile_dir)
         # test host 
-        echo 0 > $tmpfile_exec
+        #echo 0 > $tmpfile_exec
         for host_ip in $ip_list ;do
              #ping check
              if [[ $p_exec == "True" ]] || [[ $send_fio == "True" ]] ;then
@@ -1781,20 +1814,18 @@ function _group_execute(){
                  _exec_all 
              fi
         done && wait 
-        # read stat after all exec done
-        check_stat=$(sort -nr $tmpfile_exec |head -1)
         # show different output 
         [[ $quiet_mode != "True" ]] && _count_return
         # clean up tmp file 
         for k in $(awk '{print$2}' $tmpfile_exec_diff) ;do 
             [[ -f /tmp/$k ]] && rm -f /tmp/$k
         done 
-#cat $tmpfile_exec_diff
-        rm -rf $tmpfile_exec $tmpfile_exec_diff
         #unset tmpfile_exec_diff 
-        #if some failed, read done, show status
-        [[ $check_stat -eq 1 ]] && echo "$1 group execution partially failed." && _error_interrupt
-    _unquiet "$1: execute action done." || echo " group stat : $check_stat"
+#cat $tmpfile_exec_diff
+        # read stat after all exec done
+        _confirm_check_stat $tmpfile_exec
+        rm -rf $tmpfile_exec $tmpfile_exec_diff
+    _unquiet "$1: execute action done."
 }
 function _host_fio_list(){
     if ping -c1 $host_ip &>/dev/null ;then 
@@ -1887,7 +1918,7 @@ function _group_fio_log_harvest(){
     if [[ -n $output_dir  ]] ;then
         _parse_host_info "$1"
             tmpfile_hvst=$(mktemp -p $tmpfile_dir)
-            echo 0 > $tmpfile_hvst
+            #echo 0 > $tmpfile_hvst
             for host_ip in $ip_list ;do
                 #ping check
                 if ping -c2 $host_ip &>/dev/null ;then
@@ -1915,13 +1946,9 @@ function _group_fio_log_harvest(){
                     _update_check_stat 1 $tmpfile_hvst
                 fi &
             done && wait
-        check_stat=$(sort -nr $tmpfile_hvst |head -1)
+        _confirm_check_stat $tmpfile_hvst
         rm -rf $tmpfile_hvst
-    #    if [[ -f $tmpfile_exec ]] && [[ $check_stat == 1 ]] ;then
-    #        _update_check_stat 1 $tmpfile_exec
-    #    fi
-        [[ $check_stat -ne 0 ]] && echo "$1 log harvest partially failed." && _error_interrupt
-        _unquiet "$1: log harvest done." || echo " group stat : $check_stat"
+        _unquiet "$1: log harvest done."
     else
         _red "empty output dir" && _verbose "jobinfo"
     fi
@@ -1934,10 +1961,10 @@ function _group_fio_stop(){
     _yellow "fio stop:"
     _parse_host_info "$1"
         tmpfile_stop=$(mktemp -p $tmpfile_dir)
-        echo 0 >$tmpfile_stop
         for host_ip in $ip_list ;do
             if ping -c2 $host_ip &>/dev/null ;then
                 if _ssh_send 'echo ssh ok' &>/dev/null ;then
+                    # stop fio process
                     if _ssh_send 'ps aux |grep fio|grep -E "filename|rbdname" |grep -v grep' &>/dev/null ;then
                         if [[ $tolerate == "True"  ]] ;then
                             _ssh_send 'kill $(ps aux |grep fio|grep -E "rbdname|filename" |grep -v grep|awk "{print\$2}")' \
@@ -1953,19 +1980,23 @@ function _group_fio_stop(){
                     else
                         _unquiet " $(_blue "host: $host_ip") no fio running"
                     fi
+                    _update_check_stat 0 $tmpfile_stop
                 else
                     _sshfail 
+                    _update_check_stat 1 $tmpfile_stop
                 fi
             else
                 _pingfail 
+                _update_check_stat 1 $tmpfile_stop
                 #_error_interrupt
-                echo 1 >$tmpfile_stop
+                #echo 1 >$tmpfile_stop
             fi &
 # if run in backgroud return will always be 0
         done && wait
-        check_stat=$(cat $tmpfile_stop)
-        [[ $check_stat -eq 1 ]] && _error_interrupt
-    _unquiet "$1: round stop action done." || echo "stop stat: $check_stat" 
+        #check_stat=$(cat $tmpfile_stop)
+        _confirm_check_stat $tmpfile_stop
+        rm -rf $tmpfile_stop
+    _unquiet "$1: round stop action done."
 }
 
 # stop test on a group
@@ -1980,7 +2011,6 @@ function _group_test_stop(){
         echo "  stop fio jobs on hosts..."
         tmpfile_stop=$(mktemp -p $tmpfile_dir)
         #echo 0 >$tmpfile_stop
-        _update_check_stat 0 $tmpfile_stop
         for host_ip in $ip_list ;do
             # stop local process
             local host_pid=$(ps aux |grep $(whoami) |grep $host_ip |grep ssh |grep fio |grep -v grep |awk '{print$2}')
@@ -1994,6 +2024,7 @@ function _group_test_stop(){
                     else
                         _unquiet " $(_blue "host: $host_ip") no fio running"
                     fi
+                    _update_check_stat 0 $tmpfile_stop
                 else
                     _sshfail 
                     _update_check_stat 1 $tmpfile_stop
@@ -2007,9 +2038,9 @@ function _group_test_stop(){
 # if run in backgroud return will always be 0
         done && wait
         #check_stat=$(cat $tmpfile_stop)
-        check_stat=$(sort -nr $tmpfile_stop |head -1)
-        [[ $check_stat -ne 0 ]] && _error_interrupt
-    _unquiet "$1: stop action done." || echo "stop stat: $check_stat" 
+        _confirm_check_stat $tmpfile_stop
+        rm -rf $tmpfile_stop
+    _unquiet "$1: stop action done."
 }
 
 function _group_fio_check(){
@@ -2066,6 +2097,7 @@ function _group_pre_check(){
             if ping -c 2 $host_ip &>/dev/null ;then
                 if ! _ssh_send 'whoami' &>/dev/null ;then
                     _sshfail 
+                    _update_check_stat 1 $tmpfile_precheck
                     continue 
                 fi
                 #check fio installation
@@ -2081,28 +2113,29 @@ function _group_pre_check(){
                     else
                         _unquiet "$(_yellow "warning"): host:$host_ip fio version: $version, version 3+ will be better."
                     fi
+                    _update_check_stat 0 $tmpfile_precheck
                 # no fio installed
                 else
                     # check version makecache fast 
                     if _ssh_send 'yum makecache fast >/dev/null' ;then
                         version=$(_ssh_send "yum list fio|grep fio|tail -1|awk '{print \$2}'|cut -d'.' -f1")
-                       if [[ $version -ge 3 ]] ;then 
-                           _update_check_stat 2  $tmpfile_precheck
-                           _blue "host:$host_ip, fio installing.."
-                           # fio installing in background 
-                           # install fio , makecache 
-                           if _ssh_send 'fio -v 2>/dev/null || yum makecache >/dev/null' ;then 
-                               _ssh_send 'fio -v 2>/dev/null || yum -y install librbd1 fio &>/dev/null &'
-                               # get smartmontools installed
-                               _verbose && _ssh_send 'smartctl -V &>/dev/null || yum -y install smartmontools &>/dev/null' & 
-                           else
-                               _red "host:$host_ip: fio installation, makecache failed"
-                               _update_check_stat 1 $tmpfile_precheck
-                           fi
-                       else 
-                           echo "host:$host_ip, fio check failed. (not installed and fio version: $version in available repo is lower than 3)"
-                           _update_check_stat 1 $tmpfile_precheck
-                       fi
+                        if [[ $version -ge 3 ]] ;then 
+                            # fio installing in background 
+                            _blue "host:$host_ip, fio installing.."
+                            # install fio , makecache 
+                            if _ssh_send 'fio -v 2>/dev/null || yum makecache >/dev/null' ;then 
+                                _ssh_send 'fio -v 2>/dev/null || yum -y install librbd1 fio &>/dev/null &'
+                                # get smartmontools installed
+                                _verbose && _ssh_send 'smartctl -V &>/dev/null || yum -y install smartmontools &>/dev/null' & 
+                                _update_check_stat 2 $tmpfile_precheck
+                            else
+                                _red "host:$host_ip: fio installation, makecache failed"
+                                _update_check_stat 1 $tmpfile_precheck
+                            fi
+                        else 
+                            echo "host:$host_ip, fio check failed. (not installed and fio version: $version in available repo is lower than 3)"
+                            _update_check_stat 1 $tmpfile_precheck
+                        fi
                     else
                         _red "host:$host_ip: fio installation, makecache failed"
                         _update_check_stat 1 $tmpfile_precheck
@@ -2116,8 +2149,9 @@ function _group_pre_check(){
                 _update_check_stat 1 $tmpfile_precheck
             fi &
         done && wait
-        # abckend process parameters lost  
-        check_stat=$(sort -nr $tmpfile_precheck |head -1)
+        # check stat
+        _confirm_check_stat $tmpfile_precheck
+        # install fio, if possible
         if grep -q 2 $tmpfile_precheck ;then 
             # if recheck , count number abort at 3
             if [[ -n $recheck ]] ;then 
@@ -2130,7 +2164,7 @@ function _group_pre_check(){
                         return 1
                     else
                         _red "ERROR: NO success signal of fio installation recived on \"$1\" ! it is not possible to continue on this group !!"
-                        _red "$date abort!"
+                        _red "$date check action abort!"
                         exit 1
                     fi
                 else
@@ -2147,13 +2181,11 @@ function _group_pre_check(){
             _yellow "waiting fio installation (yum) ... "
             sleep 20
             _group_pre_check "$1"
-        #elif grep -q 1 $tmpfile_precheck ;then
-        #    echo check stat : $check_stat 
         fi
         [[ -f $tmpfile_precheck ]] && rm -rf $tmpfile_precheck &>/dev/null 
         # if fio failed, no need to continue
-        [[ $check_stat -eq 1 ]] && echo "$1 pre check partially failed." && _timeout 15 && _error_interrupt
-    _unquiet "host group $1: pre check action done. group stat : $check_stat " || echo " group $1 stat : $check_stat" 
+        #[[ $check_stat -eq 1 ]] && echo "$1 pre check partially failed." && _timeout 15 && _error_interrupt
+    _unquiet "host group $1: pre check action done."
 }
 function _group_blk_detect(){
 # detected possible target blk on a given host group
@@ -2246,7 +2278,7 @@ function _group_blk_precheck(){
                             _ssh_send "lsblk -p $blk" &>/dev/null 
                             if [[ $? -ne 0 ]] || [[ $(_ssh_send "lsblk -p $blk |wc -l") -ne 2  ]] ;then
                                 _devfail 
-                                grep $blk $grp_blk_conf |grep -q '#' && local blk_fail_note=',' || local blk_fail_note='#invalid for:'
+                                grep $blk $grp_blk_conf |grep -q '#' && local blk_fail_note=',' || local blk_fail_note='#not found on:'
                                 grep $blk $grp_blk_conf |grep -q $host_ip || sed -i "/^${blk//\//\\/}/s/$/$blk_fail_note$host_ip/" $grp_blk_conf
                                 #sed -i "/^${blk//\//\\/}/s/^/#/" $grp_blk_conf
                             fi 
