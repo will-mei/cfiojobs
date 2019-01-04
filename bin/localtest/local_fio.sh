@@ -1,21 +1,27 @@
 #!/bin/bash
 
+[[ $1 == "-p"  ]] && mode="&" && outputdir="$0-test_parallel" || outputdir="$0-test_single"
+blk_list=$(lsblk -ps |grep disk |grep -v ─ |awk '{print$1}')
+pattern_list="read randread write randwrite"
+bs_list="4k 256k 4m"
+numjobs=2
+
 [[ -z $1 ]] && echo "\
-    Usage: nohup  $0 <-p | -s>  &>xxx.log 
+Default settings:
+        blk_list: \"$blk_list\"
+        bs_list : $bs_list
+        pattern : $pattern_list
+        log dir : $outputdir 
+Usage:
+    nohup  $0 <-p | -s>  &>xxx.log 
 " && exit 1
 
 fio -v 1>/dev/null || yum -y install fio
 [[ $? -ne 0 ]] && exit 1
 
-[[ $1 == "-p"  ]] && mode="&" && outputdir="$0-test_parallel" || outputdir="$0-test_single"
+
 mkdir -p $outputdir 
-
-bs_list="4k 256k 4m"
-pattern_list="read randread write randwrite"
-blk_list=$(lsblk -ps |grep disk |grep -v ─ |awk '{print$1}')
-numjobs=2
 hostname=${HOSTNAME//-/_}
-
 echo  "bs: ${bs_list// /,}" > "$outputdir"/fio-batch.log
 echo  "pattern: ${pattern_list// /,}" >> "$outputdir"/fio-batch.log
 
@@ -23,7 +29,6 @@ for i in $blk_list ;do blk_seq+=","$i ;done
 echo  "blk: ${blk_seq//\//}" >> "$outputdir"/fio-batch.log
 
 function wait_fio(){
-    #
     while ps aux |grep fio |grep -E "rbdname=|filename=" |grep -qv grep ;do
         sleep 30
     done
