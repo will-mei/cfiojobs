@@ -9,6 +9,7 @@ from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.comments import Comment
 from openpyxl.styles import Font, PatternFill,Alignment,Border,Side
+from openpyxl.utils import get_column_letter
 try:
     parallel_csv    = sys.argv[1]
     single_csv      = sys.argv[2]
@@ -32,7 +33,7 @@ except:
 try:
     # load and create a new 
     wb = load_workbook(output_file)
-    wb.create_sheet(title='tmp_sheet')
+    wb.create_sheet(title='tmp_sheet', index=0)
     ws = wb['tmp_sheet']
 except:
     wb = Workbook()
@@ -229,5 +230,31 @@ for k in comment_dict:
 ws.freeze_panes = 'A2' 
 
 ####################################################################
+
+# add avg sheet 
+# load csv 
+s_avg_sheet_file = sys.argv[2].replace('all_host','avg')
+p_avg_sheet_file = sys.argv[1].replace('all_host','avg')
+#print(s_avg_sheet_file)
+s_avg_sheet = sorted(cu.load_csv(s_avg_sheet_file), key=lambda x : cu.bp2num(x[0]))
+p_avg_sheet = sorted(cu.load_csv(p_avg_sheet_file), key=lambda x : cu.bp2num(x[0]))
+#print(s_avg_sheet)
+# create worksheet
+avg_sheet_name = tmp_sheet_name+'avg'
+wb.create_sheet(title=avg_sheet_name, index=1)
+wa = wb[avg_sheet_name]
+# add to worksheet
+wa.append(['single'])
+for row in s_avg_sheet[-1:] + s_avg_sheet[:-1]:
+    wa.append(row)
+wa.append([''])
+wa.append(['parallel'])
+for row in p_avg_sheet[-1:] + p_avg_sheet[:-1]:
+    wa.append(row)
+# col width 
+for k in list(map(chr, range(ord('A'), ord(get_column_letter(wa.max_column)) + 1))):
+    if k[0] <= cu.num2letter(wa.max_column):
+        wa.column_dimensions[k].width = 20
+        wa[k+'2'].fill =title_fill 
 
 wb.save(output_file)

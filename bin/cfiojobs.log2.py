@@ -29,6 +29,7 @@ except IndexError:
 
 # special index  ['bw', 'iops', 'lat_max', 'lat_avg', 'lat_min', 'lat_stddev']
 avg_index   = ['bw', 'iops', 'lat_avg']
+avg_index_note = u'测试平均带宽MiB/s,测试平均iops,测试平均延迟(ms)\n'
 
 # the performance threshold value
 dev_perf_index  = {'hdd' :0.9,
@@ -73,6 +74,7 @@ def update_compare_tag(perf_log, perf_filter='bw'):
 
 ##################################################################################
 # get an array of all result
+# perf_list a list of dict 
 perf_list   = list()
 #for logfile in get_json_list(logdir):
     # host ip, dev(file name) , pattern 
@@ -107,9 +109,12 @@ map(add_valid_log, get_json_list(logdir))
 bs_pattern_list = list(set(map(lambda x : x['pattern_name'], perf_list)))
 #print(bs_pattern_list)
 
+# vag and peak values 
 peak_dict = dict()
+# perf list of certain type of block, like: hdd or nvme 
 type_perf_list = dict()
 
+# calculate avg value for specified index of all pattern and all blk type 
 for test_blk_type in ['hdd', 'nvme', 'rbd']:
     # log screening
     blk_list = filter(lambda x : x['blk_type'] == test_blk_type, perf_list)
@@ -147,9 +152,9 @@ def save_perf_list(perf_list, keys_of_column, csv_title, csv_name):
 
 # set output value keys and title then give a report
 if output_mode == 'normal':
-    sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','deviation','stat','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
+    sheet_keys  = ['hostname','filename','pattern_name','bw','bw_global','deviation','stat','iops','iops_global','lat_avg','lat_avg_global','lat_max','lat_min','iodepth','numjobs','util','size','runtime','direct','ioengine']
     #sheet_title = ','.join(sheet_keys) + '\n'
-    sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值(公式:(D2/E2)*100%),"筛选状态(该盘测试带宽值/同批次测试主机的所有同类型磁盘的带宽平均值;低于90%标为●否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,读写数据引擎\n'.encode('GB2312')
+    sheet_title = u'主机名,测试设备,块大小/模式,该盘测试带宽(MiB/s),测试带宽平均值(MiB/s),相对平均带宽的比值(公式:(D2/E2)*100%),"筛选状态(该盘测试带宽值/同批次测试主机的所有同类型磁盘的带宽平均值;低于90%标为●否则记为○)",该测试每秒读写(iops),测试每秒读写(iops)平均值,该测试平均延迟(ms),测试延迟平均值(ms),该测试最大延迟(ms),该测试最低延迟(ms),读写队列深度,该测试作业并发进程数,该测试设备使用率,测试数据量,测试时长,buffer禁用状态(1=禁用),读写数据引擎\n'.encode('GB2312')
 elif output_mode == 'nocompare':
     sheet_keys  = ['hostname','filename','pattern_name','bw','iops','lat_avg','lat_max','lat_min','iodepth','numjobs','util','size','runtime','ioengine']
     sheet_title = '主机名,测试设备,块大小/模式,测试带宽(MiB/s),每秒读写(iops),平均延迟(ms),最大延迟(ms),最低延迟(ms),iodepth,numjobs,util,size,runtime,ioengine\n'
@@ -168,3 +173,16 @@ for test_blk_type in type_perf_list:
     if len(perf_list_type) > 0 :
         save_perf_list(sorted(perf_list_type, key=lambda x : x['filename']), sheet_keys, sheet_title, csv_name )
         print csv_name, 'report generating success!'
+        # save avg sheet 
+        avg_sheet = list()
+        for bp in sorted(bs_pattern_list, key=lambda x: cu.bp2num(x)):
+            bp_avg = dict()
+            bp_avg['bp'] = bp 
+            for index in avg_index:
+                bp_avg[index] = peak_dict[test_blk_type][bp][index]
+            avg_sheet.append(bp_avg)
+        k = ['bp'] + avg_index 
+        ts = u'块大小/模式,' + avg_index_note 
+        t = ts.encode('GB2312')
+        n = output_dir + logdir.split('/')[-1] + '_' + test_blk_type + '_avg.csv'
+        save_perf_list(avg_sheet, k, t, n)
