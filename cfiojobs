@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.60
+script_version=0.12.61
 ssh_timeout=15
 
 check_stat=0
@@ -2126,7 +2126,7 @@ function _group_pre_check(){
                             if _ssh_send 'fio -v 2>/dev/null || yum makecache >/dev/null' ;then 
                                 _ssh_send 'fio -v 2>/dev/null || yum -y install librbd1 fio &>/dev/null &'
                                 # get smartmontools installed
-                                _verbose && _ssh_send 'smartctl -V &>/dev/null || yum -y install smartmontools &>/dev/null' & 
+                                _verbose && _ssh_send 'smartctl -V &>/dev/null || yum -y install smartmontools libaio-devel &>/dev/null' & 
                                 _update_check_stat 2 $tmpfile_precheck
                             else
                                 _red "host:$host_ip: fio installation, makecache failed"
