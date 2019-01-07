@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.61
+script_version=0.12.62
 ssh_timeout=15
 
 check_stat=0
@@ -505,11 +505,11 @@ function _confirm_check_stat(){
         # if failed, try to stop
         if [[ $task_survivors -lt 1 ]] ;then
             echo -e "\e[1;31m All $task_no Task Failed or No Host Alive! \e[0m"
-            _timeout 15
+            #_timeout 15
             _error_interrupt
         elif [[ $check_stat -ge 1 ]] ;then
             echo "Partial Task Failure occured." 
-            _timeout 15
+            #_timeout 15
             _error_interrupt
         fi
     fi
@@ -1560,13 +1560,14 @@ function _record_bknd(){
             if [[ -f $bknd_sh_conf ]] ;then
                 local bknd_sh_list=$(grep -vE "^$|^#" $bknd_sh_conf)
                 if [[ -z ${bknd_sh_list// /} ]] ;then 
-                    _red "  bknd group:$bknd_grp script list conf empty, skiped."
+                    _red " bknd group : $bknd_grp script list conf empty, skiped."
                     continue
                 fi 
             else
-                _red "  bknd group:$bknd_grp scripts list file missing, skiped."
+                _red " bknd group : $bknd_grp scripts list file missing, skiped."
                 continue 
             fi
+            echo " bknd group : $bknd_grp, script mode: $bknd_mode"
             # run script 
             if [[ $bknd_mode == "local" ]] ;then
                 for i in ${bknd_sh_list} ;do
@@ -1578,6 +1579,8 @@ function _record_bknd(){
                 done 
             fi
         done
+    else
+        echo " no bknd."
     fi
 }
 ##############################################################################################
@@ -2372,11 +2375,15 @@ function _execute_job_batch(){
                 _verbose "roundinfo" && _waiting "reading" 5
                 if [[ -z $1 ]] && [[ $group_mode == "parallel" ]];then 
                     for host_group_name in $host_group_list ;do
+                        _tmp_quiet "on"
                         _record_bknd $host_group_name 
+                        _tmp_quiet "off"
                         _group_execute $host_group_name 
                     done && wait && _blue "round $job_batch_index all jobs distributed."
                 else
+                    _tmp_quiet "on"
                     _record_bknd $1
+                    _tmp_quiet "off"
                     _group_execute $1
                     _blue "round $job_batch_index all jobs distributed."
                 fi 
