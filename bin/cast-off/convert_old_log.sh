@@ -1,7 +1,7 @@
 #!/bin/bash
 
-[[ -z $1 ]] && echo "$0 cluster_log_dir1 d2 d3 ..." && exit 1
 numjobs=2
+[[ -z $1 ]] && echo -e "numjobs=$numjobs\nUsage:\v$0 cluster_log_dir1 d2 d3 ..." && exit 1
 
 function _pipe_exec(){
     #
