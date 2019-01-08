@@ -14,7 +14,8 @@ if [[ -z $1 ]] || [[ -z $group_list ]];then
     echo -e "\tdefault nvme precondition : $nvme_precondition"
     echo -e "\tdefault excel report name : $output_excel_name"
     echo -e "\tcurrently valid group list: \"$group_list\""
-    echo -e "Usage: \vnohup $0  <-s|-p|-all>  <output excel file name>  &>grouplist.log &"
+    echo -e "Usage:\vnohup $0  <-s|-p|-all>  <output excel file name>  &>grouplist.log &"
+    echo -e "Eg :  \vnohup $0  -all &>grouplist.log &"
     exit 1
 fi
 [[ -n $2 ]] && output_excel_name="$2"
