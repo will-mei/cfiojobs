@@ -84,7 +84,8 @@ d= {13:'iodepth',
     14:'numjobs',
     16:'size',
     17:'runtime',
-    18:'ioengine'
+    18:'direct',
+    19:'ioengine'
    }
 job_arg_info = ''.join(map(lambda x: str(d[x]) + '=' + str(int(single_report[1][x])) + '  ' if isinstance(single_report[1][x], float) else str(d[x]) + '=' + str(single_report[1][x]) + '  ', sorted(d.keys()) ))
 
