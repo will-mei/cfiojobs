@@ -77,14 +77,15 @@ while read LINE ;do
         local space="${field//[^ ]/}"
         local l_space=${#space}
         # blank column 
-        [[ "$field" == '_' ]] && field=' '
+        [[ "$field" == '_' ]] && field=' ' && fn="-1"
     #    echo -n "${field}"
         f_nu=$[f_nu + 1]
         zhpart=${field//[a-zA-Z0-9[:punct:]]/}
     #    wid_f=$(( ${#field} + ${#zhpart} )) 
         #wid_f=${#field}
         #printf "%-${WIDTH[$f_nu]}s" "${field}" 
-        printf "%-$(( ${WIDTH[$f_nu]} + ${#zhpart} - ${l_space}))b" "${field}" 
+        printf "%-$(( ${WIDTH[$f_nu]} + ${#zhpart} - ${l_space} $fn))b" "${field}" 
+        fn=''
     #    while [[ $wid_f -lt ${WIDTH[$f_nu]} ]] ;do
     #        echo -en " "
     #        wid_f=$[wid_f + 1]
