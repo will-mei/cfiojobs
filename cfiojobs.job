@@ -6,6 +6,7 @@
 DEFAULT     900     100%        4k,256k,4m          randread,randwrite              True            "-ramp_time=60 -iodepth=32 -numjobs=2 -direct=1 -ioengine=libaio -time_based -group_reporting --output-format=json"
 # unknow, based on block size
 rbdlong     none    random      4m                  randwrite                       False           "-ramp_time=60 -iodepth=32 -numjobs=2 -direct=1 -ioengine=rbd -clientname=admin -pool=rbd -group_reporting  --output-format=json"
+rbdfill     none    100%        4m                  write                           False           "-ramp_time=60 -iodepth=64 -numjobs=2 -direct=1 -ioengine=rbd -clientname=admin -pool=rbd -group_reporting  --output-format=json"
 # 2 day
 durable     172800  100%        none                randrw                          False           "-iodepth=8  -numjobs=2 -direct=1 -bssplit=4k/40:256k/50:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
 
