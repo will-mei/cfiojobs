@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.63
+script_version=0.12.64
 ssh_timeout=15
 
 check_stat=0
@@ -1445,20 +1445,23 @@ function _send_cmd(){
 ##############################################################################################
 function _host_ssh_script(){
     # running script on remote host.
+    # $1 script file
+    # $2 arguments list
     if [[ -f $1 ]];then
         local script_file=$1
+        local script_args="${@:2}"
         if ping -c2 $host_ip  &>/dev/null ;then
         # network and ssh connection test.
             if _ssh_send "echo ssh ok" &>/dev/null ;then
                 #ssh -t -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
                 if [[ $quiet_mode == "True" ]] ;then
-                    cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s $2" &>/dev/null 
+                    cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\"" &>/dev/null 
                     local script_stat=$?
                     echo "  $host_ip stat: $script_stat"
                     _update_check_stat $script_stat $tmpfile_script_host_out 
                 else
     #                echo "1:$1 2:$2"
-                    cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s $2"
+                    cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\""
                     local script_stat=$?
                     _update_check_stat $script_stat $tmpfile_script_host_out 
                 fi
@@ -1478,6 +1481,7 @@ function _group_ssh_script(){
 # input :
 #        $1 host_group_name 
 #        $2 script file name 
+#        $3 script_argument_list
 #          the output file name.
     _tmp_quiet "on"
         _yellow "exec script:"
@@ -1486,9 +1490,9 @@ function _group_ssh_script(){
         #echo 0 > $tmpfile_script_host_out 
         for host_ip in $ip_list;do 
             if [[ $p_exec == "True" ]] || [[ $send_fio == "True" ]];then
-                _host_ssh_script $2 $3 &
+                _host_ssh_script $2 "$3" &
             else
-                _host_ssh_script $2 $3
+                _host_ssh_script $2 "$3"
             fi
     #        echo "1:$1 2:$2 3:$3"
         done && wait 
