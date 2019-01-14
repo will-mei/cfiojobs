@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.64
+script_version=0.12.65
 ssh_timeout=15
 
 check_stat=0

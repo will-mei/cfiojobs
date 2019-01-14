@@ -4,7 +4,7 @@
 job_group=quicknormal
 timestamp=$(date +%Y%m%d)
 output_excel_name="test_fio_"$timestamp'.xlsx'
-group_list=$(grep -vE "^$|^#" ./grouplist)
+group_list=$(grep -vE "^$|^#" ./grouplist |sed ':label;N;s/\n/\ /;b label')
 nvme_precondition="False"
 
 if [[ -z $1 ]] || [[ -z $group_list ]];then
