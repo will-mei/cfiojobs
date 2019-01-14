@@ -1903,7 +1903,7 @@ function _group_fio_list(){
     _yellow "job list:"
     _parse_host_info "$1"
     # |host name | host ip | No. of jobs | max runtime | disk/file in use | bs | rw pattern | disk/file list |
-    printf "%-21s%-16s%-6s%-12s%-12s%-8s%-11s%-9s%-30s\n" "host-name" "host-ip" "jobs" "max-runtime" "max-remain" "bs-size" "rw-pattern" "blk/file" "blk/file-list"
+    printf "%-21s%-16s%-6s%-12s%-12s%-8s%-11s%-9s%-30s\n" "host-name" "host-ip" "jobs" "runtime-max" "remain-max" "bs-size" "rw-pattern" "blk/file" "blk/file-list"
     # get and print job info .
     #    check_stat=0
     for host_ip in $ip_list ;do

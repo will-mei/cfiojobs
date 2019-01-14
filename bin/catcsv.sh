@@ -3,6 +3,9 @@
 
 function _format_indent(){
     csv_file=$1
+    # print format table
+    echo -e "\e[33m$csv_file \e[0m:"
+    # calculate max width of each column
 #(11 8 13 13 14 7 11 13 13 13 4 3)
 WIDTH=($(awk '
 BEGIN{
