@@ -4,5 +4,5 @@
 grp0            root    22        none        none        --
 ceph3           root    22        none        none        ceph1,ceph2,ceph3
 
-ceph4           root    22        ceph5       none        ceph1
-ceph5           root    22        none        remote      ceph2
+ceph4           root    22        bknd        none        ceph1
+bknd            root    22        none        local       ceph2
