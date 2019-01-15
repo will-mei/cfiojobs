@@ -1,14 +1,20 @@
 #!/bin/bash
 
-#job_group=allmode
-job_group=quicknormal
+# default test settings
+job_group=normal
+#job_group=quicknormal
+nvme_precondition="False"
 timestamp=$(date +%Y%m%d)
 output_excel_name="test_fio_"$timestamp'.xlsx'
-group_list=$(grep -vE "^$|^#" ./grouplist |sed ':label;N;s/\n/\ /;b label')
-nvme_precondition="False"
 
+# check host group and job group 
+group_list=$(grep -vE "^$|^#" ./grouplist |sed ':label;N;s/\n/\ /;b label')
+job_group_stat=$(grep -vE "^$|^#" ./cfiojobs.job |grep -q ^${job_group}; echo $?)
+
+# help info 
 if [[ -z $1 ]] || [[ -z $group_list ]];then
-    [[ -z $group_list ]] && echo -e "\e[31mno group name fond in grouplist!\e[0m\n"
+    [[ -z $group_list ]] && echo -e "\e[31mno valid host group name fond in grouplist!\e[0m\n"
+    [[ $job_group_stat -ne 0 ]] && echo -e "\e[31mno job group name \"$job_group\" fond in grouplist!\e[0m\n"
     echo "function: auto test groups in grouplist."
     echo -e "\tdefault fio test job group: $job_group "
     echo -e "\tdefault nvme precondition : $nvme_precondition"
