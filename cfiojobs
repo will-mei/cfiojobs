@@ -1029,7 +1029,7 @@ function _recover_point_check(){
             echo "$recover_job_batch_index: recover_job_batch_index format error!"
             exit 1
         fi
-        [[ -z $recover_blk_group_name ]] && local b_name="omited" || local b_name=\"$recover_blk_group_name\"
+        [[ -z $recover_blk_group_name ]] && local b_name="omited" || local b_name="\"$recover_blk_group_name\""
         _blue "recover point: blk_group_name: $b_name, job_batch_index: \"$recover_job_batch_index\""
     fi 
 }
@@ -1551,9 +1551,9 @@ function _record_bknd(){
             exit 1
         fi
 #---------|add needed info which you want to pass to your script|-----------------------
-        #local bknd_sh_pass_in='' 
-        local bknd_sh_pass_in=$bknd_runtime 
-#----------------------------------------------------------------
+        local bknd_sh_pass_in="$output_dir $job_name $job_batch_index" 
+        #local bknd_sh_pass_in=$bknd_runtime 
+#---------------------------------------------------------------------------------------
         for bknd_grp in $bknd_grps ;do 
             # get host group info format 
             _group_check $bknd_grp 
@@ -1921,7 +1921,7 @@ function _group_fio_log_harvest(){
 # blk_group_name was set (when lunch a test on cluster.)
 # host_group_name was set
     _yellow "harvest log:"
-    # check outputdir name 
+    # check output dir name 
     if [[ -n $output_dir  ]] ;then
         _parse_host_info "$1"
             tmpfile_hvst=$(mktemp -p $tmpfile_dir)
@@ -2472,7 +2472,7 @@ function _fio_scale_control(){
                 done
             else
                 [[ $rbd_mode == "True" ]] && _rbd_expansion 
-                echo "${HOST_GROUP_RBD_DEV_ARRAY[ceph2]}"
+                #echo "${HOST_GROUP_RBD_DEV_ARRAY[ceph2]}"
                 _execute_job_batch 
             fi
 }
@@ -2947,7 +2947,7 @@ done
             _recover_blk_group
 
             _fio_conflict_check 
-            # control group scale and start test on host groups 
+            # control the scale by set the test group mode (parallel/single) before start test on host groups 
             _fio_scale_control 
 
         done
@@ -2962,7 +2962,7 @@ done
 
 # send files and cmd
     elif [[ -n $CMD ]] || [[ -n $file_group_list ]] || [[ -n $harvest_file_group_list ]] ;then
-        # check outputdir 
+        # check output dir 
         [[ -n $harvest_file_group_list  ]] &&  _check_output_dir 
         # run on group 
         for host_group_name in $host_group_list ;do
