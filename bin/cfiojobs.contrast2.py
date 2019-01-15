@@ -80,6 +80,7 @@ def tweens_report(dic_p, dic_s, ref_index, stat_list):
 
 # load data form csv
 single_report   = cu.load_csv(single_csv)
+# test argument 
 d= {13:'iodepth',
     14:'numjobs',
     16:'size',
@@ -248,10 +249,12 @@ wa = wb[avg_sheet_name]
 wa.append(['single'])
 for row in s_avg_sheet[-1:] + s_avg_sheet[:-1]:
     wa.append(row)
-wa.append([''])
-wa.append(['parallel'])
-for row in p_avg_sheet[-1:] + p_avg_sheet[:-1]:
-    wa.append(row)
+# check disk amount when add parallel test report to worksheet
+if disk_count > 2:
+    wa.append([''])
+    wa.append(['parallel'])
+    for row in p_avg_sheet[-1:] + p_avg_sheet[:-1]:
+        wa.append(row)
 # col width 
 for k in list(map(chr, range(ord('A'), ord(get_column_letter(wa.max_column)) + 1))):
     if k[0] <= cu.num2letter(wa.max_column):
