@@ -1575,7 +1575,7 @@ function _record_bknd(){
             # run script 
             if [[ $bknd_mode == "local" ]] ;then
                 for i in ${bknd_sh_list} ;do
-                    bash $i $bknd_sh_pass_in &>/dev/null &
+                    bash $i "$bknd_sh_pass_in" &>/dev/null &
                 done
             elif [[ $bknd_mode == "remote" ]] ;then 
                 for i in ${bknd_sh_list} ;do

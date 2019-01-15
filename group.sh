@@ -60,6 +60,8 @@ elif [[ $1 == "-all" ]] ;then
     wait_test
     group_test "single"
     wait_test
+    # wait other bknd script 
+    sleep 60
     for i in $group_list;do
         #[[ $(grep -vE "^$|^#" conf/$i'.blk' |sort -u |wc -l) -eq 1 ]] && continue
         $(dirname $0)/bin/cfiojobs.contrast2.sh $i"_parallel_"$timestamp $i"_single_"$timestamp $output_excel_name 
