@@ -15,7 +15,15 @@ try:
     single_csv      = sys.argv[2]
 #    output_file     = './test.xlsx'
 except IndexError:
-    print("this script contrast fio parallel mode test report with single mode report, default output file name: './<your csv file name>-report.xlsx'.\nand it requires: \n\t1. parallel mode report csv file \n\t2. single mode report csv file \n3. disk type \n4. excel name :xxx.xlsx \nplease pass in these names first.")
+    print(
+"this script contract fio parallel mode test report with single mode report, default output file name: './<your csv file name>-report.xlsx'.\
+\nand it requires: \
+\n          1. parallel mode report csv file \
+\n          2. single mode report csv file \
+\n          3. disk type \
+\n          4. excel name :xxx.xlsx \
+\nplease pass in these names first."
+         )
     exit()
 
 try:
