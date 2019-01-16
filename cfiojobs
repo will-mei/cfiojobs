@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.65
+script_version=0.12.66
 ssh_timeout=15
 
 check_stat=0
@@ -1551,7 +1551,7 @@ function _record_bknd(){
             exit 1
         fi
 #---------|add needed info which you want to pass to your script|-----------------------
-        local bknd_sh_pass_in="$output_dir $job_name $job_batch_index" 
+        local bknd_sh_pass_in="$output_dir $job_name $job_batch_index $bknd_runtime" 
         #local bknd_sh_pass_in=$bknd_runtime 
 #---------------------------------------------------------------------------------------
         for bknd_grp in $bknd_grps ;do 
@@ -1575,7 +1575,14 @@ function _record_bknd(){
             # run script 
             if [[ $bknd_mode == "local" ]] ;then
                 for i in ${bknd_sh_list} ;do
-                    bash $i "$bknd_sh_pass_in" &>/dev/null &
+                    if [[ -f $i ]] ;then
+                        # do not quote the parameters passing in 
+                        if _verbose ;then 
+                            bash -x $i $bknd_sh_pass_in &>>$output_dir/bknd_${i//\//_}.log &
+                        else
+                            bash $i $bknd_sh_pass_in &>/dev/null &
+                        fi
+                    fi &
                 done
             elif [[ $bknd_mode == "remote" ]] ;then 
                 for i in ${bknd_sh_list} ;do
@@ -2380,12 +2387,16 @@ function _execute_job_batch(){
                 if [[ -z $1 ]] && [[ $group_mode == "parallel" ]];then 
                     for host_group_name in $host_group_list ;do
                         _tmp_quiet "on"
+                        # wait 10 sec for bknd script status switching
+                        sleep 5
                         _record_bknd $host_group_name 
                         _tmp_quiet "off"
                         _group_execute $host_group_name 
                     done && wait && _blue "round $job_batch_index all jobs distributed."
                 else
                     _tmp_quiet "on"
+                    # wait 10 sec for bknd script status switching
+                    sleep 5
                     _record_bknd $1
                     _tmp_quiet "off"
                     _group_execute $1
