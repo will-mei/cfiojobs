@@ -10,7 +10,9 @@ while  ps aux |grep $(whoami) |grep cfiojobs |grep '\-\-'fio'\ ' |grep -v grep |
     sleep 10
 done
 
-ceph_df_csv=$output_dir/ceph_df.csv
+# source csv 
+ceph_df_csv=$output_dir/ceph_df_increase.csv
+# target csv
 avg_report_csv_list=$(ls $output_dir/_report/*_avg.csv)
 
 function _update_ceph_df2csv(){
@@ -29,3 +31,5 @@ for avg_report_csv in $avg_report_csv_list;do
         _update_ceph_df2csv 
     fi
 done
+
+rm -rf $lock_file
