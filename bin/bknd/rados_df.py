@@ -3,8 +3,9 @@
 import sys
 import json
 pool_name  = sys.argv[1]
-log_before = sys.argv[2]
-log_after  = sys.argv[3]
+runtime    = int(sys.argv[2])
+log_before = sys.argv[3]
+log_after  = sys.argv[4]
 
 def get_used_kb(df_log):
     try:
@@ -27,6 +28,6 @@ v_a = get_used_kb(log_after)
 # delta 
 d_bytes = v_a[0] - v_b[0]
 d_ops = v_a[1] - v_b[1]
-print(v_b, v_a)
+#print(v_b, v_a)
 
-print d_bytes / 2**10, ',', d_ops
+print (d_bytes/2**10 /runtime), ',', d_ops/runtime

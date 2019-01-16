@@ -31,13 +31,9 @@ function _job_batch_check(){
     ssh -n -q $ceph_mon 'rados df --format=json-pretty ' >$output_dir/$rados_log_name.after.json
 
     ###########################
-    bw_iops=$(python $(dirname $0)/rados_df.py $pool_name $output_dir/$rados_log_name.before.json $output_dir/$rados_log_name.before.json)
-    bw=${bw_iops%,*}
-    iops=${bw_iops#*,}
-      bw=$[bw  /job_runtime]
-    iops=$[iops/job_runtime]
+    bw_iops="$(python $(dirname $0)/rados_df.py $pool_name $job_name $output_dir/$rados_log_name.before.json $output_dir/$rados_log_name.before.json)"
 
     ###########################
-    echo "${job_name/-/},$bw,$iops" >> $output_file
+    echo "${job_name/-/},${bw_iops// /}" >> $output_file
 
 # rm -rf $output_dir/${rados_log_name}*.json
