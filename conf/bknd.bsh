@@ -1,4 +1,4 @@
 #tmp/cell_commont.py
 #tmp/a.sh
 bin/bknd/rados_df.sh
-bin/bknd/rados_df_update_avg.sh
+#bin/bknd/rados_df_update_avg.sh
