@@ -12,7 +12,7 @@ def get_used_kb(df_log):
             log_dict = json.load(f)
             #print int(log_dict['pools'][0]['stats']['kb_used'])
             pool_log = filter(lambda x : x['name'] == pool_name, log_dict['pools'] )
-            return int(log_dict['pools'][0]['stats']['kb_used'])
+            return float(log_dict['pools'][0]['stats']['kb_used'])
     except:
         return 1
 
