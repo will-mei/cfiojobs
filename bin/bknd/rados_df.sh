@@ -18,7 +18,9 @@ function _job_batch_check(){
     echo "$$ wait round end"
     #check job_batch_index 
     recover_log=$output_dir/recover.log
-    job_batch_info=$(sed -n 1p $recover_log)
+    #job_batch_info=$(sed -n 1p $recover_log)
+    # exit if test was interrupted
+    job_batch_info=$(tail $recover_log)
     current_index=${job_batch_info##*,}
     # update job_batch_index and compare
     while [[ $current_index -eq $job_batch_index ]] ;do
