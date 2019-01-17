@@ -4,6 +4,8 @@ lock_file=$0.running
 [[ -f $lock_file ]] && exit 0 || touch $lock_file 
 trap "rm -rf $lock_file" 1 2 15
 
+output_dir=$1
+
 # waiting end of test
 echo "wait test $(date)"
 while  ps aux |grep $(whoami) |grep cfiojobs |grep '\-\-'fio'\ ' |grep -v grep |grep -q $output_dir ;do
@@ -12,7 +14,6 @@ done
 echo "test end $(date)"
 
 # join inut and output files names
-output_dir=$1
 source_csv=$output_dir/rados_df.csv
 target_csv_list=$(ls $output_dir/_report/*_avg.csv)
 
