@@ -18,6 +18,12 @@ ssh_timeout=15
 
 check_stat=0
 tmpfile_dir=$(mktemp -d)
+#date=$(date "+%Y-%m-%d_%H:%M:%S")
+date="$(date +%Y%m%d%H%M)"
+g_conf="$0"".grp"
+b_conf="$0"".blk"
+j_conf="$0"".job"
+
 function _clean_up(){
     # clean up tmp files
     sleep $[ssh_timeout * 2]  &&  rm -rf $tmpfile_dir &>/dev/null  &
@@ -30,21 +36,21 @@ function _clean_up(){
 function _test_abort(){
     # if fio test were started
     if [[ $send_fio == "True" ]]  ;then
-        runner=$(whoami)
-        # stop fio test 
-        [[ -z ${blk_group_list// /} ]] || \
-        for blk_group_name in $ $blk_group_list ;do
-            [[ -z ${host_group_list// /} ]] || \
-            for host_group_name in $host_group_list ;do
-                # kill local test process 
-                kill $(ps aux |grep $runner |grep "'--fio'" |grep $blk_group_name |grep $host_group_name |grep -v grep|awk '{print$2}') &>/dev/null
-            done
-        done && wait 
-        # bknd ssh process for fio cmd 
-        keywords="fio filename= rbdname="
-        for kwd in $keywords; do
-            kill $(ps aux |grep $runner |grep ssh |grep $kwd |grep -v grep|awk '{print$2}') &>/dev/null
-        done
+       # runner=$(whoami)
+       # # stop fio test 
+       # [[ -z ${blk_group_list// /} ]] || \
+       # for blk_group_name in $ $blk_group_list ;do
+       #     [[ -z ${host_group_list// /} ]] || \
+       #     for host_group_name in $host_group_list ;do
+       #         # kill local test process 
+       #         kill $(ps aux |grep $runner |grep "'--fio'" |grep $blk_group_name |grep $host_group_name |grep -v grep|awk '{print$2}') &>/dev/null
+       #     done
+       # done && wait 
+       # # bknd ssh process for fio cmd 
+       # keywords="fio filename= rbdname="
+       # for kwd in $keywords; do
+       #     kill $(ps aux |grep $runner |grep ssh |grep $kwd |grep -v grep|awk '{print$2}') &>/dev/null
+       # done
         # force kill fio process and harvest all logs, log dir will be auto removed. 
         for host_group_name in $host_group_list ;do
             tolerate="True"
@@ -52,13 +58,10 @@ function _test_abort(){
             _group_fio_log_harvest $host_group_name 
         done && wait 
     fi
+    _clean_up 
+    echo "test \"$output_dir\" stoped now"
 }
-trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; _clean_up; exit $check_stat" 1 2 3 15
-#date=$(date "+%Y-%m-%d_%H:%M:%S")
-date="$(date +%Y%m%d%H%M)"
-g_conf="$0"".grp"
-b_conf="$0"".blk"
-j_conf="$0"".job"
+trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; exit $check_stat" 1 2 3 15
 
 ##############################################################################################
 # Global ARRAY:
