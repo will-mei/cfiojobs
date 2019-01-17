@@ -39,7 +39,7 @@ function _job_batch_check(){
     echo "$$ after.json $(date)"
 
     ###########################
-    bw_iops="$(python $(dirname $0)/rados_df.py $pool_name $job_name $output_dir/$rados_log_name.before.json $output_dir/$rados_log_name.after.json)"
+    bw_iops="$(python $(dirname $0)/rados_df.py $pool_name $job_runtime $output_dir/$rados_log_name.before.json $output_dir/$rados_log_name.after.json)"
     echo "$$ get bw_iops $bw_iops"
 
     ###########################
