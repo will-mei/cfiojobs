@@ -1550,7 +1550,7 @@ function _record_bknd(){
     _parse_host_info "$1"
     # check bknd group name
     _verbose "bkndinfo" && _waiting "reading" 5
-    if [[ -n $bknd_grps ]] && [[ $bknd_grps != "none" ]] ;then 
+    if [[ -n $bknd_grps ]] && [[ $bknd_grps != '--' ]] ;then 
         if [[ -n ${JOB_RUNTIME_ARRAY[$job_group_name]} ]] ;then 
             bknd_runtime="${JOB_RUNTIME_ARRAY[$job_group_name]}"
         else
