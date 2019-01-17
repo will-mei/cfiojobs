@@ -38,6 +38,7 @@ short       120     100%        4k,256k,4m          read,randread,write,randwrit
 
 # test on lower load, try it on vm
 srbd        120     100%        4k,256k,4m          read,randread,write,randwrite   True            "-ramp_time=10 -iodepth=1 -numjobs=1 -ioengine=rbd -clientname=admin -pool=rbd"
+ssrbd       120     100%        4k,4m               read,write                      True            "-ramp_time=10 -iodepth=1 -numjobs=1 -ioengine=rbd -clientname=admin -pool=rbd"
 seqr        120     100%        4k,256k,4m          read,randread                   True            "-ramp_time=10 -iodepth=1 -numjobs=1"
 sseqr       80      100%        4k,4m               read                            True            "-ramp_time=10 -iodepth=1 -numjobs=1"
 sdurable    300     100%        none                randrw                          False           "-iodepth=1 -numjobs=1 -direct=1 -bssplit=4k/40:256k/50:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
