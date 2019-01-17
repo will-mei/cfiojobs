@@ -1584,6 +1584,7 @@ function _record_bknd(){
                 for i in ${bknd_sh_list} ;do
                     if [[ -f $i ]] ;then
                         # do not quote the parameters passing in 
+                        echo "bash $i $bknd_sh_pass_in &>>$output_dir/bknd_${i//\//_}.log &" >>$output_dir/bknd_batch.log
                         if _verbose ;then 
                             bash -x $i $bknd_sh_pass_in &>>$output_dir/bknd_${i//\//_}.log &
                         else
