@@ -66,7 +66,7 @@ function _test_abort(){
     fi
     _clean_up 
     echo "test stoped at $(date)" >>$output_dir/recover.log
-    echo "test \"$output_dir\" stoped now"
+    [[ $send_fio == "True" ]] && echo "test \"$output_dir\" stoped now" || echo "tasks all stoped" 
 }
 trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; exit $check_stat" 1 2 3 15
 
@@ -722,7 +722,7 @@ function _check_ip(){
 }
 function _check_port(){
 # input : a ssh port number
-    if echo $1 |grep -q [^0-9] || [[ $1 -ge 65535 ]] ;then
+    if [[ ${1} != ${1//[^0-9]/} ]] || [[ $1 -ge 65535 ]] ;then
        return 1
    else
        return 0
@@ -794,6 +794,9 @@ function _get_all_host_group(){
     )
 }
 function _group_check(){
+    if [[ $1 == "tmp_specified_host" ]] ;then
+        return 0
+    fi
     # $1 host_group_name
     local host_group_name=$1
     local index_name_array=("host group name" "ssh user" "ssh port" "backend group" "backend script execute mode" "host ip list")
@@ -2704,6 +2707,40 @@ function _sep_and_parse(){
 #check option calculating result
 while [ $# -gt 0 ] ;do
     case "$1" in
+        "-w" )
+            if [ $# -lt 2 ]
+            then
+                echo "$0: -w requires a hostname or host list. multi names separated by comma."
+                exit 1
+            fi
+            host_group_list+=" tmp_specified_host"
+            HOST_GROUP_IP_LIST_ARRAY[tmp_specified_host]+=" ${2//,/ }"
+            HOST_GROUP_PORT_ARRAY[tmp_specified_host]="${HOST_GROUP_PORT_ARRAY[tmp_specified_host]:-"22"}"
+            HOST_GROUP_USER_ARRAY[tmp_specified_host]="${HOST_GROUP_USER_ARRAY[tmp_specified_host]:-"root"}"
+            shift
+            ;;
+        "-P" )
+            if [ $# -lt 2 ]
+            then
+                echo "$0: -P requires a ssh port number."
+                exit 1
+            elif ! _check_port "$2"
+            then
+                echo "wrong format of ssh port \"$2\""
+                exit 1
+            fi
+            HOST_GROUP_PORT_ARRAY[tmp_specified_host]="${2}"
+            shift
+            ;;
+        "-U" )
+            if [ $# -lt 2 ]
+            then
+                echo "$0: -U requires a username."
+                exit 1
+            fi
+            HOST_GROUP_USER_ARRAY[tmp_specified_host]="${2}"
+            shift
+            ;;
         "-g" )
             if [ $# -lt 2 ]
             then
