@@ -145,6 +145,9 @@ usage :
             --cpid         copy ssh pub id to given host groups 
             --script       execute given scripts on host groups (sep with comma) 
             --argument     pass given arguments(double quote multiple args) to each given script  
+            -w             run commmand on given hosts (sep with comma)
+            -U             specify ssh user for hosts '-w' specified
+            -P             specify ssh port for hosts '-w' specified
 
     Example: 
    
