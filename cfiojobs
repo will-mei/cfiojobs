@@ -13,9 +13,11 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.66
+script_version=0.12.66a
 ssh_timeout=15
+host_concurrency_max=500
 
+#main_pid="$$"
 check_stat=0
 tmpfile_dir=$(mktemp -d)
 #date=$(date "+%Y-%m-%d_%H:%M:%S")
@@ -219,7 +221,7 @@ usage :
             -E             run the commands everythime fio test batch starts on a host 
             -o             set the output dir for all fio test logs.
             -s             single block mode, one block a time on each host.
-            -S             single group mode, one group a time in the test.
+            -S             single group mode, test one group after another till the end.
             -l             list all running fio jobs info.
             -r             test on rbd blk.
 
@@ -270,7 +272,7 @@ usage :
 6. Help info
 
             options:
-            -h             show this help info
+            -h, --help     show this help info
             -e             make examples of config file (when they do not exist)
             -v, --version  show version info
 
@@ -358,7 +360,7 @@ function _uniq_list(){
     for i in "$@" ;do
         echo $i 
     #return sorted uniq element in one line.
-    done |sort -u |sed ':label;N;s/\n/\ /;b label'
+    done |sort -u |sort -t'.' -k4 -n |sed ':label;N;s/\n/\ /;b label'
 }
 function _waiting(){
 # wait info $1
@@ -458,23 +460,23 @@ function _local_unquiet(){
         _unquiet "$@"
     fi
 }
-function _fifo_empty(){
-    # check if a pip is read obstructed
-    if [[ -n $1 ]] ;then
-        fifo_name=$1
-        line=255
-        read line<$fifo_name &
-        p_read=$1 
-        sleep 0.25
-        if ps ax |grep -q ^$p_read  ;then
-            echo 255 >$fifo_name &   
-            return 0
-        else
-            return 1
-        fi
-    else
-        _red "no fifo name recived!"
-    fi
+function _host_concurrent_pipe(){
+    #
+    [[ $# -gt 0  ]] && exec 0<$1
+    while read partial_ip ;do
+        #
+        for host_ip in $partial_ip ;do
+            eval $host_exec_function $host_ip &
+        done
+        wait
+    done<&0;
+    exec 0<&-
+}
+function _run_in_concurrent_pipe(){
+    # host_exec_function must be pre-defined 
+    # parameters 
+    #echo $ip_list
+    echo $ip_list |xargs -n$host_concurrency_max | _host_concurrent_pipe
 }
 function _update_check_stat(){
     # add new value to file
@@ -512,23 +514,23 @@ function _confirm_check_stat(){
     # $1 stat_file
     local stat_file="$1"
     if [[ -f $stat_file ]] ;then
-        local task_no=$(wc -l <$stat_file)
-        local task_survivors=$(grep ^0$ $stat_file |wc -l)
-        if [[ $task_no -eq 0 ]] ;then
+        local connection_no=$(wc -l <$stat_file)
+        local connection_survivors=$(grep ^0$ $stat_file |wc -l)
+        if [[ $connection_no -eq 0 ]] ;then
             # empty file
             local check_stat=0
         else
             # check_stat=max_return
             local check_stat=$(sort -nr $stat_file |head -1)
         fi
-        echo "$task_no tasks, $task_survivors alive, check stat: $check_stat"
+        echo "$connection_no connections, $connection_survivors alive, check stat: $check_stat"
         # if failed, try to stop
-        if [[ $task_survivors -lt 1 ]] ;then
-            echo -e "\e[1;31m All $task_no Task Failed or No Host Alive! \e[0m"
+        if [[ $connection_survivors -lt 1 ]] ;then
+            echo -e "\e[1;31m All $connection_no Connection Failed or No Host Alive! \e[0m"
             #_timeout 15
             _error_interrupt
         elif [[ $check_stat -ge 1 ]] ;then
-            echo "Partial Task Failure occured." 
+            echo "Partial Connection Failure occured." 
             #_timeout 15
             _error_interrupt
         fi
@@ -632,15 +634,15 @@ batch   detail:
         -runtime=${JOB_RUNTIME_ARRAY[$job_group_name]} 
         ${JOB_ARGS_ARRAY[$job_group_name]} 
 "
-    fi
 #---------------------------------------------
+    fi
 _blue "\
 ##############################################"
 else
     [[ $pdebug == "True" ]] && return 0 || return 1
 fi
 }
-#----------------------------------------|continue here |-----------------------
+#----------------------------------------|failure info |-----------------------
 function _record_fail(){
     if [[ $send_fio == "True" ]] || [[ -n $harvest_file_group_list  ]] ;then
         local failure_time=$(date "+%Y-%m-%d %H:%M:%S")
@@ -1467,24 +1469,23 @@ function _send_cmd(){
 }
 ##############################################################################################
 function _host_ssh_script(){
+    local host_ip=$1
     # running script on remote host.
-    # $1 script file
-    # $2 arguments list
+        #local script_file=$1
+        #local script_args="${@:2}"
     if [[ -f $1 ]];then
-        local script_file=$1
-        local script_args="${@:2}"
         if ping -c2 $host_ip  &>/dev/null ;then
         # network and ssh connection test.
             if _ssh_send "echo ssh ok" &>/dev/null ;then
                 #ssh -t -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
                 if [[ $quiet_mode == "True" ]] ;then
-                    cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\"" &>/dev/null 
+                    cat $script_file | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\"" &>/dev/null 
                     local script_stat=$?
                     echo "  $host_ip stat: $script_stat"
                     _update_check_stat $script_stat $tmpfile_script_host_out 
                 else
     #                echo "1:$1 2:$2"
-                    cat $1 | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\""
+                    cat $script_file | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\""
                     local script_stat=$?
                     _update_check_stat $script_stat $tmpfile_script_host_out 
                 fi
@@ -1511,18 +1512,40 @@ function _group_ssh_script(){
         _parse_host_info "$1"
         tmpfile_script_host_out=$(mktemp -p $tmpfile_dir)
         #echo 0 > $tmpfile_script_host_out 
-        for host_ip in $ip_list;do 
+        local script_file=$2
+        local script_args="${@:3}"
+        #for host_ip in $ip_list;do 
             if [[ $p_exec == "True" ]] || [[ $send_fio == "True" ]];then
-                _host_ssh_script $2 "$3" &
+                host_exec_function="_host_ssh_script"
+                _run_in_concurrent_pipe
+                #_host_ssh_script $2 "$3" &
             else
-                _host_ssh_script $2 "$3"
+                for host_ip in $ip_list;do 
+                    _host_ssh_script $host_ip #$2 "$3"
+                done
             fi
     #        echo "1:$1 2:$2 3:$3"
-        done && wait 
+        #done && wait 
         _confirm_check_stat $tmpfile_script_host_out
         rm -rf $tmpfile_script_host_out
         _unquiet "$1: execute script done."
     _tmp_quiet "off"
+}
+function _host_ssd_cpid(){
+    #
+    local host_ip=$1
+        #for host_ip in $ip_list;do 
+            if ping -c2 $host_ip  &>/dev/null ;then
+                # network and ssh connection test.
+                timeout $[ssh_timeout * 2] $(dirname $0)/bin/sshpass -p $ssh_passwd ssh-copy-id -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout $host_user@$host_ip -p $host_port 
+                local init_stat=$?
+                [[ $init_stat -ne 0 ]] &&  _sshfail
+                _update_check_stat $init_stat $tmpfile_init_host_out 
+            else
+                _pingfail 
+                _update_check_stat 1 $tmpfile_init_host_out 
+            fi #&
+        #done && wait 
 }
 function _group_ssd_cpid(){
 # input :
@@ -1534,18 +1557,6 @@ function _group_ssd_cpid(){
         _parse_host_info "$1"
         tmpfile_init_host_out=$(mktemp -p $tmpfile_dir)
         #echo 0 > $tmpfile_init_host_out 
-        for host_ip in $ip_list;do 
-            if ping -c2 $host_ip  &>/dev/null ;then
-                # network and ssh connection test.
-                timeout $[ssh_timeout * 2] $(dirname $0)/bin/sshpass -p $ssh_passwd ssh-copy-id -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout $host_user@$host_ip -p $host_port 
-                local init_stat=$?
-                [[ $init_stat -ne 0 ]] &&  _sshfail
-                _update_check_stat $init_stat $tmpfile_init_host_out 
-            else
-                _pingfail 
-                _update_check_stat 1 $tmpfile_init_host_out 
-            fi &
-        done && wait 
         _confirm_check_stat $tmpfile_init_host_out
         rm -rf $tmpfile_init_host_out
         _unquiet "$1: initialization done."
@@ -1791,6 +1802,7 @@ function _exec_only_oth(){
 }
 # host
 function _exec_all(){
+    host_ip=$1
     if ping -c2 $host_ip &>/dev/null ;then
         #
         if _ssh_send " echo \$(whoami) " &>/dev/null ;then
@@ -1845,14 +1857,16 @@ function _group_execute(){
         [[ -z $tmpfile_exec_diff ]] && local tmpfile_exec_diff=$(mktemp -p $tmpfile_dir)
         # test host 
         #echo 0 > $tmpfile_exec
-        for host_ip in $ip_list ;do
+        local host_exec_function="_exec_all"
              #ping check
              if [[ $p_exec == "True" ]] || [[ $send_fio == "True" ]] ;then
-                 _exec_all &
+                 #_exec_all &
+                 _run_in_concurrent_pipe
              else
-                 _exec_all 
+                for host_ip in $ip_list ;do
+                     _exec_all $host_ip
+                done #&& wait 
              fi
-        done && wait 
         # show different output 
         [[ $quiet_mode != "True" ]] && _count_return
         # clean up tmp file 
@@ -1867,6 +1881,7 @@ function _group_execute(){
     _unquiet "$1: execute action done."
 }
 function _host_fio_list(){
+    local host_ip=$1
     if ping -c1 $host_ip &>/dev/null ;then 
         if _ssh_send 'echo ok' &>/dev/null ;then
             tmpfile=$(mktemp -p $tmpfile_dir)
@@ -1938,27 +1953,24 @@ function _group_fio_list(){
     printf "%-21s%-16s%-6s%-12s%-12s%-8s%-11s%-9s%-30s\n" "host-name" "host-ip" "jobs" "runtime-max" "remain-max" "bs-size" "rw-pattern" "blk/file" "blk/file-list"
     # get and print job info .
     #    check_stat=0
-    for host_ip in $ip_list ;do
-        if [[ $p_exec == "True" ]];then
-            _host_fio_list &
-        else
-            _host_fio_list
-        fi
-    done && wait
+    local host_exec_function="_host_fio_list"
+    if [[ $p_exec == "True" ]];then
+        #echo $ip_list 
+        #echo $ip_list |xargs -n$host_concurrency_max | _host_concurrent_pipe
+        _run_in_concurrent_pipe 
+    else
+        for host_ip in $ip_list ;do
+            _host_fio_list $host_ip
+        done
+    fi
 #    [[ $check_stat -eq 1 ]] && _error_interrupt
 #    _unquiet "list action done." || echo -e "\tstat: $check_stat"
 }
 ##############################################################################################
-function _group_fio_log_harvest(){
-# blk_group_name was set (when lunch a test on cluster.)
-# host_group_name was set
-    _yellow "harvest log:"
-    # check output dir name 
-    if [[ -n $output_dir  ]] ;then
-        _parse_host_info "$1"
-            tmpfile_hvst=$(mktemp -p $tmpfile_dir)
-            #echo 0 > $tmpfile_hvst
-            for host_ip in $ip_list ;do
+function _host_fio_log_harvest(){
+    #
+    host_ip=$1
+            #for host_ip in $ip_list ;do
                 #ping check
                 if ping -c2 $host_ip &>/dev/null ;then
                     if _ssh_send " echo \$(whoami) " &>/dev/null ;then
@@ -1983,8 +1995,20 @@ function _group_fio_log_harvest(){
                     _pingfail 
                     #_error_interrupt
                     _update_check_stat 1 $tmpfile_hvst
-                fi &
-            done && wait
+                fi #&
+            #done && wait
+}
+function _group_fio_log_harvest(){
+# blk_group_name was set (when lunch a test on cluster.)
+# host_group_name was set
+    _yellow "harvest log:"
+    # check output dir name 
+    if [[ -n $output_dir  ]] ;then
+        _parse_host_info "$1"
+            tmpfile_hvst=$(mktemp -p $tmpfile_dir)
+            #echo 0 > $tmpfile_hvst
+            local host_exec_function="_host_fio_log_harvest"
+            _run_in_concurrent_pipe
         _confirm_check_stat $tmpfile_hvst
         rm -rf $tmpfile_hvst
         _unquiet "$1: log harvest done."
@@ -1993,14 +2017,10 @@ function _group_fio_log_harvest(){
     fi
 }
 #function _fio_scale_watch(){}
-
-function _group_fio_stop(){
-# stop all existing fio jobs on host group
-# [[ $tolerate == "True" ]]
-    _yellow "fio stop:"
-    _parse_host_info "$1"
-        tmpfile_stop=$(mktemp -p $tmpfile_dir)
-        for host_ip in $ip_list ;do
+function _host_fio_stop(){
+    #
+    local host_ip=$1
+        #for host_ip in $ip_list ;do
             if ping -c2 $host_ip &>/dev/null ;then
                 if _ssh_send 'echo ssh ok' &>/dev/null ;then
                     # stop fio process
@@ -2029,28 +2049,27 @@ function _group_fio_stop(){
                 _update_check_stat 1 $tmpfile_stop
                 #_error_interrupt
                 #echo 1 >$tmpfile_stop
-            fi &
+            fi #&
+        #done && wait
+}
+function _group_fio_stop(){
+# stop all existing fio jobs on host group
+# [[ $tolerate == "True" ]]
+    _yellow "fio stop:"
+    _parse_host_info "$1"
+        tmpfile_stop=$(mktemp -p $tmpfile_dir)
+        local host_exec_function="_host_fio_stop"
+        _run_in_concurrent_pipe 
 # if run in backgroud return will always be 0
-        done && wait
         #check_stat=$(cat $tmpfile_stop)
         _confirm_check_stat $tmpfile_stop
         rm -rf $tmpfile_stop
     _unquiet "$1: round stop action done."
 }
-
-# stop test on a group
-function _group_test_stop(){
-    _yellow "test stop:"
-    _parse_host_info "$1"
-# stop all background test process on local host
-    echo "  stop main test process..."
-    local main_pid=$(ps aux |grep '\-\-'fio'\ ' |grep "$1" |grep -v grep |awk '{print$2}')
-    [[ -n $main_pid ]] && kill $main_pid || echo "  main process was ended already."
-#stop fio jobs
-        echo "  stop fio jobs on hosts..."
-        tmpfile_stop=$(mktemp -p $tmpfile_dir)
-        #echo 0 >$tmpfile_stop
-        for host_ip in $ip_list ;do
+function _host_test_stop(){
+    #
+    local host_ip=$1
+        #for host_ip in $ip_list ;do
             # stop local process
             local host_pid=$(ps aux |grep $(whoami) |grep $host_ip |grep ssh |grep fio |grep -v grep |awk '{print$2}')
             [[ -n $host_pid ]] && kill $host_pid 
@@ -2073,23 +2092,34 @@ function _group_test_stop(){
                 #_error_interrupt
                 #echo 1 >$tmpfile_stop
                 _update_check_stat 1 $tmpfile_stop
-            fi &
+            fi #&
 # if run in backgroud return will always be 0
-        done && wait
+        #done && wait
+}
+# stop test on a group
+function _group_test_stop(){
+    _yellow "test stop:"
+    _parse_host_info "$1"
+# stop all background test process on local host
+    echo "  stop main test process..."
+    local main_pid=$(ps aux |grep '\-\-'fio'\ ' |grep "$1" |grep -v grep |awk '{print$2}')
+    [[ -n $main_pid ]] && kill $main_pid || echo "  main process was ended already."
+#stop fio jobs
+        echo "  stop fio jobs on hosts..."
+        tmpfile_stop=$(mktemp -p $tmpfile_dir)
+        #echo 0 >$tmpfile_stop
+        local host_exec_function="_host_fio_stop"
+        _run_in_concurrent_pipe 
         #check_stat=$(cat $tmpfile_stop)
         _confirm_check_stat $tmpfile_stop
         rm -rf $tmpfile_stop
     _unquiet "$1: stop action done."
 }
-
-function _group_fio_check(){
-# check and wait when fio jobs detected on a given host group
-    _yellow "running stat check:"
-    _parse_host_info "$1"
-        #check_stat=0
-       echo " check and wait running fio jobs."
-        for host_ip in $ip_list ;do
-            _verbose hostinfo && _waiting "reading" 5
+function _host_fio_check2(){
+    #
+    local host_ip=$1
+        #for host_ip in $ip_list ;do
+        #    _verbose hostinfo && _waiting "reading" 5
             if ping -c1 $host_ip &>/dev/null ;then
             # no fio between 15 secends check, three times of send interval
                 if _ssh_send 'whoami' &>/dev/null ;then
@@ -2118,19 +2148,24 @@ function _group_fio_check(){
             else
                 _pingfail  &>/dev/null
                 #_error_interrupt
-            fi &
-        done && wait
+            fi #&
+        #done && wait
+}
+function _group_fio_check(){
+# check and wait when fio jobs detected on a given host group
+    _yellow "running stat check:"
+    _parse_host_info "$1"
+        #check_stat=0
+       echo " check and wait running fio jobs."
+       local host_exec_function="_host_fio_check2"
+       _run_in_concurrent_pipe
     #[[ $check_stat -eq 1 ]] && _error_interrupt
     _unquiet "$1: check action done."  # || echo " group stat : $check_stat" 
 }
-function _group_pre_check(){
-# check and wait when fio jobs detected on a given host group
-    _yellow "host pre check:"
-    _parse_host_info "$1"
-#        check_stat=0
-        tmpfile_precheck=$(mktemp -p $tmpfile_dir)
-        # echo 0 > $tmpfile_precheck
-        for host_ip in $ip_list ;do
+function _host_pre_check(){
+    #
+    local host_ip=$1
+        #for host_ip in $ip_list ;do
             _verbose "hostinfo" && _waiting "reading" 5
             # network check
             if ping -c 2 $host_ip &>/dev/null ;then
@@ -2186,8 +2221,18 @@ function _group_pre_check(){
                 _pingfail 
                 #_error_interrupt
                 _update_check_stat 1 $tmpfile_precheck
-            fi &
-        done && wait
+            fi #&
+        #done && wait
+}
+function _group_pre_check(){
+# check and wait when fio jobs detected on a given host group
+    _yellow "host pre check:"
+    _parse_host_info "$1"
+#        check_stat=0
+        tmpfile_precheck=$(mktemp -p $tmpfile_dir)
+        # echo 0 > $tmpfile_precheck
+        local host_exec_function="_host_pre_check"
+        _run_in_concurrent_pipe
         # check stat
         _confirm_check_stat $tmpfile_precheck
         # install fio, if possible
@@ -2226,13 +2271,11 @@ function _group_pre_check(){
         #[[ $check_stat -eq 1 ]] && echo "$1 pre check partially failed." && _timeout 15 && _error_interrupt
     _unquiet "host group $1: pre check action done."
 }
-function _group_blk_detect(){
-# detected possible target blk on a given host group
-    _yellow "group blk detecting:"
-    _parse_host_info "$1"
-        tmpfile_grp_blk_detected=$(mktemp -p $tmpfile_dir)
-        for host_ip in $ip_list ;do
-            _verbose "hostinfo" && _waiting "reading" 5
+function _host_blk_detect(){
+    #
+    local host_ip=$1
+        #for host_ip in $ip_list ;do
+            #_verbose "hostinfo" && _waiting "reading" 5
             # network check
             if ping -c 1 $host_ip &>/dev/null ;then
                 # ssh check 
@@ -2279,8 +2322,16 @@ function _group_blk_detect(){
             else
                 _pingfail 
                 #_error_interrupt
-            fi &
-        done && wait 
+            fi #&
+        #done && wait 
+}
+function _group_blk_detect(){
+# detected possible target blk on a given host group
+    _yellow "group blk detecting:"
+    _parse_host_info "$1"
+        tmpfile_grp_blk_detected=$(mktemp -p $tmpfile_dir)
+        local host_exec_function="_host_blk_detect"
+        _run_in_concurrent_pipe 
         #output blk list to group blk configfile 
         echo check done 
         sleep 5
@@ -2300,16 +2351,10 @@ function _group_blk_detect(){
         # clean tmpfile 
         rm -f $tmpfile_grp_blk_detected
 }
-function _group_blk_precheck(){
-    #check if detected blk available on every host 
-    _yellow "group blk recheck:"
-    _parse_host_info "$1"
-    local grp_blk_conf=$(dirname $0)/conf/$1".blk"
-    if [[ -f $grp_blk_conf ]] ;then 
-        local blk_list=$(_format_conf $grp_blk_conf)
-        if [[ -n $blk_list ]] ;then 
-            local blk_list=${blk_list//,/ }
-            for host_ip in $ip_list;do
+function _host_blk_precheck(){
+    #
+    local host_ip=$1
+            #for host_ip in $ip_list;do
                 if ping -c 1 $host_ip &>/dev/null ;then
                     if _ssh_send 'whoami' &>/dev/null ;then
                         #
@@ -2329,8 +2374,21 @@ function _group_blk_precheck(){
                     fi
                 else
                     _pingfail 
-                fi &
-            done && wait 
+                fi #&
+            #done && wait 
+}
+function _group_blk_precheck(){
+    #check if detected blk available on every host 
+    _yellow "group blk recheck:"
+    _parse_host_info "$1"
+    local grp_blk_conf=$(dirname $0)/conf/$1".blk"
+    if [[ -f $grp_blk_conf ]] ;then 
+        local blk_list=$(_format_conf $grp_blk_conf)
+        if [[ -n $blk_list ]] ;then 
+            local blk_list=${blk_list//,/ }
+            # pipe exec 
+            local host_exec_function="_host_blk_precheck"
+            _run_in_concurrent_pipe 
             # show blk list after recheck 
             _yellow "currently valid blk list of $1:"
             grep -v "^#" $grp_blk_conf |sed "$ s/\,//g" || _red "  $grp_blk_conf :No valid block device for group: $1 !" 
@@ -2901,6 +2959,10 @@ while [ $# -gt 0 ] ;do
             ;;
         "--version" )
             echo "$0 $script_version"
+            exit 0
+            ;;
+        "--help" )
+            _show_help_info
             exit 0
             ;;
         * )
