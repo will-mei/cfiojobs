@@ -13,13 +13,28 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.66a
+script_version=0.12.66b
+
 ssh_timeout=15
+process_reservation=128
 host_concurrency_max=500
+strict_concurrent_controle="True" # "True" or "False" 
 
 #main_pid="$$"
 check_stat=0
 tmpfile_dir=$(mktemp -d)
+concurrency_tag=$(mktemp -u -p $tmpfile_dir) 
+# check host_concurrency_max 
+sys_concurrency_max=$(( $(ulimit -u) - $(ps ax |wc -l) - $process_reservation))
+if [[ $host_concurrency_max -gt $sys_concurrency_max ]];then
+    echo "host_concurrency_max: $host_concurrency_max is too big, please set a number less than $sys_concurrency_max on this host."
+    exit 1
+fi
+# get unused fd number 
+concurrent_pipe_fd=$host_concurrency_max 
+while ls -l /proc/self/fd/ |grep -q " $concurrent_pipe_fd " ;do 
+    concurrent_pipe_fd=$[host_concurrency_max + 1]
+done 
 #date=$(date "+%Y-%m-%d_%H:%M:%S")
 date="$(date +%Y%m%d%H%M)"
 g_conf="$0"".grp"
@@ -34,6 +49,7 @@ function _clean_up(){
         [[ -f $trash_file ]] && rm -f $trash_file &>/dev/null
         [[ -d $trash_file ]] && rm -rf $trash_file &>/dev/null
     done
+    [[ $strict_concurrent_controle == "True" ]] && _close_concurrent_pipe 
 }
 function _test_abort(){
     echo "test aborting at $(date)" >>$output_dir/recover.log
@@ -460,6 +476,44 @@ function _local_unquiet(){
         _unquiet "$@"
     fi
 }
+function _gen_concurrent_pipe(){
+    # works when concurrency_tag was predefined
+    if [[ -n $concurrency_tag ]] ;then
+        #return 0
+        mkfifo $concurrency_tag
+        #exec 256<>$concurrency_tag
+        eval "exec $concurrent_pipe_fd<>$concurrency_tag"
+        rm -rf $concurrency_tag
+        for ((n=1;n<=$host_concurrency_max;n++)) ;do
+            #echo >&256
+            echo >&$concurrent_pipe_fd 
+        done
+    else
+        #_blue "concurrency_tag missing"
+        echo "concurrency_tag missing"
+    fi
+}
+function _close_concurrent_pipe(){
+        # close pipe
+        eval "exec $concurrent_pipe_fd>&- "
+        eval "exec $concurrent_pipe_fd<&- "
+}
+function _join_concurrent_troop(){
+    #
+    read -u$concurrent_pipe_fd
+}
+function _leave_concurrent_troop(){
+    echo >&$concurrent_pipe_fd 
+}
+function _host_concurrent_pipe2(){
+    for host_ip in $ip_list ;do 
+        {
+            _join_concurrent_troop
+            eval $host_exec_function $host_ip
+            _leave_concurrent_troop 
+        } &
+    done && wait 
+}
 function _host_concurrent_pipe(){
     #
     [[ $# -gt 0  ]] && exec 0<$1
@@ -476,7 +530,12 @@ function _run_in_concurrent_pipe(){
     # host_exec_function must be pre-defined 
     # parameters 
     #echo $ip_list
-    echo $ip_list |xargs -n$host_concurrency_max | _host_concurrent_pipe
+    if [[ $strict_concurrent_controle == "True" ]] ;then 
+        _host_concurrent_pipe2 
+    else
+        #
+        echo $ip_list |xargs -n$host_concurrency_max | _host_concurrent_pipe 
+    fi
 }
 function _update_check_stat(){
     # add new value to file
@@ -2994,6 +3053,7 @@ done
     fi
 # check blk group, exit with any wrong name, '-d' skip missing group
         _host_group_check
+        [[ $strict_concurrent_controle == "True" ]] && _gen_concurrent_pipe
         #preparation before send fio jobs
         if [[ $send_fio == "True" ]] ;then
             _blk_group_check
