@@ -18,7 +18,6 @@ script_version=0.12.66b
 ssh_timeout=15
 process_reservation=128
 host_concurrency_max=500
-strict_concurrent_controle="True" # "True" or "False" 
 
 #main_pid="$$"
 check_stat=0
@@ -166,6 +165,7 @@ usage :
             -w             run commmand on given hosts (sep with comma)
             -U             specify ssh user for hosts '-w' specified
             -P             specify ssh port for hosts '-w' specified
+            --strictly     execute with a more precise control of concurrency scale 
 
     Example: 
    
@@ -505,7 +505,7 @@ function _join_concurrent_troop(){
 function _leave_concurrent_troop(){
     echo >&$concurrent_pipe_fd 
 }
-function _host_concurrent_pipe2(){
+function _host_concurrent_pipe_strict(){
     for host_ip in $ip_list ;do 
         {
             _join_concurrent_troop
@@ -531,7 +531,7 @@ function _run_in_concurrent_pipe(){
     # parameters 
     #echo $ip_list
     if [[ $strict_concurrent_controle == "True" ]] ;then 
-        _host_concurrent_pipe2 
+        _host_concurrent_pipe_strict
     else
         #
         echo $ip_list |xargs -n$host_concurrency_max | _host_concurrent_pipe 
@@ -2665,6 +2665,7 @@ recover_job_batch_index=""
 command_mode="onece"
 rbd_mode="False"
 ssd_cpid="False"
+strict_concurrent_controle="False" 
 #no_sys_blk="False"
 
 }
@@ -3014,6 +3015,10 @@ while [ $# -gt 0 ] ;do
                 exit 1
             fi
             script_argument_list+=" ${2}"
+            shift
+            ;;
+        "--strictly" )
+            strict_concurrent_controle="True"
             shift
             ;;
         "--version" )
