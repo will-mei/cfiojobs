@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.66b
+script_version=0.12.67
 
 ssh_timeout=15
 process_reservation=128
@@ -166,6 +166,7 @@ usage :
             -U             specify ssh user for hosts '-w' specified
             -P             specify ssh port for hosts '-w' specified
             --strictly     execute with a more precise control of concurrency scale 
+            --conflict-ok  cancle pre conflict check befoe launch a test(don't use it if not nessary!).
 
     Example: 
    
@@ -181,7 +182,7 @@ usage :
 
             $0 ls -i -g vmg1,grp3 -t -d
       
-    it is fine, because '-i' does not confilict with any options supported by this script,
+    it is fine, because '-i' does not conflict with any options supported by this script,
     but still we strongly recommend you write it this way:
 
             $0 \"ls -i\" -g vmg1,grp3 -t -d
@@ -1085,7 +1086,7 @@ function _blk_group_check(){
     fi
 }
 function _recover_point_check(){
-    # confilict check.
+    # conflict check.
     [[ $recover_test == "True" ]] && [[ $round_retest == "True" ]] && echo "Parameter confusion!" && exit 1
     # recover or retest.
     if  [[ $recover_test == "True" ]] || [[ $round_retest == "True" ]] ;then 
@@ -2548,7 +2549,7 @@ function _execute_job_batch(){
                 # check jobs 
                 _round_stat "CHECKING"
                 _tmp_quiet "on"
-                # group mode 
+                # sing group mode 
                 if [[ -z $1 ]] && [[ $group_mode == "parallel" ]];then 
                     for host_group_name in $host_group_list ;do
                         _group_fio_check $host_group_name 
@@ -2607,12 +2608,17 @@ function _fio_env_check(){
 }
 
 function _fio_conflict_check(){
+    #
+    if [[ $conflict_ok == "True" ]] ;then 
+        return 0
+    else
             #check previous
             _tmp_quiet "on"
             for host_group_name in $host_group_list ;do
                 _group_fio_check $host_group_name
             done
             _tmp_quiet "off"
+    fi
 }
 function _fio_scale_control(){
             if [[ $group_mode == "single" ]];then 
@@ -2666,6 +2672,7 @@ command_mode="onece"
 rbd_mode="False"
 ssd_cpid="False"
 strict_concurrent_controle="False" 
+conflict_ok="False"
 #no_sys_blk="False"
 
 }
@@ -2703,6 +2710,7 @@ info:
     printdebug: $pdebug
       tolerate: $tolerate
      stop_test: $stop_test
+        strict: $strict_concurrent_controle 
 ##################################"
     #no_sys_blk: $no_sys_blk
 _waiting "read info" 10
@@ -3019,6 +3027,10 @@ while [ $# -gt 0 ] ;do
             ;;
         "--strictly" )
             strict_concurrent_controle="True"
+            shift
+            ;;
+        "--conflict-ok" )
+            conflict_ok="True"
             shift
             ;;
         "--version" )
