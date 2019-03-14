@@ -1,5 +1,6 @@
+A script bundle that help you to run fio benchmark on a cluster. Makes your disk testing much easier.
 
-This script is a simple fio jobs and file distributor. You can also run commands on multiple hosts with it.
+This script is a fio jobs and file distributor. You can also run commands on multiple hosts with it.
 Remenber, you need passwordless SSH access permssions for all hosts, and use a comma as a delimiter when you have multiple group units.
 
 usage :
