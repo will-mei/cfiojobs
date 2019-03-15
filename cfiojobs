@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.67
+script_version=0.12.68
 
 ssh_timeout=15
 process_reservation=128
@@ -167,6 +167,7 @@ usage :
             -P             specify ssh port for hosts '-w' specified
             --strictly     execute with a more precise control of concurrency scale 
             --conflict-ok  cancle pre conflict check befoe launch a test(don't use it if not nessary!).
+            --no-ping      no ping check for host.
 
     Example: 
    
@@ -1414,6 +1415,12 @@ function _parse_host_info(){
 ##############################################################################################
 # actions on a host
 ##############################################################################################
+function _ping_check(){
+    [[ $no_ping == "True" ]] && return 0
+    ping -c1 $host_ip  &>/dev/null 
+    local ping_stat=$?
+    return $ping_stat
+}
 function _ssh_send(){
 #send command info to host when ssh_user, ssh_ip, ssh_port was set
     if [[ $# -lt 1 ]] ;then
@@ -1428,6 +1435,11 @@ function _ssh_send(){
             ssh -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
         #fi 
     fi
+}
+function _ssh_check(){
+    _ssh_send "echo ssh ok" &>/dev/null 
+    local ssh_stat=$?
+    return $ssh_stat
 }
 function _send_file(){
     if [[ -n $file_group_list ]] ;then
@@ -1534,9 +1546,9 @@ function _host_ssh_script(){
         #local script_file=$1
         #local script_args="${@:2}"
     if [[ -f $1 ]];then
-        if ping -c2 $host_ip  &>/dev/null ;then
+        if _ping_check ;then
         # network and ssh connection test.
-            if _ssh_send "echo ssh ok" &>/dev/null ;then
+            if _ssh_check ;then
                 #ssh -t -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
                 if [[ $quiet_mode == "True" ]] ;then
                     cat $script_file | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\"" &>/dev/null 
@@ -1595,7 +1607,7 @@ function _host_ssd_cpid(){
     #
     local host_ip=$1
         #for host_ip in $ip_list;do 
-            if ping -c2 $host_ip  &>/dev/null ;then
+            if _ping_check ;then
                 # network and ssh connection test.
                 timeout $[ssh_timeout * 2] $(dirname $0)/bin/sshpass -p $ssh_passwd ssh-copy-id -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout $host_user@$host_ip -p $host_port 
                 local init_stat=$?
@@ -1692,7 +1704,7 @@ function _record_bknd(){
 }
 ##############################################################################################
 function _host_fio_check(){
-    if ping -c1 $host_ip &>/dev/null ;then
+    if _ping_check ;then
         # wait five secends, let fio start its jobs
         sleep 5
     else
@@ -1863,9 +1875,9 @@ function _exec_only_oth(){
 # host
 function _exec_all(){
     host_ip=$1
-    if ping -c2 $host_ip &>/dev/null ;then
+    if _ping_check ;then
         #
-        if _ssh_send " echo \$(whoami) " &>/dev/null ;then
+        if _ssh_check ;then
         # file , cmd , fio
             if [[ $send_fio == "True" ]] ;then
                 # put fio in bg, no need to wait and skip to next host immediately.
@@ -1942,8 +1954,8 @@ function _group_execute(){
 }
 function _host_fio_list(){
     local host_ip=$1
-    if ping -c1 $host_ip &>/dev/null ;then 
-        if _ssh_send 'echo ok' &>/dev/null ;then
+    if _ping_check ;then 
+        if _ssh_check ;then
             tmpfile=$(mktemp -p $tmpfile_dir)
             tmpfile2=$(mktemp -p $tmpfile_dir)
             host_stat=0
@@ -2032,8 +2044,8 @@ function _host_fio_log_harvest(){
     host_ip=$1
             #for host_ip in $ip_list ;do
                 #ping check
-                if ping -c2 $host_ip &>/dev/null ;then
-                    if _ssh_send " echo \$(whoami) " &>/dev/null ;then
+                if _ping_check ;then
+                    if _ssh_check ;then
     #echo "output_dir $output_dir"
     #sleep 30
                         # stop scp from coping "/" from remote, when output dir missing
@@ -2081,8 +2093,8 @@ function _host_fio_stop(){
     #
     local host_ip=$1
         #for host_ip in $ip_list ;do
-            if ping -c2 $host_ip &>/dev/null ;then
-                if _ssh_send 'echo ssh ok' &>/dev/null ;then
+            if _ping_check ;then
+                if _ssh_check ;then
                     # stop fio process
                     if _ssh_send 'ps aux |grep fio|grep -E "filename|rbdname" |grep -v grep' &>/dev/null ;then
                         if [[ $tolerate == "True"  ]] ;then
@@ -2134,8 +2146,8 @@ function _host_test_stop(){
             local host_pid=$(ps aux |grep $(whoami) |grep $host_ip |grep ssh |grep fio |grep -v grep |awk '{print$2}')
             [[ -n $host_pid ]] && kill $host_pid 
             # stop fio on host
-            if ping -c2 $host_ip &>/dev/null ;then
-                if _ssh_send 'echo ssh ok' &>/dev/null ;then
+            if _ping_check ;then
+                if _ssh_check ;then
                     if _ssh_send 'ps aux |grep fio|grep -E "filename|rbdname" |grep -v grep' &>/dev/null ;then
                         _ssh_send 'kill $(ps aux |grep fio|grep -E "filename|rbdname" |grep -v grep|awk "{print\$2}") ' \
                         && _unquiet " $(_blue "host: $host_ip") fio process killed successfully."
@@ -2180,9 +2192,9 @@ function _host_fio_check2(){
     local host_ip=$1
         #for host_ip in $ip_list ;do
         #    _verbose hostinfo && _waiting "reading" 5
-            if ping -c1 $host_ip &>/dev/null ;then
+            if _ping_check ;then
             # no fio between 15 secends check, three times of send interval
-                if _ssh_send 'whoami' &>/dev/null ;then
+                if _ssh_check ;then
                     if _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;then
                         while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
                             sleep 30
@@ -2228,8 +2240,8 @@ function _host_pre_check(){
         #for host_ip in $ip_list ;do
             _verbose "hostinfo" && _waiting "reading" 5
             # network check
-            if ping -c 2 $host_ip &>/dev/null ;then
-                if ! _ssh_send 'whoami' &>/dev/null ;then
+            if _ping_check ;then
+                if ! _ssh_check ;then
                     _sshfail 
                     _update_check_stat 1 $tmpfile_precheck
                     return 1 
@@ -2337,9 +2349,9 @@ function _host_blk_detect(){
         #for host_ip in $ip_list ;do
             #_verbose "hostinfo" && _waiting "reading" 5
             # network check
-            if ping -c 1 $host_ip &>/dev/null ;then
+            if _ping_check ;then
                 # ssh check 
-                if _ssh_send 'whoami' &>/dev/null ;then
+                if  _ssh_check ;then
                     tmpfile_host_blk_detected=$(mktemp -p $tmpfile_dir)
                     # get all blk info form ssh 
                     _ssh_send "lsblk -ps" >$tmpfile_host_blk_detected
@@ -2415,8 +2427,8 @@ function _host_blk_precheck(){
     #
     local host_ip=$1
             #for host_ip in $ip_list;do
-                if ping -c 1 $host_ip &>/dev/null ;then
-                    if _ssh_send 'whoami' &>/dev/null ;then
+                if _ping_check ;then
+                    if _ssh_check ;then
                         #
                         for blk in $blk_list ;do 
                             _ssh_send "lsblk -p $blk" &>/dev/null 
@@ -2673,7 +2685,7 @@ rbd_mode="False"
 ssd_cpid="False"
 strict_concurrent_controle="False" 
 conflict_ok="False"
-#no_sys_blk="False"
+no_ping="False"
 
 }
 
@@ -2711,6 +2723,7 @@ info:
       tolerate: $tolerate
      stop_test: $stop_test
         strict: $strict_concurrent_controle 
+       no_ping: $no_ping
 ##################################"
     #no_sys_blk: $no_sys_blk
 _waiting "read info" 10
@@ -2846,6 +2859,7 @@ while [ $# -gt 0 ] ;do
             HOST_GROUP_IP_LIST_ARRAY[tmp_specified_host]+=" ${2//,/ }"
             HOST_GROUP_PORT_ARRAY[tmp_specified_host]="${HOST_GROUP_PORT_ARRAY[tmp_specified_host]:-"22"}"
             HOST_GROUP_USER_ARRAY[tmp_specified_host]="${HOST_GROUP_USER_ARRAY[tmp_specified_host]:-"root"}"
+            # another shift 
             shift
             ;;
         "-P" )
@@ -3027,11 +3041,13 @@ while [ $# -gt 0 ] ;do
             ;;
         "--strictly" )
             strict_concurrent_controle="True"
-            shift
+            #shift
             ;;
         "--conflict-ok" )
             conflict_ok="True"
-            shift
+            ;;
+        "--no-ping" )
+            no_ping="True"
             ;;
         "--version" )
             echo "$0 $script_version"
