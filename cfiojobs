@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.70
+script_version=0.12.71
 
 ssh_timeout=15
 process_reservation=128
@@ -168,6 +168,7 @@ usage :
             --strictly     execute with a more precise control of concurrency scale 
             --conflict-ok  cancle pre conflict check befoe launch a test(don't use it if not nessary!).
             --no-ping      no ping check for host.
+            --sudo         use sudo for all command 
 
     Example: 
    
@@ -1433,7 +1434,7 @@ function _ssh_send(){
             #exddpect -v &>/dev/null && expect bin/expect_ssh2vm.exp $host_user $host_ip $host_port $host_pwd "$@"
         #else 
             #ssh -n -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -l $host_user $host_ip -p $host_port "$@"
-            ssh -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
+            ssh -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "${cmd_prefix}$@"
         #fi 
     fi
 }
@@ -1507,7 +1508,7 @@ function _send_cmd(){
                 local tmpfile_exec_host_out=$(mktemp -p $tmpfile_dir)
                 #use virtual terminal and recive tty input.
                 # echo "$host_ip :"
-                ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
+                ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "${cmd_prefix}$CMD" 2>&1 |tee $tmpfile_exec_host_out
                 local cmd_stat=$?
                 _update_check_stat $cmd_stat $tmpfile_exec 
             else 
@@ -1515,7 +1516,7 @@ function _send_cmd(){
                 # do not merge output 
                 _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
                 _segline "$host_ip  stdout"
-                ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
+                ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "${cmd_prefix}$CMD" 2>&1 |tee $tmpfile_exec_host_out
                 local cmd_stat=$?
                 _update_check_stat $cmd_stat $tmpfile_exec 
                 _segline "$host_ip cmd end"
@@ -1552,13 +1553,13 @@ function _host_ssh_script(){
             if _ssh_check ;then
                 #ssh -t -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
                 if [[ $quiet_mode == "True" ]] ;then
-                    cat $script_file | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\"" &>/dev/null 
+                    cat $script_file | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "${cmd_prefix}cat - |bash -s \"$script_args\"" &>/dev/null 
                     local script_stat=$?
                     echo "  $host_ip stat: $script_stat"
                     _update_check_stat $script_stat $tmpfile_script_host_out 
                 else
     #                echo "1:$1 2:$2"
-                    cat $script_file | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\""
+                    cat $script_file | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "${cmd_prefix}cat - |bash -s \"$script_args\""
                     local script_stat=$?
                     _update_check_stat $script_stat $tmpfile_script_host_out 
                 fi
@@ -2702,6 +2703,7 @@ ssd_cpid="False"
 strict_concurrent_controle="False" 
 conflict_ok="False"
 no_ping="False"
+cmd_prefix=""
 
 }
 
@@ -2740,6 +2742,7 @@ info:
      stop_test: $stop_test
         strict: $strict_concurrent_controle 
        no_ping: $no_ping
+      sudo_all: $sudo_all
 ##################################"
     #no_sys_blk: $no_sys_blk
 _waiting "read info" 10
@@ -3065,6 +3068,9 @@ while [ $# -gt 0 ] ;do
         "--no-ping" )
             no_ping="True"
             ;;
+        "--sudo" )
+            cmd_prefix="sudo "
+            ;;
         "--version" )
             echo "$0 $script_version"
             exit 0
@@ -3210,7 +3216,7 @@ done
         # run on group 
         for host_group_name in $host_group_list ;do
             # info 
-            [[ -n $CMD ]] && _yellow "command: \"$CMD\"\n"
+            [[ -n $CMD ]] && _yellow "command: \"${cmd_prefix}$CMD\"\n"
             [[ -n $file_group_list ]] && _yellow "  send files: \"$file_group_list\""
             [[ -n $harvest_file_group_list ]] && _yellow "  harvest files: \"$harvest_file_group_list\""
             # execute 
