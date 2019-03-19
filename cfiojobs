@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.68
+script_version=0.12.69
 
 ssh_timeout=15
 process_reservation=128
@@ -880,7 +880,8 @@ function _group_check(){
                     if [[ ${group_info[5]} == '--' ]] ;then
                         local host_conf=$(dirname $0)/conf/$host_group_name".grp"
                         if [[ -f $host_conf ]] ;then
-                            HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ))
+                            # reformat hostname.
+                            HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ) | sed 's/-/_/g' )
                         else
                             echo "Warning: host group config file: $g_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf\" is missing "
                         fi
@@ -2502,18 +2503,33 @@ function _list_all_running_jobs(){
         echo "no groups to list"
     fi
 }
-
+function _get_default_output_dir(){
+    if [[ $send_fio == "True"  ]] ;then
+        local dir_name="${0#*/}-test-$date"
+    else
+        local dir_name="${0#*/}-file-$date"
+    fi
+    print $dir_name
+}
 function _check_output_dir(){
-        #check output directory, set default to a datatime stamp.
+    # this functio will be called twice
+        #1st check: set variable; check output directory, set default to a datatime stamp.
+        local default_output_dir=$(_get_default_output_dir)
         if [[ -z $output_dir ]] ;then
-            [[ $send_fio == "True" ]] && output_dir="${0#*/}-test-$date" || output_dir="${0#*/}-file-$date"
+            output_dir="$default_output_dir"
             _yellow "INFO: no output dir name specified, \"$output_dir\" will be the default name."
+        #2nd check: hold files.
         elif [[ -d $output_dir ]] || mkdir -p $output_dir ;then
             :
         else
-            [[ $send_fio == "True" ]] && output_dir="${0#*/}-test-$date" || output_dir="${0#*/}-file-$date"
-            _red "Warn: the output dir creation failed !" 
-            _yellow "INFO: now use \"$output_dir\" as the new output directory, is this ok?"
+            # either 1 or 2 failed.
+            if [[ $output_dir == $default_output_dir ]] ;then
+                # dir creation failure for default name.
+                _red "Warn: the output dir creation failed !" 
+            else
+                # creation failure for specified name.
+                _yellow "INFO: now use \"$output_dir\" as the new output directory, is this ok?"
+            fi
             _timeout "15"
         fi
 }
@@ -3156,6 +3172,8 @@ done
         _check_output_dir 
         #check test env for all host groups, fio installation, network reachability, ssh access.
         _fio_env_check 
+        #mkdir if env check ok.
+        _check_output_dir
  
         #send jobs with available blk group
         broud=0
