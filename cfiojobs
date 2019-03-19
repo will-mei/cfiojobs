@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.69
+script_version=0.12.70
 
 ssh_timeout=15
 process_reservation=128
@@ -1740,10 +1740,10 @@ function _send_fio(){
         #log_dir
         if [[ -n path_flyover ]];then
             #
-            log_dir="$output_dir/$path_flyover/$blk_group_name-$job_group_name-$current_host_group-$host_ip"
+            log_dir="$output_dir/$path_flyover/$blk_group_name-$job_group_name-$current_host_group-${host_ip}"
         else 
             #
-            log_dir="$output_dir/$blk_group_name-$job_group_name-$current_host_group-$host_ip"
+            log_dir="$output_dir/$blk_group_name-$job_group_name-$current_host_group-${host_ip}"
         fi
         # mkdir 
         [[ -d $log_dir ]] ||  mkdir -p $log_dir
@@ -1773,15 +1773,15 @@ function _send_fio(){
                     # check sata disk with smartctl, nvme disks are not supported
                     local blk_name=${BLK##*/}
                     if [[ $rbd_mode == "True" ]] ;then
-                        local tag=$num_jobs-$host_ip-rbd  
+                        local tag=$num_jobs-${host_ip//-/_}-rbd  
                         # skip rbd check   
                         #:
                     elif [[ ${blk_name//nvme/} != "${blk_name}" ]] ;then
-                        local tag=$num_jobs-$host_ip-nvme 
+                        local tag=$num_jobs-${host_ip//-/_}-nvme 
                         # skip nvme
                         #:
                     else
-                        local tag=$num_jobs-$host_ip-hdd  
+                        local tag=$num_jobs-${host_ip//-/_}-hdd  
                         if [[ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ]] ;then
                             # if smartmontools installed, check status.
                             blk_stats=$(_ssh_send "smartctl -H $BLK |grep 'SMART Health Status:' |awk '{print\$NF}' ")
