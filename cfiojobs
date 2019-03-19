@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.68
+script_version=0.12.69
 
 ssh_timeout=15
 process_reservation=128
@@ -880,7 +880,8 @@ function _group_check(){
                     if [[ ${group_info[5]} == '--' ]] ;then
                         local host_conf=$(dirname $0)/conf/$host_group_name".grp"
                         if [[ -f $host_conf ]] ;then
-                            HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ))
+                            # reformat hostname.
+                            HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ) | sed 's/-/_/g' )
                         else
                             echo "Warning: host group config file: $g_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf\" is missing "
                         fi
