@@ -2504,6 +2504,7 @@ function _list_all_running_jobs(){
 }
 
 function _check_output_dir(){
+    # this functio will be called twice, 1st check: set variable; 2nd check: hold files.
         #check output directory, set default to a datatime stamp.
         if [[ -z $output_dir ]] ;then
             [[ $send_fio == "True" ]] && output_dir="${0#*/}-test-$date" || output_dir="${0#*/}-file-$date"
@@ -3156,6 +3157,8 @@ done
         _check_output_dir 
         #check test env for all host groups, fio installation, network reachability, ssh access.
         _fio_env_check 
+        #mkdir if env check ok.
+        _check_output_dir
  
         #send jobs with available blk group
         broud=0
