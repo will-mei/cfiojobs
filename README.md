@@ -31,6 +31,13 @@ usage :
             --cpid         copy ssh pub id to given host groups 
             --script       execute given scripts on host groups (sep with comma) 
             --argument     pass given arguments(double quote multiple args) to each given script  
+            -w             run commmand on given hosts (sep with comma)
+            -U             specify ssh user for hosts '-w' specified
+            -P             specify ssh port for hosts '-w' specified
+            --strictly     execute with a more precise control of concurrency scale 
+            --conflict-ok  cancle pre conflict check befoe launch a test(don't use it if not nessary!).
+            --no-ping      no ping check for host.
+            --sudo         use sudo for all command 
 
     Example: 
    
@@ -46,7 +53,7 @@ usage :
 
             ./cfiojobs ls -i -g vmg1,grp3 -t -d
       
-    it is fine, because '-i' does not confilict with any options supported by this script,
+    it is fine, because '-i' does not conflict with any options supported by this script,
     but still we strongly recommend you write it this way:
 
             ./cfiojobs "ls -i" -g vmg1,grp3 -t -d
@@ -102,7 +109,7 @@ usage :
             -E             run the commands everythime fio test batch starts on a host 
             -o             set the output dir for all fio test logs.
             -s             single block mode, one block a time on each host.
-            -S             single group mode, one group a time in the test.
+            -S             single group mode, test one group after another till the end.
             -l             list all running fio jobs info.
             -r             test on rbd blk.
 
@@ -153,7 +160,7 @@ usage :
 6. Help info
 
             options:
-            -h             show this help info
+            -h, --help     show this help info
             -e             make examples of config file (when they do not exist)
             -v, --version  show version info
 
