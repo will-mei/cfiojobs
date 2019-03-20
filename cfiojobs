@@ -2510,7 +2510,7 @@ function _get_default_output_dir(){
     else
         local dir_name="${0#*/}-file-$date"
     fi
-    print $dir_name
+    echo $dir_name
 }
 function _check_output_dir(){
     # this functio will be called twice
