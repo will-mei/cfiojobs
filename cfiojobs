@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.71
+script_version=0.12.72
 
 ssh_timeout=15
 process_reservation=128
@@ -2820,7 +2820,7 @@ _parse_short_args(){
             command_mode="always"
             ;;
         * )
-            _red "Error: wrong format for option \"$1\", please check again!"
+            _red "Error: wrong format for option \"$1\", please check \"$@\" again!"
             echo "Use \"$0 -h\" to get more help."
             exit 1
             ;;
@@ -2835,6 +2835,11 @@ function _sep_and_parse(){
         local alphabet=''
         local args_set=''
         case "$1" in
+            "--"* )
+                _red "Error: unknown option \"$1\", please check again!"
+                echo "Use \"$0 -h\" to get more help."
+                exit 1
+                ;;
             "-"* )
                 # start with a '-'
                 # one letter
