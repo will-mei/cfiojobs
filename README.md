@@ -21,6 +21,7 @@ usage :
             options: 
             -t             check host group config file format.
             -g groups      run commands on certain host groups in ./cfiojobs.grp (sep with comma)
+                           (note that all the host group info will be reloaded when signal 1 is recived.)
             -a             run commands on all host group set
             -x hosts       make an exception on these hosts (sep with comma)
             -X groups      make an exception on these host groups (sep with comma)
