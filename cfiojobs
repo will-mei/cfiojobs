@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.72
+script_version=0.12.73
 
 ssh_timeout=15
 process_reservation=128
@@ -85,7 +85,8 @@ function _test_abort(){
     echo "test stoped at $(date)" >>$output_dir/recover.log
     [[ $send_fio == "True" ]] && echo "test \"$output_dir\" stoped now" || echo "tasks all stoped" 
 }
-trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; exit $check_stat" 1 2 3 15
+trap "echo -e '\n job reload group config with signal 1'; _host_group_check" 1
+trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; exit $check_stat" 2 3 15
 
 ##############################################################################################
 # Global ARRAY:
@@ -124,7 +125,7 @@ trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; 
 # an output dir list file have all output dir,host group, job group inof stored.
 #    echo "" >$0".dirlist"
 # temperary history file.
-    echo "$(date "+%Y-%m-%d_%H:%M:%S"): $0 $@" >>$0".hst"
+    echo "$(date "+%Y-%m-%d_%H:%M:%S"): $$ $0 $@" >>$0".hst"
 ##############################################################################################
 
 #help info 
