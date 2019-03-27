@@ -21,7 +21,7 @@ function _zh_check(line){
 function _zh_count(field){
     count1=0
     for(j=1;j<length(field);++j)
-    {
+        {
         if(match(substr(field, j, 1), zh))
             count1=count1+1
         }
@@ -35,25 +35,27 @@ function _count(field){
 # initialize column width from begining.
 {
     if(NR == 1)
+        {
+        col=NF
         # init array
         for(i=1;i<=NF;i=i+1)
             wid[i]=length($i)
-            col=NF
+        }
     }
 # field width count loop
 {
     _zh_check($0)
     # chinese characters in line
     if(_zh_stat == 0)
-    {
+        {
         # count zh character acount
         for(i=1;i<=NF;i=i+1)
-        {
+            {
             _zh_count($i)
             }
         }
     else
-    {
+        {
         for(i=1;i<=NF;i=i+1)
             if(wid[i] < length($i))
                 wid[i]=length($i)
@@ -96,7 +98,7 @@ function _p_indent(i){
     if( match(\$i, \"[^\x00-\xff]+\") )
         {
             for(j=1; j<=length(\$i); ++j)
-            {
+                {
                 if(match(substr(\$i, j, 1), \"[^\x00-\xff]\"))
                 count1=count1+1
                 #next
@@ -108,9 +110,11 @@ function _p_indent(i){
         f=\"%-\"wid[i]\"s | \"
     printf(f,\$i)
     }
+# sep of line end
 {
     printf(\"%s\",\"| \")
-}
+    }
+# line content
 {
     #for(i=1;i<=NF;i=i+1)
     for(i=1;i<=${WIDTH[-1]};i=i+1)
@@ -118,6 +122,7 @@ function _p_indent(i){
     if(i>NF)
         print\"\"
     }
+# sep 
 {
     print sep
     }"  $csv_file 
