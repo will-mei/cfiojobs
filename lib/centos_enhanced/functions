@@ -1,4 +1,290 @@
 # -*-Shell-script-*-
 #
-# functions This file contains functions to be used by most or all
-# cfiojobs scripts
+# functions This file contains functions to be used by all cfiojobs scripts
+
+
+##############################################################################################
+# config color 
+##############################################################################################
+function _red(){
+    echo -e "\e[31m$@\e[0m"
+}
+function _yellow(){
+    echo -e "\e[33m$@\e[0m"
+}
+function _green(){
+    echo -e "\e[32m$@\e[0m"
+}
+function _blue(){
+    echo -e "\e[34m$@\e[0m"
+}
+function _blink(){
+    echo -e "\e[5m$@\e[0m"
+}
+
+##############################################################################################
+# config text tools for output 
+##############################################################################################
+function _uniq_list(){
+# go through all the parameters.
+    for i in "$@" ;do
+        echo $i 
+    #return sorted uniq element in one line.
+    done |sort -u |sort -t'.' -k4 -n |sed ':label;N;s/\n/\ /;b label'
+}
+function _segline(){
+    local segment="$@"
+    local tty_width=$(tput cols)
+    local tag_width=$[tty_width/2 -${#segment}/2]
+    local delimiter=""
+    for i in $(seq 1 $tag_width);do delimiter+='-' ;done
+    delimiter+="$segment"
+    while [[ ${#delimiter} -lt $tty_width ]] ;do delimiter+='-' ;done
+    echo -e "\e[34m$delimiter\e[0m"
+}
+function _check_ip(){
+# input : an ip address
+    ip="$1"
+        #pure number and dot
+        if echo $ip |grep -q [^0-9,'.'] ;then
+            return 1
+        #not 0 started
+        elif echo $ip |grep -q ^0 ;then
+            return 1
+        #less than 256
+        else 
+            for net in $(echo $ip |sed s/\\./\ /g) ;do
+                if [[ $net -gt 255 ]] ;then
+                    return 1
+                fi
+            done
+        fi
+        return 0
+}
+function _check_port(){
+# input : a ssh port number
+    if [[ ${1} != ${1//[^0-9]/} ]] || [[ $1 -ge 65535 ]] ;then
+       return 1
+   else
+       return 0
+    fi 
+}
+function _format_conf(){
+#transform configfile for most config files
+# replace:
+    # 1. table with space
+    # 2. continuous multiple spaces with one space
+# removed:
+    # 1. empty line and comment.
+    # 2. space/tab in head of line
+    # 3. comment in end of line
+    # 4. space/tab after a comma 
+    # 5. space/tab between comma and the line end '\n'
+    # 6. cancle line switch, by remove '\n' after comma
+    if [[ -z $1 ]] || [[ ! -f $1 ]] ;then
+        return 1
+    else
+        configfile="$1"
+    fi
+    grep -vE "^$|^#" $configfile \
+    |sort -u \
+    |sed -e 's/\t\+/\ /g' \
+         -e 's/[ ]\+/\ /g' \
+         -e 's/^[ ]\+//g' \
+         -e 's/^\t\+//g' \
+         -e 's/#.*$//g' \
+         -e 's/\,[ ]*$/\,/g' \
+         -e 's/\,[ ]*/\,/g' \
+         -e 's/\,[\t]*$/\,/g' \
+         -e 's/\,[\t]*/\,/g' \
+    |sed -e ':\,;N;s/\,\n/\,/;b \,'
+}
+function _unit_time(){
+# add time unit to a int time value (sec) 
+    local time_in=${1%%.*}
+        if   [[ $time_in -ge 86400 ]] ;then
+            time_out=$(echo $time_in |awk '{printf("%.2f\n",$1/86400)}')"Day(s)"
+        elif [[ $time_in -ge 3600 ]] ;then
+            time_out=$(echo $time_in |awk '{printf("%.2f\n",$1/3600)}')"Hour(s)"
+        elif [[ $time_in -ge 60 ]] ;then
+            time_out=$(echo $time_in |awk '{printf("%.2f\n",$1/60)}')"Min(s)"
+        elif [[ $time_in -ge 0 ]] ;then
+            time_out="$time_in"'(s)'
+        elif [[ $time_in -lt 0 ]] ;then
+#            time_out="confusion!"
+            time_out="overtime!"
+        fi
+        echo "$time_out"
+        unset time_out 
+}
+
+##############################################################################################
+# config debug tools for output and timeout 
+##############################################################################################
+#
+# debug functions 
+function _marker(){
+    _segline "marker $1"
+    _blue "function :${FUNCNAME[@]:1}"
+}
+
+function _info(){
+    local date_time=$(date "+%Y-%m-%d_%H:%M:%S")
+    echo "[ $date_time ][$(_blue "INFO")]: $@"
+}
+function _warn(){
+    local date_time=$(date "+%Y-%m-%d_%H:%M:%S")
+    echo "[ $date_time ][$(_yellow "WARN")]: $@"
+}
+function _error(){
+    local date_time=$(date "+%Y-%m-%d_%H:%M:%S")
+    echo "[ $date_time ][$(_red "ERROR")]: $@"
+}
+function _waiting(){
+# wait time $1
+# showing info $2
+    local t=$1
+    shift
+    local info="\n  waiting $@ ..."
+    # action title 
+    echo -en "$info" 
+    until [[ $t -le 1 ]] ;do
+        # the bar to flash in every second
+        for i in '---' ' \ ' ' | ' ' / ' ;do
+            # update bar 
+            echo -en "\b\b\b$i" 
+            sleep 0.25 
+        done
+        # sec update 
+        t=$((t -1))
+        printf  "%-10s" "$t"
+        #clean time info from end
+        printf  "\b\b\b\b\b\b\b\b\b\b"
+    done
+    # clean waiting 
+    printf  "\b\b\b"
+    printf  "%-10s\n" " done"
+}
+function _timeout(){
+# another waiting function.
+# show timeout info and wait few secends.
+    local t="$1"
+    shift 
+    [[ -n $@ ]] && local info="$@" || local info="skip failed and continue."
+    #echo -n "time out in :  "
+    echo -e "\npress \"Ctrl + c\" to break here."
+    until [[ $t -lt 1 ]] ;do 
+        t=$(($t - 1))
+        printf  "\r\e[33m%-20s\e[0m" "timeout in $t s"
+        sleep 1
+    done
+    echo -e "\r $1 seconds waiting time out. $(_yellow "$info")\n"
+}
+
+##############################################################################################
+# config a user_specified_concurrency for parallel tasks 
+##############################################################################################
+# enable alias for shell
+shopt -s expand_aliases
+alias _ssh_fg="ssh -t -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
+#function _ssh_fg(){
+#    # a ssh command for script, but able to interacte with terminal.
+#    # use eval to control the expansion of parametters passed in if this is included by another function !!!
+#    ssh -t -q \
+#        -o StrictHostKeyChecking=no \
+#        -o PubkeyAuthentication=yes \
+#        -o PasswordAuthentication=no \
+#        -o BatchMode=yes $@
+#        local ssh_stat=$?
+#        return $ssh_stat 
+#}
+alias _ssh_cmd="ssh -t -t -n -q -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o BatchMode=yes"
+#function _ssh_cmd(){
+## a passwordless ssh command for most script situations (no interactions at all)
+## here the timeout option is intended to be set by your onw :
+## -o ConnectTimeout=$ssh_timeout 
+#    if [[ $# -lt 1 ]] ;then
+#        #no command info to send!" 
+#        return 1
+#    else
+#        ssh -t -t -n -q \
+#            -o StrictHostKeyChecking=no \
+#            -o PubkeyAuthentication=yes \
+#            -o PasswordAuthentication=no \
+#            -o BatchMode=yes  $@
+#        local cmd_stat=$?
+#        return $cmd_stat 
+#    fi
+#}
+alias _scp="ssh -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
+#function _scp(){
+## same as ssh above
+#    scp -q \
+#        -o StrictHostKeyChecking=no \
+#        -o PubkeyAuthentication=yes \
+#        -o PasswordAuthentication=no \
+#        -o BatchMode=yes $@ 
+#}
+function _init_concurrency_env(){
+    # old function _gen_concurrent_pipe(){
+    # $1 concurrency max 
+    [[ -z ${1//[0-9]/} ]] || return 1
+    local user_specified_concurrency=$1
+# note that its a global variable !!
+    concurrent_pipe_fd=$user_specified_concurrency 
+    # $2 reservation for system  default 100
+        if [[ -n $2 ]] && [[ -z ${2//[0-9]/} ]];then
+            local sys_capacity_reservation=$2
+        else
+            local sys_capacity_reservation=100
+        fi
+        local sys_capacity_max=$(( $(ulimit -u) - $(ps ax |wc -l) - $sys_capacity_reservation))
+    # check user_specified_concurrency 
+        if [[ $user_specified_concurrency -gt $sys_capacity_max ]];then
+            #echo "user_specified_concurrency: $user_specified_concurrency is too big, the max capacity is no more than $sys_capacity_max on this host."
+            #exit 1
+            local concurrency_max=$sys_capacity_max
+        else
+            local concurrency_max=$user_specified_concurrency
+        fi
+    # get unused fd number 
+        #local concurrent_pipe_fd=$user_specified_concurrency 
+        while ls -l /proc/self/fd/ |grep -q " $concurrent_pipe_fd " ;do 
+            concurrent_pipe_fd=$[user_specified_concurrency + 1]
+        done 
+        local concurrency_tag=$(mktemp -u)
+    # redirect tasks of input/output to fd  
+        mkfifo $concurrency_tag
+        eval "exec $concurrent_pipe_fd<>$concurrency_tag"
+        rm -f $concurrency_tag
+        for ((n=1;n<=$concurrency_max;n++)) ;do
+            echo >&$concurrent_pipe_fd 
+        done
+    #return 0
+}
+function _cleanup_concurrency_env(){
+        # close pipe
+        eval "exec $concurrent_pipe_fd>&- "
+        eval "exec $concurrent_pipe_fd<&- "
+}
+function _join_concurrent_troop(){
+    read -u$concurrent_pipe_fd
+}
+function _leave_concurrent_troop(){
+    echo >&$concurrent_pipe_fd 
+}
+
+# concurrency  env examples:
+#function _host_concurrent_pipe_strict(){
+#    # host_exec_function must be set before it's called 
+#    for host_ip in $ip_list ;do 
+#        {
+#            _join_concurrent_troop
+#            eval $host_exec_function $host_ip
+#            _leave_concurrent_troop 
+#        } &
+#    done 
+#    wait 
+#}
+#
+
