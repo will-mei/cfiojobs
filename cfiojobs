@@ -2397,10 +2397,14 @@ function _check_output_dir(){
         local default_output_dir=$(_get_default_output_dir)
         if [[ -z $output_dir ]] ;then
             output_dir="$default_output_dir"
-            _info "no output dir name specified, \"$(_yellow "$output_dir")\" will be the default name."
+            if [[ ${FUNCNAME[-2]} == "_group_execute" ]] && [[ $send_fio != "True" ]] && [[ -z ${file_group_list// /} ]] ;then 
+                return 1
+            else
+                _info "no output dir name specified, \"$(_yellow "$output_dir")\" will be the default name."
+            fi
         #2nd check: hold files.
         elif [[ -d $output_dir ]] || mkdir -p $output_dir ;then
-            :
+            return 1
         else
             # either 1 or 2 failed.
             if [[ $output_dir == $default_output_dir ]] ;then
