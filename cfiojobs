@@ -163,6 +163,7 @@ usage :
             -t             check host group config file format.
             -g groups      run commands on certain host groups in $g_conf (sep with comma)
                            (note that all the host group info will be reloaded when signal 1 is recived.)
+            -L             list all available host group names in conf.
             -a             run commands on all host group set
             -x hosts       make an exception on these hosts (sep with comma)
             -X groups      make an exception on these host groups (sep with comma)
@@ -671,7 +672,7 @@ EOF
             _info "host group config file check ok."
             return 0
         else
-            _erro "host group config file check error."
+            _error "host group config file check error."
             return 1
             #exit 1
         fi 
@@ -777,6 +778,13 @@ function _host_group_check(){
         _red "no host group name revived."
         exit 1
     fi
+}
+function _show_group_info(){
+            local tmpfile_group_info=$(mktemp)
+            echo "NAME,USER,PORT,BKND,MODE,IP" >$tmpfile_group_info 
+            _format_conf $g_conf |sed -e 's/,/\+/g' -e 's/\ /,/g' >>$tmpfile_group_info
+            bash $(dirname $0)/tools/catcsv.sh $tmpfile_group_info
+            rm -f $tmpfile_group_info
 }
 function _job_group_check(){
 #verify job group and get fio arguments merged, then store in array
@@ -2141,7 +2149,7 @@ function _host_pre_check(){
                     # if yum available, check version makecache fast 
                     if _ssh_send 'yum makecache fast >/dev/null' ;then
                         # check version 
-                        version=$(_ssh_send "yum list fio|grep fio|tail -1" |awk '{print substr($2, 1, 1}')
+                        version=$(_ssh_send "yum list fio|grep fio|tail -1" |awk '{print substr($2, 1, 1)}')
                         #version=$(_get_host_yum_pkg_version "fio")
                         if [[ $version -ge 3 ]] ;then 
                             # fio installing in background 
@@ -2664,7 +2672,11 @@ _parse_short_args(){
             ;;
         "-l" )
             _list_all_running_jobs
-            exit
+            exit 0
+            ;;
+        "-L" )
+            _show_group_info
+            exit 0
             ;;
         "-a" )
             _get_all_host_group
@@ -2703,7 +2715,7 @@ _parse_short_args(){
             command_mode="always"
             ;;
         * )
-            _red "Error: wrong format for option \"$1\", please check \"$@\" again!"
+            _error "wrong format for option \"$1\", please check \"$@\" again!"
             echo "Use \"$0 -h\" to get more help."
             exit 1
             ;;
@@ -2719,7 +2731,7 @@ function _sep_and_parse(){
         local args_set=''
         case "$1" in
             "--"* )
-                _red "Error: unknown option \"$1\", please check again!"
+                _error "unknown option \"$1\", please check again!"
                 echo "Use \"$0 -h\" to get more help."
                 exit 1
                 ;;
@@ -2728,14 +2740,16 @@ function _sep_and_parse(){
                 # one letter
                 alphabet=${1#*-}
                 # one charctor
-                if [[ ${#alphabet} -eq 1 ]] ;then 
+                if [[ ${#alphabet} -eq 1 ]]
+                then 
                     args_set+=' '$1
                     shift 
                     continue
                 fi 
                 # long combinations of letters 
                 # echo all short args : ${#alphabet}
-                for i in $(seq 0 $((${#alphabet} -1)) );do 
+                for i in $(seq 0 $((${#alphabet} -1)) )
+                do 
                     #echo $i -${alphabet:$i:1}
                     args_set+=' -'${alphabet:$i:1}
                     #echo reparse ${alphabet:$i:1}
@@ -2743,7 +2757,7 @@ function _sep_and_parse(){
                 ;;
             * )
                 # not start with a '-'
-                echo "format error: $1 is not an argument!"
+                _error "format error: $1 is not an argument!"
                 exit 1
                 ;;
         esac
