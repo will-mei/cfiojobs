@@ -13,12 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-# import function from lib 
-#[[ -f /etc/init.d/functions ]] && . /etc/init.d/functions 
-#. $(dirname)/lib/centos_sys/functions 
-. $(dirname $0)/lib/centos_enhanced/functions 
-
-script_version=0.12.75
+script_version=0.12.76
 
 ssh_timeout=15
 host_concurrency_max=500
@@ -32,6 +27,12 @@ date="$(date +%Y%m%d%H%M)"
 g_conf="$0"".grp"
 b_conf="$0"".blk"
 j_conf="$0"".job"
+
+# import function from lib 
+#[[ -f /etc/init.d/functions ]] && . /etc/init.d/functions 
+#. $(dirname)/lib/centos_sys/functions 
+. $(dirname $0)/lib/centos_enhanced/functions 
+. $(dirname $0)/lib/modules/functions 
 
 function _clean_up(){
     # clean up tmp files
@@ -136,240 +137,6 @@ trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; 
 # temperary history file.
     echo "$(date "+%Y-%m-%d_%H:%M:%S"): $$ $0 $@" >>$0".hst"
 ##############################################################################################
-
-#help info 
-function _show_help_info(){
-  echo -e "
-This script is a simple fio jobs and file distributor. You can also run commands on multiple hosts with it.
-Remenber, you need passwordless SSH access permssions for all hosts, and use a comma as a delimiter when you have multiple group units.
-
-usage :
---------
-1. Edit your own host group, block group and fio job type settings in config files.
-
-            (1)     hosts  list conf:   $g_conf
-            (2)     blocks list conf:   $b_conf
-            (3)     jobs   list conf:   $j_conf
-
-    tips: 
-
-            '$0 -e' will generate example configure files for you
-
-2. Run a short single cmd: 
-
-            $0 <options> [commands]
-
-            options: 
-            -t             check host group config file format.
-            -g groups      run commands on certain host groups in $g_conf (sep with comma)
-                           (note that all the host group info will be reloaded when signal 1 is recived.)
-            -L             list all available host group names in conf.
-            -a             run commands on all host group set
-            -x hosts       make an exception on these hosts (sep with comma)
-            -X groups      make an exception on these host groups (sep with comma)
-            -q             return only exit status of command.(be quiet and less output if no error occurred)
-            -d             check and give function parameters, also, skip failure
-            -f             skip failure and try to continue, if possible
-            -p             send commands and copy files execute in parallel
-            --cpid         copy ssh pub id to given host groups 
-            --script       execute given scripts on host groups (sep with comma) 
-            --argument     pass given arguments(double quote multiple args) to each given script  
-            -w             run commmand on given hosts (sep with comma)
-            -U             specify ssh user for hosts '-w' specified
-            -P             specify ssh port for hosts '-w' specified
-            --strictly     execute with a more precise control of concurrency scale 
-            --conflict-ok  cancle pre conflict check befoe launch a test(don't use it if not nessary!).
-            --no-ping      no ping check for host.
-            --sudo         use sudo for all command 
-
-    Example: 
-   
-            $0 -q -g grp1,grp2,grp3,grp4 \"systemctl status sshd ;ls abc\" -x 172.18.211.105
-            $0 -q -g grp1,grp2,grp3,grp4 --script ./tmp/install.sh --argument \"-stable\" -x 172.18.211.105
-
-    tips:
-    say you want run the command:
-    
-            'ls -i' 
-
-    you can use: 
-
-            $0 ls -i -g vmg1,grp3 -t -d
-      
-    it is fine, because '-i' does not conflict with any options supported by this script,
-    but still we strongly recommend you write it this way:
-
-            $0 \"ls -i\" -g vmg1,grp3 -t -d
-
-    if you have scripts with different argument to pass in, you'd better execute them separately.
-
-3. Example of Some more complex situation. (how to use double/single quote to pass the complete cmd to script):
-
-        (1).with multy command a time:  
-            $0  -g <grp name> \"command1 ;  command2 ;  command3 \"
-
-         with command list to run :  
-            $0  -g <grp name> \"command1 && command2 || command3 \"
-
-        (2).with pipe thing or some  :  
-            $0  -g <grp name> \"your command |pipe |pipe \"
-
-        (3).with local bash variable :  
-            $0  -g <grp name> \"your command \$local_variable \"
-            
-        (4).with remote env variable :  
-            $0  -g <grp name> \"your command '\$remote_env_viriable' \" 
-
-    example: 
-            
-            $0 -g grp1 \"ls -l |awk '{print\\\$2}'\"
-         
-    or: 
-
-            $0 -g grp1 \"ls -l |awk \\\"{print"'\\''\\\$2'"}\\\"\"
-       
-    tips: 
-
-            awk variable is not bash shell variable, so there were three antislash inside curly braces,
-            first two antislash passed an '\\' to remote bash, and then the third is for translating the '\$'.
-
-4. FIO jobs control
-    
-            options:
-            --fio          launch a fio test
-            --fio-list     output summary info of fio jobs on given host groups
-            --fio-stop     stop all existinging fio jobs on given host groups (stop a certain round of jobs in test)
-            --test-stop    stop test on given host groups (stop all test and all jobs)
-            --recover      recover an undone test form where it was interrupted (aborted, killed or cancled)
-            --recover-from recover or restart the test form a given \"round number\" (and a certain \"blk group\")
-            --round-list   list all job round info with your test options and arguments (launch no test)
-            --round-retest retest a batch of fio jobs with a given \"blk group name\" and \"round number\"
-                           the round range like: \"6-9\" or: \"blk8,6-9\" are both ok.
-            -c             check test env, (network, ssh connections, fio installation, blk dev to test)
-            -b             run fio jobs with given blk group in $b_conf
-            -j             run fio job with given job group in $j_conf
-            -A             fio task 'After' commands that are given
-            -E             run the commands everythime fio test batch starts on a host 
-            -o             set the output dir for all fio test logs.
-            -s             single block mode, one block a time on each host.
-            -S             single group mode, test one group after another till the end.
-            -l             list all running fio jobs info.
-            -r             test on rbd blk.
-
-    example: 
-
-            $0 --fio -g grp1 -b vd5,blk8 -j rand1 -o test01 
-            $0 --fio-list -g group1 -p
-        
-    you can have the current round info from script stdout or log file:
-    
-            \"<output_dir>/recover.log\", 
-    you can easyly recover the test with with a certin round point in test progress, say, to recover the previous test with blk 
-    target \"blk8\" and round \"6\", you can use the command :         
-
-            $0 --fio -g grp1 -b vd5,file8 -j rand1 --recover-from blk8,6 -o test01 
-        
-    or recover a test with only one blk group:
-    
-            $0 --fio -g grp1 -b vd5 -j rand1,mix1 --recover-from 6 -f -o test02 
-    
-    or recover the test from where you don't know:
-    
-            $0 --fio -g grp1 -b vd5 -j rand1,mix1 --recover -f -o test02 
-    
-    note:
-        
-            when both the commands and fio jobs were running on a given host, they will be execute in parallel,
-            but fio jobs will be send first by default, you can use '-A' to let command execute first.
-            $0 --fio -g grp1 -b vd5,blk8 -j rand1,mix1 -A \"umount /dev/vdb\" -o grp1_parallel_test01
-
-    tips:
-
-    **remanber to check the test env befor you start your fio test on a group:**
-    
-            $0 -g <group name> -f -c
-
-5. File distribution
-
-            options:
-            -F files       copy files(sep with comma) to remote host
-            -C files       collect files(sep with comma) from remote to local host
-            -D dir         specify destination directory on remote host
-
-    example: 
-    
-            $0 -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
-
-6. Help info
-
-            options:
-            -h, --help     show this help info
-            -e             make examples of config file (when they do not exist)
-            -v, --version  show version info
-
-    If an option requires an argument to work, you are not allowed to combine it with other options,
-    you can use :
-
-            $0 -g <group name> -f -c 
-            or 
-            $0 -g <group name> -fc 
-
-    but the option -g requires an argument of host group name, for this case, you cannot put ~~' -gfc '~~ together!
-"
-}
-
-function _make_conf_example(){
-[[ -f $g_conf ]] && echo "host group config file exist." \
- || cat >$g_conf <<EOF
-# The IP address delimiter is a coma ','
-# tcmu/ceph backend can be an ip address or 'none' 
-#
-#grp        user    port    bknd_grps    bknd_mode    ip_addr
-grp0        root    5000    grp1         remote       --     # use $(dirname $0)/conf/grp0.grp as ip list 
-grp1        root    22      none         none         172.18.211.133,172.18.211.134  #running on esxi 
-
-EOF
-[[ -f $b_conf ]] && echo "blk group config file exist."  \
- || cat  >$b_conf <<EOF
-# 1. Device delimiter is comma ','.
-#list_name  lbk_list/file_list 
-
-# example 1:
-sd8         /mnt/sdb/data,/mnt/sdc/data,/mnt/sdd/data,/mnt/sde/data,/mnt/sdf/data,/mntsdg/data,/mnt/sdh/data,/mnt/sdi/data
-
-# example 2:
-vd5         /dev/sdb,  #some comment
-            /dev/sdc,  #loal disk
-            /dev/sdd,  #iscsi disk
-            /dev/sde,  #ssd
-            /dev/sdf
-
-EOF
-[[ -f $j_conf ]] && echo "job group config file exist." \
- ||cat  >$j_conf <<EOF 
-# 1. fio arguments delimiter is comma ','.
-#    If your are using space as a delimiter for fio job arguments, the "job arguments" must be double quoted!
-#    Don't use double quote on the field 1~6. 
-#
-# 2. "DEFAULT" job should be set before any job group with an empty customized options were writen.
-#    If 'inherit_DEFAULT' is 'True' all omitted args will be get from the 'DEFAULT' job set.
-#    If 'inherit_DEFAULT' is 'False' this job group will use its own fio arguments.
-# 3. only 'json' format log is supported . 
-#
-#job_name   runtime data_size block_size_range read_write_pattern             inherit_DEFAULT  "fio I/O job arguments"
-DEFAULT     600     100%      4k,256k,4m       read,randread,write,randwrite  True             "-group_reporting -direct=1 -iodepth=4  -ioengine=libaio -time_based -numjobs=16 --output-format=json"    
-test        600     60G       4k,256k,4m       randread,randwrite             True
-durable     172800  100%      none             randrw                         False            "-direct=1  -iodepth=32 -numjobs=4 -bssplit=4k/50:256k/40:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
-EOF
-#[[ -f $0".iodepth_bs_pattern.csv" ]] && echo $0".iodepth_bs_pattern.csv" exist. \
-#||cat >$0".iodepth_bs_pattern.csv" <<EOF
-#,read,randread,write,randwrite
-#4k,64,64,64,8
-#256k,64,64,64,4
-#4m,64,64,4,6
-#EOF
-}
-
 function _unquiet(){
 # give inof when not quiet mode.
     if [[ $quiet_mode == "True" ]] ;then
@@ -1096,23 +863,6 @@ function _show_rbd_expansion(){
             _rbd_expansion 
         fi
     fi 
-}
-function _get_iodepth_from_table(){
-    _blue "${FUNCNAME[@]} is on the way ... 0_=" && exit 1
-# get iodepth from a table with bs and pattern axis.
-    iodepth_bs_pattern_table="$1"
-    [[ ! -f "$iodepth_bs_pattern_table" ]] \
-     && echo "$(date "+%Y-%m-%d_%H:%M:%S") ${FUNCNAME[@]} $iodepth_bs_pattern_table not fond !" \
-     && exit 1
-    declare -A col_no
-    col_no[read]=2
-    col_no[randread]=3
-    col_no[write]=4
-    col_no[randwrite]=5
-    colume=${col_no[$PATTERN]}
-#give iodepth from table
-    IODEPTH=$(grep $BS $iodepth_bs_pattern_table |cut -d',' -f $colume)
-    echo "$IODEPTH"
 }
 function _give_size(){
     #if [[ ${JOB_DATA_SIZE_ARRAY[$job_group_name]} == "none" ]] ;then
