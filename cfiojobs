@@ -2659,10 +2659,10 @@ while [ $# -gt 0 ] ;do
             fi
             shift
             ;;
-        "-F" )
+        "-D" )
             if [ $# -lt 2 ]
             then
-                echo "$0: -F requires a file list.  multi names separated by comma."
+                echo "$0: -D requires a file list.  multi names separated by comma."
                 exit 1
             fi
             file_group_list+=" ${2//,/ }"
@@ -2677,10 +2677,10 @@ while [ $# -gt 0 ] ;do
             harvest_file_group_list+="${2}"
             shift
             ;;
-        "-D" )
+        "-T" )
             if [ $# -lt 2 ]
             then
-                echo "$0: -D requires an output directory to work."
+                echo "$0: -T requires an output directory to work."
                 exit 1
             fi
             #remove the last "/"
