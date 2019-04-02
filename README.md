@@ -19,26 +19,27 @@ usage :
             ./cfiojobs <options> [commands]
 
             options: 
-            -t             check host group config file format.
-            -g groups      run commands on certain host groups in ./cfiojobs.grp (sep with comma)
+            -t             check host group config file format (experimental).
+            -g groups      run commands on given host groups which were defined in ./cfiojobs.grp (sep with comma)
                            (note that all the host group info will be reloaded when signal 1 is recived.)
-            -a             run commands on all host group set
-            -x hosts       make an exception on these hosts (sep with comma)
-            -X groups      make an exception on these host groups (sep with comma)
+            -L             list all available host group names in ./cfiojobs.grp.
+            -a             run commands on all host groups set
+            -x hosts       exclude hosts form hosts list (sep with comma)
+            -X groups      exclude host groups form host groups list (sep with comma)
             -q             return only exit status of command.(be quiet and less output if no error occurred)
-            -d             check and give function parameters, also, skip failure
+            -d             check and show most function parameters, also, skip failure
             -f             skip failure and try to continue, if possible
-            -p             send commands and copy files execute in parallel
+            -p             make send commands and copy files action executed in parallel
             --cpid         copy ssh pub id to given host groups 
-            --script       execute given scripts on host groups (sep with comma) 
+            --script       execute given scripts on host groups (files sep with comma) 
             --argument     pass given arguments(double quote multiple args) to each given script  
             -w             run commmand on given hosts (sep with comma)
             -U             specify ssh user for hosts '-w' specified
             -P             specify ssh port for hosts '-w' specified
-            --strictly     execute with a more precise control of concurrency scale 
+            --strictly     execute with a more precise scale control of concurrency (True|False)
             --conflict-ok  cancle pre conflict check befoe launch a test(don't use it if not nessary!).
-            --no-ping      no ping check for host.
-            --sudo         use sudo for all command 
+            --no-ping      no ping check for hosts.
+            --sudo         use sudo as a prefix for all command 
 
     Example: 
    
@@ -88,19 +89,19 @@ usage :
        
     tips: 
 
-            awk variable is not bash shell variable, so there were three antislash inside curly braces,
-            first two antislash passed an '\' to remote bash, and then the third is for translating the '$'.
+            awk variable is different from bash shell variable, so there were three antislash inside curly braces,
+            first two antislash passed an '\' to remote bash, and then the third is for translating the '$' inside awk.
 
 4. FIO jobs control
     
             options:
             --fio          launch a fio test
-            --fio-list     output summary info of fio jobs on given host groups
-            --fio-stop     stop all existinging fio jobs on given host groups (stop a certain round of jobs in test)
-            --test-stop    stop test on given host groups (stop all test and all jobs)
-            --recover      recover an undone test form where it was interrupted (aborted, killed or cancled)
-            --recover-from recover or restart the test form a given "round number" (and a certain "blk group")
-            --round-list   list all job round info with your test options and arguments (launch no test)
+            --fio-list     output a summary list of fio jobs on all given host groups
+            --fio-stop     stop all existinging fio jobs on given host groups (stop, in fact, a certain round of jobs in test)
+            --test-stop    stop test on given host groups (stop all test and all jobs on this group)
+            --recover      recover an undone test from where it was interrupted (aborted, killed or cancled)
+            --recover-from recover or restart a test form a given "round number" of it (and with a certain "blk group")
+            --round-list   list all job round based on the test options and arguments that are given (without launch a test)
             --round-retest retest a batch of fio jobs with a given "blk group name" and "round number"
                            the round range like: "6-9" or: "blk8,6-9" are both ok.
             -c             check test env, (network, ssh connections, fio installation, blk dev to test)

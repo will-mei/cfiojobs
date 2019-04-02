@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.76
+script_version=0.12.77
 
 ssh_timeout=15
 host_concurrency_max=500
@@ -2341,7 +2341,7 @@ recover_job_batch_index=""
 command_mode="onece"
 rbd_mode="False"
 ssd_cpid="False"
-strict_concurrent_controle="False" 
+strict_concurrent_controle="True" 
 conflict_ok="False"
 no_ping="False"
 cmd_prefix=""
@@ -2711,8 +2711,13 @@ while [ $# -gt 0 ] ;do
             shift
             ;;
         "--strictly" )
-            strict_concurrent_controle="True"
-            #shift
+            if [ $# -lt 2 ] || [ $2 != "False" -a $2 != "True" ]
+            then
+                echo "$0: --strictly requires a arg of \"True\" or \"False\" ."
+                exit 1
+            fi
+            strict_concurrent_controle="${2}"
+            shift
             ;;
         "--conflict-ok" )
             conflict_ok="True"
