@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.77
+script_version=0.12.78
 
 ssh_timeout=15
 host_concurrency_max=500
@@ -945,7 +945,7 @@ ${JOB_ARGS_ARRAY[$job_group_name]} "
             done
         fi 
         _yellow "round list:"
-        $(dirname $0)/bin/catcsv.sh $tmpfile_expansion | sed 1d 
+        $(dirname $0)/tools/catcsv.sh $tmpfile_expansion | sed 1d 
         rm -f $tmpfile_expansion 
         [[ $round_list == "True" ]] && _show_rbd_expansion && exit 0 || _waiting 5 "reading" 
     fi
