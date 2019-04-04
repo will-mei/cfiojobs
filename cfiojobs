@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.78
+script_version=0.12.79
 
 ssh_timeout=15
 host_concurrency_max=500
@@ -364,12 +364,38 @@ else
 fi
 }
 #----------------------------------------|failure info |-----------------------
-function _record_fail(){
-    _check_output_dir 
-    if [[ $send_fio == "True" ]] || [[ -n $harvest_file_group_list  ]] ;then
+function _log_output_dir_check_ok(){
+    # 2 scenario
+    if [[ $send_fio == "True" ]] || [[ -n $harvest_file_group_list  ]] || [[ -n $output_dir ]];then
+        _check_output_dir 
+        return 0
+    else
+        return 1
+    fi
+}
+function _record_cmd(){
+    # called by _ssh_send only 
+    # cmd status : $1
+    # cmd content = "$2 ... end"
+    if _log_output_dir_check_ok ;then
         local failure_time=$(date "+%Y-%m-%d %H:%M:%S")
-        local failure_type="${FUNCNAME[1]}" # parent function name 
-        [[ ${FUNCNAME[-2]} == "_fio_scale_control" ]] && local failure_stage=${FUNCNAME[-4]} || local failure_stage="${FUNCNAME[-2]}" # the last one is main 
+        local cmd_stat=$1
+        shift
+        echo "$failure_time,$host_group_name,$host_ip,cmd_stat:$cmd_stat,${*}" >$output_dir/all_ssh_cmd.log
+    fi
+}
+# store log info to output_dir 
+function _record_fail(){
+    if _log_output_dir_check_ok ;then
+        local failure_time=$(date "+%Y-%m-%d %H:%M:%S")
+        local failure_type="${FUNCNAME[1]}" # parent function name or name passed in.
+        if [[ ${FUNCNAME[-2]} == "_fio_scale_control" ]] ;then
+            # in a fio test 
+            local failure_stage=${FUNCNAME[-4]} 
+        else
+            # the last one is main 
+            local failure_stage="${FUNCNAME[-2]}" 
+        fi
         [[ -z $job_batch_index ]] && failure_note="not in test" || local failure_note="round $job_batch_index"
         echo "$failure_time,$host_group_name,$host_ip,$failure_stage,$failure_type,$failure_note" >>$output_dir/failure_host.csv  
     fi 
@@ -388,6 +414,11 @@ function _devfail(){
     [[ -n $blk ]] && local dev_name=$blk || local dev_name=$BLK 
     # give device check failed info 
     _red "  host:$host_ip dev:$dev_name not a valid test device."
+    _record_fail
+}
+function _cmdfail(){
+    # if ping ok or --no-ping 
+    #give command return value check failed info 
     _record_fail
 }
 
@@ -1042,6 +1073,8 @@ function _ssh_send(){
                 -p $host_port "${cmd_prefix}$@"
         #fi 
         local cmd_stat=$?
+        [[ $cmd_stat -ne 0 ]] && _cmdfail
+        [[ $pdebug == "True" ]] && _record_cmd "$cmd_stat" "${cmd_prefix}$@"
         return $cmd_stat 
     fi
 }
