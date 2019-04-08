@@ -163,7 +163,7 @@ usage :
 
     example: 
     
-            $0 -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
+            $0 -g grp1 -D file1,file2,file3 -T /tmp/180730/ -x 172.18.211.137
 
 6. Help info
 
