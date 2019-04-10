@@ -33,6 +33,7 @@ j_conf="$0"".job"
 #. $(dirname)/lib/centos_sys/functions 
 . $(dirname $0)/lib/centos_enhanced/functions 
 . $(dirname $0)/lib/modules/functions 
+. $(dirname $0)/lib/modules/usr_profile 
 
 function _clean_up(){
     # clean up tmp files
