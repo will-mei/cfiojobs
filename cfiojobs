@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.79
+script_version=0.12.80
 
 ssh_timeout=15
 host_concurrency_max=500
