@@ -15,8 +15,8 @@
 
 script_version=0.12.80
 
-ssh_timeout=15
-host_concurrency_max=500
+#ssh_timeout=15
+#host_concurrency_max=500
 
 #main_pid="$$"
 check_stat=0
@@ -33,7 +33,8 @@ j_conf="$0"".job"
 #. $(dirname)/lib/centos_sys/functions 
 . $(dirname $0)/lib/centos_enhanced/functions 
 . $(dirname $0)/lib/modules/functions 
-. $(dirname $0)/lib/modules/usr_profile 
+. $(dirname $0)/lib/global_profile 
+. $(dirname $0)/lib/usr_profile 
 
 function _clean_up(){
     # clean up tmp files
