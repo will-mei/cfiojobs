@@ -4,18 +4,23 @@
 #
 #job_name   runtime data_size   block_size_range    read_write_pattern              inherit_args    "customized_options_args"
 DEFAULT     900     100%        4k,256k,4m          randread,randwrite              True            "-ramp_time=60 -iodepth=32 -numjobs=2 -direct=1 -ioengine=libaio -time_based -group_reporting --output-format=json"
+#
 # unknow, based on block size
-rbdlong     none    random      4m                  randwrite                       False           "-ramp_time=60 -iodepth=32 -numjobs=2 -direct=1 -ioengine=rbd -clientname=admin -pool=rbd -group_reporting  --output-format=json"
-rbdfill     none    100%        4m                  write                           False           "-ramp_time=60 -iodepth=64 -numjobs=2 -direct=1 -ioengine=rbd -clientname=admin -pool=rbd -group_reporting  --output-format=json"
+rbdlong     none    random      4m                  randwrite                       False           "-ramp_time=60 -iodepth=32 -numjobs=2 -direct=1 -clientname=admin -pool=rbd -ioengine=rbd -group_reporting --output-format=json"
+#
 # 2 day
-durable     172800  100%        none                randrw                          False           "-iodepth=8  -numjobs=2 -direct=1 -bssplit=4k/40:256k/50:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
+durable     172800  100%        none                randrw                          False           "-bssplit=4k/40:256k/50:4m/10 -rwmixwrite=30 -iodepth=8  -numjobs=2 -direct=1 -ioengine=libaio -time_based -group_reporting --output-format=json"
+rbddurable  172800  100%        none                randrw                          False           "-bssplit=4k/40:256k/50:4m/10 -rwmixwrite=30 -clientname=admin -pool=rbd -iodepth=32 -numjobs=2 -direct=1 -ioengine=rbd -time_based -group_reporting  --output-format=json"
 
-# ssh block devices data fill jobs
-fill1       none    100%        128k                write                           False           "--ioengine=libaio --direct=1 --thread --norandommap --numjobs=1 --iodepth=128 --loops=2 -group_reporting --output-format=json"
-fill2       7200    100%        4k                  randwrite                       False           "--ioengine=libaio --direct=1 --thread --norandommap --numjobs=8 --iodepth=32 --ramp_time=60 --time_based -group_reporting --output-format=json"
+# block devices data fill jobs
+ssdfill1    none    100%        128k                write                           False           "--ioengine=libaio --direct=1 --thread --norandommap -numjobs=1 -iodepth=128 --loops=2     -group_reporting --output-format=json"
+ssdfill2    7200    100%        4k                  randwrite                       False           "--ioengine=libaio --direct=1 --thread --norandommap -numjobs=8 -iodepth=32  --time_based  -group_reporting --output-format=json"
+hddfill     none    100%        4m                  write                           False           "--ioengine=libaio --direct=1 --thread               -numjobs=2 -iodepth=32                -group_reporting --output-format=json"
+rbdfill     none    100%        4m                  write                           False           "-clientname=admin -pool=rbd  --thread -direct=1     -numjobs=2 -iodepth=32  -ioengine=rbd -group_reporting --output-format=json"
 
 # 10 min
 normal      600     100%        4k,256k,4m          read,randread,write,randwrite   True
+rbdnormal   600     100%        4k,256k,4m          read,randread,write,randwrite   True            "-ramp_time=30 -ioengine=rbd -clientname=admin -pool=rbd"
 random      600     100%        4k,256k,4m          randread,randwrite              True
 writeonly   600     100%        4k,256k,4m          write,randwrite                 True
 readonly    600     100%        4k,256k,4m          read,randread                   True
@@ -23,14 +28,14 @@ sequntial   600     100%        4k,256k,4m          read,write                  
 4k          600     100%        4k                  read,randread,write,randwrite   True
 4m          600     100%        4m                  read,randread,write,randwrite   True
 
-# 8 min
+# 8 min only for test
 allbs       500     100% 4k,8k,16k,32k,64k,128k,256k,512k,1m,4m randread,randwrite  True            "-ramp_time=30 -iodepth=32 -numjobs=2"
 allsmall    500     100%        1k,4k,16k,32k,64k   read,randread,write,randwrite   True
 general     500     100%        4k,64k,256k,4m      read,randread,write,randwrite   True
 
 # 5 min
-quicknormal 300     100%        4k,256k,4m          read,randread,write,randwrite   True            "-ramp_time=30"
-rbdnormal   300     100%        4k,256k,4m          read,randread,write,randwrite   True            "-ramp_time=30 -ioengine=rbd -clientname=admin -pool=rbd"
+normalquick 300     100%        4k,256k,4m          read,randread,write,randwrite   True            "-ramp_time=30"
+rbdquick    300     100%        4k,256k,4m          read,randread,write,randwrite   True            "-ramp_time=30 -ioengine=rbd -clientname=admin -pool=rbd"
 quick       300     100%        4k,4m               read,randread,write,randwrite   True            "-ramp_time=30"
 
 # 2 min, try it on real host
@@ -42,3 +47,5 @@ ssrbd       120     100%        4k,4m               read,write                  
 seqr        120     100%        4k,256k,4m          read,randread                   True            "-ramp_time=10 -iodepth=1 -numjobs=1"
 sseqr       80      100%        4k,4m               read                            True            "-ramp_time=10 -iodepth=1 -numjobs=1"
 sdurable    300     100%        none                randrw                          False           "-iodepth=1 -numjobs=1 -direct=1 -bssplit=4k/40:256k/50:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
+
+# self defined
