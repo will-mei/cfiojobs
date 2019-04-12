@@ -186,7 +186,31 @@ function _timeout(){
 ##############################################################################################
 # enable alias for shell
 shopt -s expand_aliases
-alias _ssh_fg="ssh -t -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
+
+function _unquote(){
+    local str=${*}
+    if [[ ${str::1} == "'" ]] || [[ ${str::1} == '"' ]];then
+        echo "${str:1:-1}"
+    else
+        echo "$str"
+    fi
+}
+
+if alias ssh &>/dev/null ;then
+    old_ssh_alias=$(alias ssh |cut -d '=' -f2)
+    old_ssh_alias=$(_unquote "$old_ssh_alias")
+else
+    old_ssh_alias="ssh"
+fi
+
+if alias scp &>/dev/null ;then
+    old_scp_alias=$(alias scp |cut -d '=' -f2)
+    old_scp_alias=$(_unquote "$old_scp_alias")
+else
+    old_scp_alias="scp"
+fi
+
+alias _ssh_fg="$old_ssh_alias -t -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
 #function _ssh_fg(){
 #    # a ssh command for script, but able to interacte with terminal.
 #    # use eval to control the expansion of parametters passed in if this is included by another function !!!
@@ -198,7 +222,7 @@ alias _ssh_fg="ssh -t -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes
 #        local ssh_stat=$?
 #        return $ssh_stat 
 #}
-alias _ssh_cmd="ssh -t -t -n -q -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o BatchMode=yes"
+alias _ssh_cmd="$old_ssh_alias -t -t -n -q -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o BatchMode=yes"
 #function _ssh_cmd(){
 ## a passwordless ssh command for most script situations (no interactions at all)
 ## here the timeout option is intended to be set by your onw :
@@ -216,7 +240,7 @@ alias _ssh_cmd="ssh -t -t -n -q -o StrictHostKeyChecking=no -o PasswordAuthentic
 #        return $cmd_stat 
 #    fi
 #}
-alias _scp="scp -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
+alias _scp="$old_scp_alias -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
 #function _scp(){
 ## same as ssh above
 #    scp -q \
