@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.81
+script_version=0.12.82
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -51,7 +51,7 @@ function _clean_up(){
     [[ $strict_concurrent_controle == "True" ]] && _cleanup_concurrency_env 
 }
 function _test_abort(){
-    echo "test aborting at $(date)" >>$output_dir/recover.log
+    [[ -f $outputdir/recover.log ]] && echo "test aborting at $(date)" >>$output_dir/recover.log
     # reply to multiple kill signals
     if grep -q aborting $output_dir/recover.log &>/dev/null ;then
         echo "test stop action is in progress, please wait."
