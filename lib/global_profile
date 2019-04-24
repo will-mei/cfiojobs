@@ -1,0 +1,25 @@
+# -*-Shell-script-*-
+#
+# This is the global settings of main script
+
+############################################
+# for main script
+############################################
+
+# the concurrency number of cluster
+host_concurrency_max=500
+
+# ssh connection timeout value
+ssh_timeout=15
+
+
+############################################
+# for group.sh
+############################################
+
+# run data fill jobs on nvme disk costs hours
+# keep if 'False', if you have no idea on this
+nvme_precondition="False"
+
+# the default job batch for a batch mode test
+job_group=normal

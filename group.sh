@@ -1,9 +1,14 @@
 #!/bin/bash
 
+. $(dirname $0)/lib/global_profile
+
 # default test settings
-job_group=normal
+
+#job_group=normal
 #job_group=quicknormal
-nvme_precondition="False"
+
+#nvme_precondition="False"
+
 timestamp=$(date +%Y%m%d)
 output_excel_name="test_fio_"$timestamp'.xlsx'
 
@@ -15,11 +20,12 @@ job_group_stat=$(grep -vE "^$|^#" ./cfiojobs.job |grep -q ^${job_group}; echo $?
 if [[ -z $1 ]] || [[ -z $group_list ]];then
     [[ -z $group_list ]] && echo -e "\e[31mno valid host group name fond in grouplist!\e[0m\n"
     [[ $job_group_stat -ne 0 ]] && echo -e "\e[31mno job group name \"$job_group\" fond in grouplist!\e[0m\n"
-    echo "function: auto test groups in grouplist."
-    echo -e "\tdefault fio test job group: $job_group "
-    echo -e "\tdefault nvme precondition : $nvme_precondition"
-    echo -e "\tdefault excel report name : $output_excel_name"
-    echo -e "\tcurrently valid group list: \"$group_list\""
+    echo -e "function:\vautomatically run test with 'group names' in grouplist, and '<group name>.blk' in 'conf/' dir.\n"
+    echo -e "\tdefault   batch config file : $(dirname $0)/lib/global_profile"
+    echo -e "\tdefault      job group name : $job_group "
+    echo -e "\tdefault   nvme precondition : $nvme_precondition"
+    echo -e "\tdefault   excel report name : $output_excel_name"
+    echo -e "\tcurrently  valid group list : \"$group_list\""
     echo -e "Usage:\vnohup $0  <-s|-p|-all>  <output excel file name>  &>grouplist.log &"
     echo -e "Eg :  \vnohup $0  -all &>grouplist.log &"
     exit 1

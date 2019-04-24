@@ -13,32 +13,32 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.69
+script_version=0.12.82
 
-ssh_timeout=15
-process_reservation=128
-host_concurrency_max=500
+#ssh_timeout=15
+#host_concurrency_max=500
 
 #main_pid="$$"
 check_stat=0
 tmpfile_dir=$(mktemp -d)
-concurrency_tag=$(mktemp -u -p $tmpfile_dir) 
-# check host_concurrency_max 
-sys_concurrency_max=$(( $(ulimit -u) - $(ps ax |wc -l) - $process_reservation))
-if [[ $host_concurrency_max -gt $sys_concurrency_max ]];then
-    echo "host_concurrency_max: $host_concurrency_max is too big, please set a number less than $sys_concurrency_max on this host."
-    exit 1
-fi
-# get unused fd number 
-concurrent_pipe_fd=$host_concurrency_max 
-while ls -l /proc/self/fd/ |grep -q " $concurrent_pipe_fd " ;do 
-    concurrent_pipe_fd=$[host_concurrency_max + 1]
-done 
-#date=$(date "+%Y-%m-%d_%H:%M:%S")
+
+#date_time=$(date "+%Y-%m-%d_%H:%M:%S")
 date="$(date +%Y%m%d%H%M)"
 g_conf="$0"".grp"
 b_conf="$0"".blk"
 j_conf="$0"".job"
+
+# import function from lib 
+#[[ -f /etc/init.d/functions ]] && . /etc/init.d/functions 
+#. $(dirname)/lib/centos_sys/functions 
+
+# init ssh and basic functions 
+. $(dirname $0)/lib/usr_profile 
+. $(dirname $0)/lib/global_profile 
+
+# basic functions 
+. $(dirname $0)/lib/modules/functions 
+. $(dirname $0)/lib/centos_enhanced/functions 
 
 function _clean_up(){
     # clean up tmp files
@@ -48,10 +48,10 @@ function _clean_up(){
         [[ -f $trash_file ]] && rm -f $trash_file &>/dev/null
         [[ -d $trash_file ]] && rm -rf $trash_file &>/dev/null
     done
-    [[ $strict_concurrent_controle == "True" ]] && _close_concurrent_pipe 
+    [[ $strict_concurrent_controle == "True" ]] && _cleanup_concurrency_env 
 }
 function _test_abort(){
-    echo "test aborting at $(date)" >>$output_dir/recover.log
+    [[ -f $outputdir/recover.log ]] && echo "test aborting at $(date)" >>$output_dir/recover.log
     # reply to multiple kill signals
     if grep -q aborting $output_dir/recover.log &>/dev/null ;then
         echo "test stop action is in progress, please wait."
@@ -85,7 +85,24 @@ function _test_abort(){
     echo "test stoped at $(date)" >>$output_dir/recover.log
     [[ $send_fio == "True" ]] && echo "test \"$output_dir\" stoped now" || echo "tasks all stoped" 
 }
-trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; exit $check_stat" 1 2 3 15
+function _reload_host_group_config(){
+    _segline "reload host group config file with signal 1"
+    if _grp_conf_check ;then 
+        _host_group_check
+        local reload_stat=$?
+        if [[ $reload_stat -eq 0 ]] ;then
+            _info "reload host group config file seccess"
+        else
+            _error "reload host group config file failed."
+        fi 
+        _segline "host group config file reloaded"
+    else
+        _warn "The current host group config file can not be reloaded by $0 !!"
+        _warn "The old grp conf info will be remained, but please check your new host group config file as soon as possible!!"
+    fi 
+}
+trap " _reload_host_group_config " 1
+trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; _test_abort; exit $check_stat" 2 3 15
 
 ##############################################################################################
 # Global ARRAY:
@@ -124,328 +141,8 @@ trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; 
 # an output dir list file have all output dir,host group, job group inof stored.
 #    echo "" >$0".dirlist"
 # temperary history file.
-    echo "$(date "+%Y-%m-%d_%H:%M:%S"): $0 $@" >>$0".hst"
+    echo "$(date "+%Y-%m-%d_%H:%M:%S"): $$ $0 $@" >>$0".hst"
 ##############################################################################################
-
-#help info 
-function _show_help_info(){
-  echo -e "
-This script is a simple fio jobs and file distributor. You can also run commands on multiple hosts with it.
-Remenber, you need passwordless SSH access permssions for all hosts, and use a comma as a delimiter when you have multiple group units.
-
-usage :
---------
-1. Edit your own host group, block group and fio job type settings in config files.
-
-            (1)     hosts  list conf:   $g_conf
-            (2)     blocks list conf:   $b_conf
-            (3)     jobs   list conf:   $j_conf
-
-    tips: 
-
-            '$0 -e' will generate example configure files for you
-
-2. Run a short single cmd: 
-
-            $0 <options> [commands]
-
-            options: 
-            -t             check host group config file format.
-            -g groups      run commands on certain host groups in $g_conf (sep with comma)
-            -a             run commands on all host group set
-            -x hosts       make an exception on these hosts (sep with comma)
-            -X groups      make an exception on these host groups (sep with comma)
-            -q             return only exit status of command.(be quiet and less output if no error occurred)
-            -d             check and give function parameters, also, skip failure
-            -f             skip failure and try to continue, if possible
-            -p             send commands and copy files execute in parallel
-            --cpid         copy ssh pub id to given host groups 
-            --script       execute given scripts on host groups (sep with comma) 
-            --argument     pass given arguments(double quote multiple args) to each given script  
-            -w             run commmand on given hosts (sep with comma)
-            -U             specify ssh user for hosts '-w' specified
-            -P             specify ssh port for hosts '-w' specified
-            --strictly     execute with a more precise control of concurrency scale 
-            --conflict-ok  cancle pre conflict check befoe launch a test(don't use it if not nessary!).
-            --no-ping      no ping check for host.
-
-    Example: 
-   
-            $0 -q -g grp1,grp2,grp3,grp4 \"systemctl status sshd ;ls abc\" -x 172.18.211.105
-            $0 -q -g grp1,grp2,grp3,grp4 --script ./tmp/install.sh --argument \"-stable\" -x 172.18.211.105
-
-    tips:
-    say you want run the command:
-    
-            'ls -i' 
-
-    you can use: 
-
-            $0 ls -i -g vmg1,grp3 -t -d
-      
-    it is fine, because '-i' does not conflict with any options supported by this script,
-    but still we strongly recommend you write it this way:
-
-            $0 \"ls -i\" -g vmg1,grp3 -t -d
-
-    if you have scripts with different argument to pass in, you'd better execute them separately.
-
-3. Example of Some more complex situation. (how to use double/single quote to pass the complete cmd to script):
-
-        (1).with multy command a time:  
-            $0  -g <grp name> \"command1 ;  command2 ;  command3 \"
-
-         with command list to run :  
-            $0  -g <grp name> \"command1 && command2 || command3 \"
-
-        (2).with pipe thing or some  :  
-            $0  -g <grp name> \"your command |pipe |pipe \"
-
-        (3).with local bash variable :  
-            $0  -g <grp name> \"your command \$local_variable \"
-            
-        (4).with remote env variable :  
-            $0  -g <grp name> \"your command '\$remote_env_viriable' \" 
-
-    example: 
-            
-            $0 -g grp1 \"ls -l |awk '{print\\\$2}'\"
-         
-    or: 
-
-            $0 -g grp1 \"ls -l |awk \\\"{print"'\\''\\\$2'"}\\\"\"
-       
-    tips: 
-
-            awk variable is not bash shell variable, so there were three antislash inside curly braces,
-            first two antislash passed an '\\' to remote bash, and then the third is for translating the '\$'.
-
-4. FIO jobs control
-    
-            options:
-            --fio          launch a fio test
-            --fio-list     output summary info of fio jobs on given host groups
-            --fio-stop     stop all existinging fio jobs on given host groups (stop a certain round of jobs in test)
-            --test-stop    stop test on given host groups (stop all test and all jobs)
-            --recover      recover an undone test form where it was interrupted (aborted, killed or cancled)
-            --recover-from recover or restart the test form a given \"round number\" (and a certain \"blk group\")
-            --round-list   list all job round info with your test options and arguments (launch no test)
-            --round-retest retest a batch of fio jobs with a given \"blk group name\" and \"round number\"
-                           the round range like: \"6-9\" or: \"blk8,6-9\" are both ok.
-            -c             check test env, (network, ssh connections, fio installation, blk dev to test)
-            -b             run fio jobs with given blk group in $b_conf
-            -j             run fio job with given job group in $j_conf
-            -A             fio task 'After' commands that are given
-            -E             run the commands everythime fio test batch starts on a host 
-            -o             set the output dir for all fio test logs.
-            -s             single block mode, one block a time on each host.
-            -S             single group mode, test one group after another till the end.
-            -l             list all running fio jobs info.
-            -r             test on rbd blk.
-
-    example: 
-
-            $0 --fio -g grp1 -b vd5,blk8 -j rand1 -o test01 
-            $0 --fio-list -g group1 -p
-        
-    you can have the current round info from script stdout or log file:
-    
-            \"<output_dir>/recover.log\", 
-    you can easyly recover the test with with a certin round point in test progress, say, to recover the previous test with blk 
-    target \"blk8\" and round \"6\", you can use the command :         
-
-            $0 --fio -g grp1 -b vd5,file8 -j rand1 --recover-from blk8,6 -o test01 
-        
-    or recover a test with only one blk group:
-    
-            $0 --fio -g grp1 -b vd5 -j rand1,mix1 --recover-from 6 -f -o test02 
-    
-    or recover the test from where you don't know:
-    
-            $0 --fio -g grp1 -b vd5 -j rand1,mix1 --recover -f -o test02 
-    
-    note:
-        
-            when both the commands and fio jobs were running on a given host, they will be execute in parallel,
-            but fio jobs will be send first by default, you can use '-A' to let command execute first.
-            $0 --fio -g grp1 -b vd5,blk8 -j rand1,mix1 -A \"umount /dev/vdb\" -o grp1_parallel_test01
-
-    tips:
-
-    **remanber to check the test env befor you start your fio test on a group:**
-    
-            $0 -g <group name> -f -c
-
-5. File distribution
-
-            options:
-            -F files       copy files(sep with comma) to remote host
-            -C files       collect files(sep with comma) from remote to local host
-            -D dir         specify destination directory on remote host
-
-    example: 
-    
-            $0 -g grp1 -F file1,file2,file3 -D /tmp/180730/ -x 172.18.211.137
-
-6. Help info
-
-            options:
-            -h, --help     show this help info
-            -e             make examples of config file (when they do not exist)
-            -v, --version  show version info
-
-    If an option requires an argument to work, you are not allowed to combine it with other options,
-    you can use :
-
-            $0 -g <group name> -f -c 
-            or 
-            $0 -g <group name> -fc 
-
-    but the option -g requires an argument of host group name, for this case, you cannot put ~~' -gfc '~~ together!
-"
-}
-
-function _make_conf_example(){
-[[ -f $g_conf ]] && echo "host group config file exist." \
- || cat >$g_conf <<EOF
-# The IP address delimiter is a coma ','
-# tcmu/ceph backend can be an ip address or 'none' 
-#
-#grp        user    port    bknd_grps    bknd_mode    ip_addr
-grp0        root    5000    grp1         remote       --     # use $(dirname $0)/conf/grp0.grp as ip list 
-grp1        root    22      none         none         172.18.211.133,172.18.211.134  #running on esxi 
-
-EOF
-[[ -f $b_conf ]] && echo "blk group config file exist."  \
- || cat  >$b_conf <<EOF
-# 1. Device delimiter is comma ','.
-#list_name  lbk_list/file_list 
-
-# example 1:
-sd8         /mnt/sdb/data,/mnt/sdc/data,/mnt/sdd/data,/mnt/sde/data,/mnt/sdf/data,/mntsdg/data,/mnt/sdh/data,/mnt/sdi/data
-
-# example 2:
-vd5         /dev/sdb,  #some comment
-            /dev/sdc,  #loal disk
-            /dev/sdd,  #iscsi disk
-            /dev/sde,  #ssd
-            /dev/sdf
-
-EOF
-[[ -f $j_conf ]] && echo "job group config file exist." \
- ||cat  >$j_conf <<EOF 
-# 1. fio arguments delimiter is comma ','.
-#    If your are using space as a delimiter for fio job arguments, the "job arguments" must be double quoted!
-#    Don't use double quote on the field 1~6. 
-#
-# 2. "DEFAULT" job should be set before any job group with an empty customized options were writen.
-#    If 'inherit_DEFAULT' is 'True' all omitted args will be get from the 'DEFAULT' job set.
-#    If 'inherit_DEFAULT' is 'False' this job group will use its own fio arguments.
-# 3. only 'json' format log is supported . 
-#
-#job_name   runtime data_size block_size_range read_write_pattern             inherit_DEFAULT  "fio I/O job arguments"
-DEFAULT     600     100%      4k,256k,4m       read,randread,write,randwrite  True             "-group_reporting -direct=1 -iodepth=4  -ioengine=libaio -time_based -numjobs=16 --output-format=json"    
-test        600     60G       4k,256k,4m       randread,randwrite             True
-durable     172800  100%      none             randrw                         False            "-direct=1  -iodepth=32 -numjobs=4 -bssplit=4k/50:256k/40:4m/10 -ioengine=libaio -rwmixwrite=30 -time_based -group_reporting --output-format=json"
-EOF
-#[[ -f $0".iodepth_bs_pattern.csv" ]] && echo $0".iodepth_bs_pattern.csv" exist. \
-#||cat >$0".iodepth_bs_pattern.csv" <<EOF
-#,read,randread,write,randwrite
-#4k,64,64,64,8
-#256k,64,64,64,4
-#4m,64,64,4,6
-#EOF
-}
-
-
-function _red(){
-    echo -e "\e[31m$@\e[0m"
-}
-function _yellow(){
-    echo -e "\e[33m$@\e[0m"
-}
-function _green(){
-    echo -e "\e[32m$@\e[0m"
-}
-function _blue(){
-    echo -e "\e[34m$@\e[0m"
-}
-function _blink(){
-    echo -e "\e[5m$@\e[0m"
-}
-function _uniq_list(){
-# go through all the parameters.
-    for i in "$@" ;do
-        echo $i 
-    #return sorted uniq element in one line.
-    done |sort -u |sort -t'.' -k4 -n |sed ':label;N;s/\n/\ /;b label'
-}
-function _waiting(){
-# wait info $1
-# sleep time $2
-    # head title 
-    echo -en "\n  waiting $1 ...    " 
-    local t=$2
-    until [[ $t -le 1 ]] ;do
-        # bar of second 
-        for i in '---' ' \ ' ' | ' ' / ' ;do
-            # update bar 
-            echo -en "\b\b\b$i" 
-            sleep 0.25 
-        done
-        # sec update 
-        t=$(($t -1))
-        printf  "%-10s" "$t"
-        #clean time info 
-        printf  "\b\b\b\b\b\b\b\b\b\b"
-    done
-    # clean waiting 
-    echo -en "\r"
-    #sleep 5
-    #for ((integer = 1; integer <= 5; integer++));do echo -en "\b\b\b" ;done 
-    #echo ""
-}
-function _timeout(){
-# another waiting function.
-# show timeout info and wait few secends.
-    local t="$1"
-    #echo -n "time out in :  "
-    echo -e "\npress \"Ctrl + c\" to break here."
-    until [[ $t -lt 1 ]] ;do 
-        t=$(($t - 1))
-        printf  "\r\e[33m%-20s\e[0m" "timeout in $t s"
-        sleep 1
-    done
-    echo -e "\r $1 seconds waiting time out, $(_yellow "skip failed and continue.")\n"
-}
-function _segline(){
-    segment="$@"
-    local tty_width=$(tput cols)
-    local tag_width=$[tty_width/2 -${#segment}/2]
-    delimiter=""
-    for i in $(seq 1 $tag_width);do delimiter+='-' ;done
-    delimiter+="$segment"
-    while [[ ${#delimiter} -lt $tty_width ]] ;do delimiter+='-' ;done
-    echo -e "\e[34m$delimiter\e[0m"
-}
-function _unit_time(){
-# add time unit to a time value (sec) int 
-    local time_in=${1%%.*}
-        if   [[ $time_in -ge 86400 ]] ;then
-            time_out=$(echo $time_in |awk '{printf("%.2f\n",$1/86400)}')"Day(s)"
-        elif [[ $time_in -ge 3600 ]] ;then
-            time_out=$(echo $time_in |awk '{printf("%.2f\n",$1/3600)}')"Hour(s)"
-        elif [[ $time_in -ge 60 ]] ;then
-            time_out=$(echo $time_in |awk '{printf("%.2f\n",$1/60)}')"Min(s)"
-        elif [[ $time_in -ge 0 ]] ;then
-            time_out="$time_in"'(s)'
-        elif [[ $time_in -lt 0 ]] ;then
-#            time_out="confusion!"
-            time_out="overtime!"
-        fi
-        echo "$time_out"
-        unset time_out 
-}
 function _unquiet(){
 # give inof when not quiet mode.
     if [[ $quiet_mode == "True" ]] ;then
@@ -454,6 +151,7 @@ function _unquiet(){
     else 
         # echo 
         echo -e "$@"
+        return 0
     fi
 }
 function _tmp_quiet(){
@@ -478,36 +176,9 @@ function _local_unquiet(){
         _unquiet "$@"
     fi
 }
-function _gen_concurrent_pipe(){
-    # works when concurrency_tag was predefined
-    if [[ -n $concurrency_tag ]] ;then
-        #return 0
-        mkfifo $concurrency_tag
-        #exec 256<>$concurrency_tag
-        eval "exec $concurrent_pipe_fd<>$concurrency_tag"
-        rm -rf $concurrency_tag
-        for ((n=1;n<=$host_concurrency_max;n++)) ;do
-            #echo >&256
-            echo >&$concurrent_pipe_fd 
-        done
-    else
-        #_blue "concurrency_tag missing"
-        echo "concurrency_tag missing"
-    fi
-}
-function _close_concurrent_pipe(){
-        # close pipe
-        eval "exec $concurrent_pipe_fd>&- "
-        eval "exec $concurrent_pipe_fd<&- "
-}
-function _join_concurrent_troop(){
-    #
-    read -u$concurrent_pipe_fd
-}
-function _leave_concurrent_troop(){
-    echo >&$concurrent_pipe_fd 
-}
+# concurrency 
 function _host_concurrent_pipe_strict(){
+    # host_exec_function must be set before it's called 
     for host_ip in $ip_list ;do 
         {
             _join_concurrent_troop
@@ -517,7 +188,7 @@ function _host_concurrent_pipe_strict(){
     done && wait 
 }
 function _host_concurrent_pipe(){
-    #
+    # host_exec_function must be set before it's called 
     [[ $# -gt 0  ]] && exec 0<$1
     while read partial_ip ;do
         #
@@ -596,11 +267,6 @@ function _confirm_check_stat(){
             _error_interrupt
         fi
     fi
-}
-# debug functions 
-function _marker(){
-    _segline "marker $1"
-    _blue "function :${FUNCNAME[@]:1}"
 }
 function _verbose(){
 # print info help testing script
@@ -704,11 +370,38 @@ else
 fi
 }
 #----------------------------------------|failure info |-----------------------
-function _record_fail(){
-    if [[ $send_fio == "True" ]] || [[ -n $harvest_file_group_list  ]] ;then
+function _log_output_dir_check_ok(){
+    # 2 scenario
+    if [[ $send_fio == "True" ]] || [[ -n $harvest_file_group_list  ]] || [[ -n $output_dir ]];then
+        _check_output_dir 
+        return 0
+    else
+        return 1
+    fi
+}
+function _record_cmd(){
+    # called by _ssh_send only 
+    # cmd status : $1
+    # cmd content = "$2 ... end"
+    if _log_output_dir_check_ok ;then
         local failure_time=$(date "+%Y-%m-%d %H:%M:%S")
-        local failure_type="${FUNCNAME[1]}" # parent function name 
-        [[ ${FUNCNAME[-2]} == "_fio_scale_control" ]] && local failure_stage=${FUNCNAME[-4]} || local failure_stage="${FUNCNAME[-2]}" # the last one is main 
+        local cmd_stat=$1
+        shift
+        echo "$failure_time,$host_group_name,$host_ip,cmd_stat:$cmd_stat,${*}" >$output_dir/all_ssh_cmd.log
+    fi
+}
+# store log info to output_dir 
+function _record_fail(){
+    if _log_output_dir_check_ok ;then
+        local failure_time=$(date "+%Y-%m-%d %H:%M:%S")
+        local failure_type="${FUNCNAME[1]}" # parent function name or name passed in.
+        if [[ ${FUNCNAME[-2]} == "_fio_scale_control" ]] ;then
+            # in a fio test 
+            local failure_stage=${FUNCNAME[-4]} 
+        else
+            # the last one is main 
+            local failure_stage="${FUNCNAME[-2]}" 
+        fi
         [[ -z $job_batch_index ]] && failure_note="not in test" || local failure_note="round $job_batch_index"
         echo "$failure_time,$host_group_name,$host_ip,$failure_stage,$failure_type,$failure_note" >>$output_dir/failure_host.csv  
     fi 
@@ -729,71 +422,15 @@ function _devfail(){
     _red "  host:$host_ip dev:$dev_name not a valid test device."
     _record_fail
 }
+function _cmdfail(){
+    # if ping ok or --no-ping 
+    #give command return value check failed info 
+    _record_fail
+}
 
 ##############################################################################################
 # config file check
 ##############################################################################################
-function _format_conf(){
-#transform configfile for most config files
-    if [[ -z $1 ]] ;then
-        echo "${FUNCNAME[@]}: no config file name recived."
-        exit 1
-    elif [[ ! -f $1 ]] ;then
-        echo "${FUNCNAME[@]}: config file $1 not fond."
-        exit 1
-    else
-        configfile="$1"
-    fi
-# replace:
-    # 1. table with space
-    # 2. continuous multiple spaces with one space
-# removed:
-    # 1. empty line and comment.
-    # 2. space/tab in head of line
-    # 3. comment in end of line
-    # 4. space/tab after a comma 
-    # 5. space/tab between comma and the line end '\n'
-    # 6. cancle line switch, by remove '\n' after comma
-    grep -vE "^$|^#" $configfile \
-    |sort -u \
-    |sed -e 's/\t\+/\ /g' \
-         -e 's/[ ]\+/\ /g' \
-         -e 's/^[ ]\+//g' \
-         -e 's/^\t\+//g' \
-         -e 's/#.*$//g' \
-         -e 's/\,[ ]*$/\,/g' \
-         -e 's/\,[ ]*/\,/g' \
-         -e 's/\,[\t]*$/\,/g' \
-         -e 's/\,[\t]*/\,/g' \
-    |sed -e ':\,;N;s/\,\n/\,/;b \,'
-}
-function _check_ip(){
-# input : an ip address
-    ip="$1"
-        #pure number and dot
-        if echo $ip |grep -q [^0-9,'.'] ;then
-            return 1
-        #not 0 started
-        elif echo $ip |grep -q ^0 ;then
-            return 1
-        #less than 256
-        else 
-            for net in $(echo $ip |sed s/\\./\ /g) ;do
-                if [[ $net -gt 255 ]] ;then
-                    return 1
-                fi
-            done
-        fi
-        return 0
-}
-function _check_port(){
-# input : a ssh port number
-    if [[ ${1} != ${1//[^0-9]/} ]] || [[ $1 -ge 65535 ]] ;then
-       return 1
-   else
-       return 0
-    fi 
-}
 function _grp_conf_check(){
     if [ -f $g_conf ] ;then
         #check start.
@@ -835,7 +472,14 @@ function _grp_conf_check(){
         done  << EOF
 $(_format_conf $g_conf)
 EOF
-        [[ $check_stat -ne 1 ]] && echo "host group config file checked ok." || exit 1
+        if [[ $check_stat -ne 1 ]] ;then
+            _info "host group config file check ok."
+            return 0
+        else
+            _error "host group config file check error."
+            return 1
+            #exit 1
+        fi 
     else
         echo "host list file not fond."
     fi
@@ -883,7 +527,7 @@ function _group_check(){
                             # reformat hostname.
                             HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ) | sed 's/-/_/g' )
                         else
-                            echo "Warning: host group config file: $g_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf\" is missing "
+                            _warn "host group config file: $g_conf, group name: \"$host_group_name\" , ip list file: \"$host_conf\" is missing "
                         fi
                     else
                           HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list ${group_info[5]//,/ })
@@ -893,7 +537,7 @@ function _group_check(){
                 # if group info lost, skip or exit
                 # 3. check from last, find last missing info index, and print its name.
                     for index in {1..5} ;do
-                       [[ -z ${group_info[$index]} ]] && echo "Warning: host group config file: $g_conf, group name: \"$host_group_name\" , ${index_name_array[$index]} info missing!"
+                       [[ -z ${group_info[$index]} ]] && _warn "host group config file: $g_conf, group name: \"$host_group_name\" , ${index_name_array[$index]} info missing!"
                     done
                     grp_stat=1
                     # remove from host_group_list
@@ -939,6 +583,13 @@ function _host_group_check(){
         exit 1
     fi
 }
+function _show_group_info(){
+            local tmpfile_group_info=$(mktemp)
+            echo "NAME,USER,PORT,BKND,MODE,IP" >$tmpfile_group_info 
+            _format_conf $g_conf |sed -e 's/,/\+/g' -e 's/\ /,/g' >>$tmpfile_group_info
+            bash $(dirname $0)/tools/catcsv.sh $tmpfile_group_info
+            rm -f $tmpfile_group_info
+}
 function _job_group_check(){
 #verify job group and get fio arguments merged, then store in array
 # job_stat, 0: ok, 1: part failed, 2: all failed.
@@ -977,7 +628,7 @@ function _job_group_check(){
                 # check missing array element. check from the last, which element is missing.
                 # if index2 is missing index3 will be take as index2, so always find the last missing index, index 1-5
                 for index in {1..5} ;do
-                   [[ -z ${job_group_info[$index]} ]] && echo "Warning: job group config file: $j_conf, $job_group_name: ${index_name_array[$index]} info missing!"
+                   [[ -z ${job_group_info[$index]} ]] && _warn "job group config file: $j_conf, $job_group_name: ${index_name_array[$index]} info missing!"
                 done
                 _error_interrupt
             else
@@ -1047,7 +698,7 @@ function _blk_group_check(){
                     blk_stat="1"
                     blk_group_list=${blk_group_list/$blk_group_name/}
                     # give info which is missing.
-                    echo "blk group: $blk_group_name, device list info is missing!"
+                    _error "blk group: $blk_group_name, device list info is missing!"
                     # if test with the rest group
                     _error_interrupt
                 else
@@ -1062,7 +713,7 @@ function _blk_group_check(){
             # 1.2 name missing in conf
             else
             #remove the invalid group which its name not exist in conf
-                echo "Warning: blk config file: $b_conf, $blk_group_name: device list info is missing!"
+                _warn "blk config file: $b_conf, $blk_group_name: device list info is missing!"
                 blk_stat="1"
                 blk_group_list=${blk_group_list/$blk_group_name/}
                 # skip missing test with the rest group
@@ -1250,23 +901,6 @@ function _show_rbd_expansion(){
         fi
     fi 
 }
-function _get_iodepth_from_table(){
-    _blue "${FUNCNAME[@]} is on the way ... 0_=" && exit 1
-# get iodepth from a table with bs and pattern axis.
-    iodepth_bs_pattern_table="$1"
-    [[ ! -f "$iodepth_bs_pattern_table" ]] \
-     && echo "$(date "+%Y-%m-%d_%H:%M:%S") ${FUNCNAME[@]} $iodepth_bs_pattern_table not fond !" \
-     && exit 1
-    declare -A col_no
-    col_no[read]=2
-    col_no[randread]=3
-    col_no[write]=4
-    col_no[randwrite]=5
-    colume=${col_no[$PATTERN]}
-#give iodepth from table
-    IODEPTH=$(grep $BS $iodepth_bs_pattern_table |cut -d',' -f $colume)
-    echo "$IODEPTH"
-}
 function _give_size(){
     #if [[ ${JOB_DATA_SIZE_ARRAY[$job_group_name]} == "none" ]] ;then
     #    :
@@ -1311,7 +945,7 @@ function _fio_job_expansion(){
                 #update runtime_sum
                 [[ -z $runtime_sum ]] && runtime_sum=${JOB_RUNTIME_ARRAY[$job_group_name]}  || runtime_sum=$((${JOB_RUNTIME_ARRAY[$job_group_name]} + $runtime_sum ))
                 #pdebug info
-                _verbose "expansion" && _waiting "reading" 5
+                _verbose "expansion" && _waiting 5 "reading" 
                 #store job batch in global list
                 JOB_BATCH_ARRAY[$total_round]="\
 fio \
@@ -1348,9 +982,9 @@ ${JOB_ARGS_ARRAY[$job_group_name]} "
             done
         fi 
         _yellow "round list:"
-        $(dirname $0)/bin/catcsv.sh $tmpfile_expansion | sed 1d 
+        $(dirname $0)/tools/catcsv.sh $tmpfile_expansion | sed 1d 
         rm -f $tmpfile_expansion 
-        [[ $round_list == "True" ]] && _show_rbd_expansion && exit 0 || _waiting "reading" 5
+        [[ $round_list == "True" ]] && _show_rbd_expansion && exit 0 || _waiting 5 "reading" 
     fi
 }
 ##############################################################################################
@@ -1394,7 +1028,7 @@ function _parse_host_info(){
             #echo $job_group_name 
         fi
         if [[ -z ${host_user// /} ]] || [[ -z ${host_port// /} ]] || [[ -z ${ip_list// /} ]] ;then
-            echo "${FUNCNAME[@]}: group: \"$1\", ssh login info is missing."
+            _error "${FUNCNAME[@]}: group: \"$1\", ssh login info is missing."
             continue || exit 1
         fi
         #remove x_host list from group ip_list
@@ -1405,10 +1039,10 @@ function _parse_host_info(){
         fi
         # info
         if _verbose "groupinfo" ;then
-            _waiting "reading" 5
+            _waiting 5 "reading"
             if [[ $send_fio == "True" ]] && [[ -n $blk_group_name ]] ;then
                 echo "blk list : ${BLK_DEV_ARRAY[$blk_group_name]}"
-                _waiting "reading blk info" 5
+                _waiting 5 "reading blk info"
             fi
         fi
     fi
@@ -1425,20 +1059,33 @@ function _ping_check(){
 function _ssh_send(){
 #send command info to host when ssh_user, ssh_ip, ssh_port was set
     if [[ $# -lt 1 ]] ;then
-        echo "${FUNCNAME[@]} warning: no command info to send!" 
+        _warn "${FUNCNAME[@]} : no command info to send!" 
         return 1
     else
         #if expect -v &>/dev/null ;then 
         #    $(dirname $0)/bin/login/expect_ssh2vm.exp $host_user $host_ip $host_port 'www.123.com' "$@"
             #exddpect -v &>/dev/null && expect bin/expect_ssh2vm.exp $host_user $host_ip $host_port $host_pwd "$@"
         #else 
-            #ssh -n -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -l $host_user $host_ip -p $host_port "$@"
-            ssh -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
+            #eval _ssh_cmd -o ConnectTimeout=$ssh_timeout \
+            #        -l $host_user $host_ip \
+            #        -p $host_port "${cmd_prefix}$@"
+            ssh -n -q $old_ssh_alias \
+                -o StrictHostKeyChecking=no \
+                -o ConnectTimeout=$ssh_timeout \
+                -o PubkeyAuthentication=yes \
+                -o PasswordAuthentication=no \
+                -o BatchMode=yes \
+                -l $host_user $host_ip \
+                -p $host_port "${cmd_prefix}$@"
         #fi 
+        local cmd_stat=$?
+        [[ $cmd_stat -ne 0 ]] && _cmdfail
+        [[ $pdebug == "True" ]] && _record_cmd "$cmd_stat" "${cmd_prefix}$@"
+        return $cmd_stat 
     fi
 }
 function _ssh_check(){
-    _ssh_send "echo ssh ok" &>/dev/null 
+    _ssh_send "/bin/true"
     local ssh_stat=$?
     return $ssh_stat
 }
@@ -1446,12 +1093,12 @@ function _send_file(){
     if [[ -n $file_group_list ]] ;then
         _unquiet "  $host_ip send files..."
         if [[ $quiet_mode == "True" ]] ;then
-            scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
+            _scp -r -o ConnectTimeout=$ssh_timeout -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination &>/dev/null 
             local scp_stat=$?
             echo "  $host_ip stat: $scp_stat"
             _update_check_stat $scp_stat $tmpfile_exec 
         else
-            scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
+            _scp -r -o ConnectTimeout=$ssh_timeout -P $host_port $file_group_list $host_user@$host_ip:$file_group_destination && echo "  $host_ip done"
             local scp_stat=$?
             _update_check_stat $scp_stat $tmpfile_exec 
         fi
@@ -1468,24 +1115,24 @@ function _harvest_file(){
         # one file or dir to harvest
         if [[ ${harvest_file_group_list//,/} == ${harvest_file_group_list} ]] ;then
             if [[ $quiet_mode == "True" ]] ;then
-                eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir/ &>/dev/null                                                        
+                eval _scp -r -o ConnectTimeout=$ssh_timeout -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir/ &>/dev/null                                                        
                 local hvst_stat=$?
                 echo "  $host_ip stat: $hvst_stat"
                 _update_check_stat $hvst_stat $tmpfile_exec 
             else
-                eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir && echo "  $host_ip done"
+                eval _scp -r -o ConnectTimeout=$ssh_timeout -P $host_port $host_user@$host_ip:$harvest_file_group_list $harvest_dir && echo "  $host_ip done"
                 local hvst_stat=$?
                 _update_check_stat $hvst_stat $tmpfile_exec 
             fi
         # multy files
         else
             if [[ $quiet_mode == "True" ]] ;then
-                eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir/ &>/dev/null                                                        
+                eval _scp -r -o ConnectTimeout=$ssh_timeout -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir/ &>/dev/null                                                        
                 local hvst_stat=$?
                 echo "  $host_ip stat: $hvst_stat"
                 _update_check_stat $hvst_stat $tmpfile_exec 
             else
-                eval scp -r -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir && echo "  $host_ip done"
+                eval _scp -r -o ConnectTimeout=$ssh_timeout -P $host_port $host_user@$host_ip:{$harvest_file_group_list} $harvest_dir && echo "  $host_ip done"
                 local hvst_stat=$?
                 _update_check_stat $hvst_stat $tmpfile_exec 
             fi
@@ -1507,7 +1154,7 @@ function _send_cmd(){
                 local tmpfile_exec_host_out=$(mktemp -p $tmpfile_dir)
                 #use virtual terminal and recive tty input.
                 # echo "$host_ip :"
-                ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
+                _ssh_fg -o ConnectTimeout=$ssh_timeout -l $host_user $host_ip -p $host_port "${cmd_prefix}$CMD" 2>&1 |tee $tmpfile_exec_host_out
                 local cmd_stat=$?
                 _update_check_stat $cmd_stat $tmpfile_exec 
             else 
@@ -1515,7 +1162,7 @@ function _send_cmd(){
                 # do not merge output 
                 _ssh_send " echo -e \" HOST:\e[34m\$HOSTNAME \e[0m \" "
                 _segline "$host_ip  stdout"
-                ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$CMD" 2>&1 |tee $tmpfile_exec_host_out
+                _ssh_fg -o ConnectTimeout=$ssh_timeout -l $host_user $host_ip -p $host_port "${cmd_prefix}$CMD" 2>&1 |tee $tmpfile_exec_host_out
                 local cmd_stat=$?
                 _update_check_stat $cmd_stat $tmpfile_exec 
                 _segline "$host_ip cmd end"
@@ -1543,22 +1190,21 @@ function _send_cmd(){
 ##############################################################################################
 function _host_ssh_script(){
     local host_ip=$1
-    # running script on remote host.
+    # running script on remote host through stdin.
         #local script_file=$1
         #local script_args="${@:2}"
-    if [[ -f $1 ]];then
+    if [[ -f $script_file ]];then
         if _ping_check ;then
         # network and ssh connection test.
             if _ssh_check ;then
-                #ssh -t -n -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "$@"
                 if [[ $quiet_mode == "True" ]] ;then
-                    cat $script_file | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\"" &>/dev/null 
+                    cat $script_file | _ssh_fg -o ConnectTimeout=$ssh_timeout -l $host_user $host_ip -p $host_port "${cmd_prefix}cat - |bash -s \"$script_args\"" &>/dev/null 
                     local script_stat=$?
                     echo "  $host_ip stat: $script_stat"
                     _update_check_stat $script_stat $tmpfile_script_host_out 
                 else
     #                echo "1:$1 2:$2"
-                    cat $script_file | ssh -t -q -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -l $host_user $host_ip -p $host_port "cat - |bash -s \"$script_args\""
+                    cat $script_file | _ssh_fg -o ConnectTimeout=$ssh_timeout -l $host_user $host_ip -p $host_port "${cmd_prefix}cat - |bash -s \"$script_args\""
                     local script_stat=$?
                     _update_check_stat $script_stat $tmpfile_script_host_out 
                 fi
@@ -1571,7 +1217,7 @@ function _host_ssh_script(){
             _update_check_stat 1 $tmpfile_script_host_out 
         fi
     else
-        _red "script file: $1 missing."
+        _red "script file: $script_file missing."
     fi
 }
 function _group_ssh_script(){
@@ -1610,7 +1256,7 @@ function _host_ssd_cpid(){
         #for host_ip in $ip_list;do 
             if _ping_check ;then
                 # network and ssh connection test.
-                timeout $[ssh_timeout * 2] $(dirname $0)/bin/sshpass -p $ssh_passwd ssh-copy-id -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout $host_user@$host_ip -p $host_port 
+                timeout $[ssh_timeout * 2] $(dirname $0)/tools/sshpass -p $ssh_passwd ssh-copy-id -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout $host_user@$host_ip -p $host_port 
                 local init_stat=$?
                 [[ $init_stat -ne 0 ]] &&  _sshfail
                 _update_check_stat $init_stat $tmpfile_init_host_out 
@@ -1644,12 +1290,14 @@ function _group_ssd_cpid(){
 function _record_bknd(){
 # $1 host_group_name 
 # works when bknd_grps/bknd_mode were set
-# run script on certain host group and there output will be collected with a name like: blk_group_name host_group_name job_group_name / pattern_name bknd_host script_name '.log' 
+# run script on certain host group and there output will be collected
+# with a name like: 
+# blk_group_name host_group_name job_group_name / pattern_name bknd_host script_name '.log' 
 # collect backend info like tcmu and ceph
     _yellow "check bknd:"
     _parse_host_info "$1"
     # check bknd group name
-    _verbose "bkndinfo" && _waiting "reading" 5
+    _verbose "bkndinfo" && _waiting 5 "reading"
     if [[ -n $bknd_grps ]] && [[ $bknd_grps != '--' ]] ;then 
         if [[ -n ${JOB_RUNTIME_ARRAY[$job_group_name]} ]] ;then 
             bknd_runtime="${JOB_RUNTIME_ARRAY[$job_group_name]}"
@@ -1713,11 +1361,11 @@ function _host_fio_check(){
         #_error_interrupt
     fi
     while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
-        _verbose  hostinfo && _waiting "reading" 5
+        _verbose  hostinfo && _waiting 5 "reading"
         sleep 5
     done
     while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
-        _verbose  hostinfo && _waiting "reading" 5
+        _verbose  hostinfo && _waiting 5 "reading"
         sleep 5
     done
 }
@@ -1740,10 +1388,10 @@ function _send_fio(){
         #log_dir
         if [[ -n path_flyover ]];then
             #
-            log_dir="$output_dir/$path_flyover/$blk_group_name-$job_group_name-$current_host_group-$host_ip"
+            log_dir="$output_dir/$path_flyover/$blk_group_name-$job_group_name-$current_host_group-${host_ip}"
         else 
             #
-            log_dir="$output_dir/$blk_group_name-$job_group_name-$current_host_group-$host_ip"
+            log_dir="$output_dir/$blk_group_name-$job_group_name-$current_host_group-${host_ip}"
         fi
         # mkdir 
         [[ -d $log_dir ]] ||  mkdir -p $log_dir
@@ -1773,15 +1421,15 @@ function _send_fio(){
                     # check sata disk with smartctl, nvme disks are not supported
                     local blk_name=${BLK##*/}
                     if [[ $rbd_mode == "True" ]] ;then
-                        local tag=$num_jobs-$host_ip-rbd  
+                        local tag=$num_jobs-${host_ip//-/_}-rbd  
                         # skip rbd check   
                         #:
                     elif [[ ${blk_name//nvme/} != "${blk_name}" ]] ;then
-                        local tag=$num_jobs-$host_ip-nvme 
+                        local tag=$num_jobs-${host_ip//-/_}-nvme 
                         # skip nvme
                         #:
                     else
-                        local tag=$num_jobs-$host_ip-hdd  
+                        local tag=$num_jobs-${host_ip//-/_}-hdd  
                         if [[ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ]] ;then
                             # if smartmontools installed, check status.
                             blk_stats=$(_ssh_send "smartctl -H $BLK |grep 'SMART Health Status:' |awk '{print\$NF}' ")
@@ -1806,7 +1454,7 @@ function _send_fio(){
                 if [[ ${JOB_DATA_SIZE_ARRAY[$job_group_name]} == "random"  ]] ;then
                     local size_info="-size=$(($RANDOM%100+1))%"
                 fi
-                _verbose "jobinfo" && _waiting "reading" 15
+                _verbose "jobinfo" && _waiting 15 "reading"
                     # wait previous 
                 if [[ $rbd_mode == "True" ]];then 
                     [[ $test_mode == "single" ]] && _host_fio_check 
@@ -2051,7 +1699,7 @@ function _host_fio_log_harvest(){
     #sleep 30
                         # stop scp from coping "/" from remote, when output dir missing
                         if [[ -n $output_dir ]] && [[ $output_dir != '/' ]] ;then
-                            scp -q -r -o StrictHostKeyChecking=no -o ConnectTimeout=$ssh_timeout -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes -P $host_port $host_user@$host_ip:$output_dir/* $output_dir/ 
+                            _scp -r -o ConnectTimeout=$ssh_timeout -P $host_port $host_user@$host_ip:$output_dir/* $output_dir/ 
                             _update_check_stat $? $tmpfile_hvst 
                             # wait
                             _ssh_send "rm -rf $output_dir/"
@@ -2192,7 +1840,7 @@ function _host_fio_check2(){
     #
     local host_ip=$1
         #for host_ip in $ip_list ;do
-        #    _verbose hostinfo && _waiting "reading" 5
+        #    _verbose hostinfo && _waiting 5 "reading" 
             if _ping_check ;then
             # no fio between 15 secends check, three times of send interval
                 if _ssh_check ;then
@@ -2235,11 +1883,32 @@ function _group_fio_check(){
     #[[ $check_stat -eq 1 ]] && _error_interrupt
     _unquiet "$1: check action done."  # || echo " group stat : $check_stat" 
 }
+#function _get_host_yum_pkg_version(){
+#    # print software main version 
+#    # print int or empty str 
+#    local pkg_name=$1
+#    local pkg_version=$(_ssh_send "yum list $pkg_name |grep $pkg_name |tail -1 " | awk '{print substr($2, 1, 1)}')
+#    if [[ -z ${pkg_version//[0-9]/} ]];then
+#        echo "$pkg_version"
+#    else
+#        return 1
+#    fi
+#}
+#function _get_host_rpm_pkg_version(){
+#    # print software main version 
+#    local pkg_name=$1
+#    local pkg_version=$(_ssh_send "rpm -q $pkg_name" |awk -F[-.] '{print$2}')
+#    if [[ -z ${pkg_version//[0-9]/} ]];then
+#        echo "$pkg_version"
+#    else
+#        return 1
+#    fi
+#}
 function _host_pre_check(){
     #
     local host_ip=$1
         #for host_ip in $ip_list ;do
-            _verbose "hostinfo" && _waiting "reading" 5
+            _verbose "hostinfo" && _waiting 5 "reading" 
             # network check
             if _ping_check ;then
                 if ! _ssh_check ;then
@@ -2250,10 +1919,13 @@ function _host_pre_check(){
                 #check fio installation
                 if _ssh_send 'fio -v' &>/dev/null ;then
                     _update_check_stat 0  $tmpfile_precheck
-                    version=$(_ssh_send "rpm -q fio |awk -F[-.] '{print\$2}'")
+                    # rpm check
+                    version=$(_ssh_send "rpm -q fio" |awk -F[-.] '{print$2}')
+                    #local version=$(_get_host_rpm_pkg_version "fio")
                     if [[ -z $version ]] ;then
                         _verbose && _blue "host:$host_ip fio was not installed through rpm/yum."
-                        version=$(_ssh_send "fio -v |awk -F[-.] '{print\$2}'")
+                        # direct check
+                        version=$(_ssh_send "fio -v " |awk -F[-.] '{print$2}')
                     fi
                     if [[ $version -ge 3 ]]  ;then
                         _verbose  &&  echo "  host:$host_ip fio check ok"
@@ -2263,9 +1935,11 @@ function _host_pre_check(){
                     _update_check_stat 0 $tmpfile_precheck
                 # no fio installed
                 else
-                    # check version makecache fast 
+                    # if yum available, check version makecache fast 
                     if _ssh_send 'yum makecache fast >/dev/null' ;then
-                        version=$(_ssh_send "yum list fio|grep fio|tail -1|awk '{print \$2}'|cut -d'.' -f1")
+                        # check version 
+                        version=$(_ssh_send "yum list fio|grep fio|tail -1" |awk '{print substr($2, 1, 1)}')
+                        #version=$(_get_host_yum_pkg_version "fio")
                         if [[ $version -ge 3 ]] ;then 
                             # fio installing in background 
                             _blue "host:$host_ip, fio installing.."
@@ -2283,6 +1957,7 @@ function _host_pre_check(){
                             echo "host:$host_ip, fio check failed. (not installed and fio version: $version in available repo is lower than 3)"
                             _update_check_stat 1 $tmpfile_precheck
                         fi
+                    # yum not available 
                     else
                         _red "host:$host_ip: fio installation, makecache failed"
                         _update_check_stat 1 $tmpfile_precheck
@@ -2348,7 +2023,7 @@ function _host_blk_detect(){
     #
     local host_ip=$1
         #for host_ip in $ip_list ;do
-            #_verbose "hostinfo" && _waiting "reading" 5
+            #_verbose "hostinfo" && _waiting 5 "reading"
             # network check
             if _ping_check ;then
                 # ssh check 
@@ -2432,8 +2107,10 @@ function _host_blk_precheck(){
                     if _ssh_check ;then
                         #
                         for blk in $blk_list ;do 
-                            _ssh_send "lsblk -p $blk" &>/dev/null 
-                            if [[ $? -ne 0 ]] || [[ $(_ssh_send "lsblk -p $blk |wc -l") -ne 2  ]] ;then
+                            local blk_existence=$(_ssh_send "lsblk -p $blk &>/dev/null && echo 0 || echo 1" )
+                            local blk_partition=$(_ssh_send "lsblk -p $blk |grep -v ^NAME |wc -l")
+                            # double [[ $(cmd) ]] will stop further expansion.
+                            if [[ $blk_existence -ne 0 ]] || [[ $blk_partition -ne 1  ]] ;then
                                 _devfail 
                                 grep $blk $grp_blk_conf |grep -q '#' && local blk_fail_note=',' || local blk_fail_note='#not found on:'
                                 grep $blk $grp_blk_conf |grep -q $host_ip || sed -i "/^${blk//\//\\/}/s/$/$blk_fail_note$host_ip/" $grp_blk_conf
@@ -2494,7 +2171,7 @@ function round_report(){
     fi
 }
 function _list_all_running_jobs(){
-    local groups_to_list=$(ps aux |grep $(whoami) |grep -E "\-\-fio|\-\-fio\ " |grep -v grep |awk -F'-g' '{print$2}' |awk '{print$1}' |sort -u)
+    local groups_to_list=$(ps -u $USER -aeo args |grep -E "\-\-fio|\-\-fio\ " |grep -v grep |awk -F'-g' '{print$2}' |awk '{print$1}' |sort -u)
     if [[ -n $groups_to_list ]] ;then
         for i in $groups_to_list ;do
             bash $0 -g $i --fio-list -p 
@@ -2509,7 +2186,7 @@ function _get_default_output_dir(){
     else
         local dir_name="${0#*/}-file-$date"
     fi
-    print $dir_name
+    echo $dir_name
 }
 function _check_output_dir(){
     # this functio will be called twice
@@ -2517,18 +2194,22 @@ function _check_output_dir(){
         local default_output_dir=$(_get_default_output_dir)
         if [[ -z $output_dir ]] ;then
             output_dir="$default_output_dir"
-            _yellow "INFO: no output dir name specified, \"$output_dir\" will be the default name."
+            if [[ ${FUNCNAME[-2]} == "_group_execute" ]] && [[ $send_fio != "True" ]] && [[ -z ${file_group_list// /} ]] ;then 
+                return 1
+            else
+                _info "no output dir name specified, \"$(_yellow "$output_dir")\" will be the default name."
+            fi
         #2nd check: hold files.
         elif [[ -d $output_dir ]] || mkdir -p $output_dir ;then
-            :
+            return 1
         else
             # either 1 or 2 failed.
             if [[ $output_dir == $default_output_dir ]] ;then
                 # dir creation failure for default name.
-                _red "Warn: the output dir creation failed !" 
+                _warn "the output dir creation failed !" 
             else
                 # creation failure for specified name.
-                _yellow "INFO: now use \"$output_dir\" as the new output directory, is this ok?"
+                _info "now use \"$output_dir\" as the new output directory, is this ok?"
             fi
             _timeout "15"
         fi
@@ -2554,7 +2235,7 @@ function _execute_job_batch(){
                 #exec on all groups
                 _round_stat "EXECUTING"
                 #print debug 
-                _verbose "roundinfo" && _waiting "reading" 5
+                _verbose "roundinfo" && _waiting 5 "reading" 
                 if [[ -z $1 ]] && [[ $group_mode == "parallel" ]];then 
                     for host_group_name in $host_group_list ;do
                         _tmp_quiet "on"
@@ -2699,9 +2380,10 @@ recover_job_batch_index=""
 command_mode="onece"
 rbd_mode="False"
 ssd_cpid="False"
-strict_concurrent_controle="False" 
+strict_concurrent_controle="True" 
 conflict_ok="False"
 no_ping="False"
+cmd_prefix=""
 
 }
 
@@ -2740,9 +2422,10 @@ info:
      stop_test: $stop_test
         strict: $strict_concurrent_controle 
        no_ping: $no_ping
+      sudo_all: $sudo_all
 ##################################"
     #no_sys_blk: $no_sys_blk
-_waiting "read info" 10
+_waiting 10 "read info"
     [[ -z $host_group_list ]] && _red group empty
                 [[ -z $CMD ]] && _red cmd empty
            [[ -z $send_fio ]] && _red send_fio empty
@@ -2778,7 +2461,11 @@ _parse_short_args(){
             ;;
         "-l" )
             _list_all_running_jobs
-            exit
+            exit 0
+            ;;
+        "-L" )
+            _show_group_info
+            exit 0
             ;;
         "-a" )
             _get_all_host_group
@@ -2817,7 +2504,7 @@ _parse_short_args(){
             command_mode="always"
             ;;
         * )
-            _red "Error: wrong format for option \"$1\", please check again!"
+            _error "wrong format for option \"$1\", please check \"$@\" again!"
             echo "Use \"$0 -h\" to get more help."
             exit 1
             ;;
@@ -2832,19 +2519,26 @@ function _sep_and_parse(){
         local alphabet=''
         local args_set=''
         case "$1" in
+            "--"* )
+                _error "unknown option \"$1\", please check again!"
+                echo "Use \"$0 -h\" to get more help."
+                exit 1
+                ;;
             "-"* )
                 # start with a '-'
                 # one letter
                 alphabet=${1#*-}
                 # one charctor
-                if [[ ${#alphabet} -eq 1 ]] ;then 
+                if [[ ${#alphabet} -eq 1 ]]
+                then 
                     args_set+=' '$1
                     shift 
                     continue
                 fi 
                 # long combinations of letters 
                 # echo all short args : ${#alphabet}
-                for i in $(seq 0 $((${#alphabet} -1)) );do 
+                for i in $(seq 0 $((${#alphabet} -1)) )
+                do 
                     #echo $i -${alphabet:$i:1}
                     args_set+=' -'${alphabet:$i:1}
                     #echo reparse ${alphabet:$i:1}
@@ -2852,7 +2546,7 @@ function _sep_and_parse(){
                 ;;
             * )
                 # not start with a '-'
-                echo "format error: $1 is not an argument!"
+                _error "format error: $1 is not an argument!"
                 exit 1
                 ;;
         esac
@@ -3004,10 +2698,10 @@ while [ $# -gt 0 ] ;do
             fi
             shift
             ;;
-        "-F" )
+        "-D" )
             if [ $# -lt 2 ]
             then
-                echo "$0: -F requires a file list.  multi names separated by comma."
+                echo "$0: -D requires a file list.  multi names separated by comma."
                 exit 1
             fi
             file_group_list+=" ${2//,/ }"
@@ -3022,10 +2716,10 @@ while [ $# -gt 0 ] ;do
             harvest_file_group_list+="${2}"
             shift
             ;;
-        "-D" )
+        "-T" )
             if [ $# -lt 2 ]
             then
-                echo "$0: -D requires an output directory to work."
+                echo "$0: -T requires an output directory to work."
                 exit 1
             fi
             #remove the last "/"
@@ -3056,14 +2750,22 @@ while [ $# -gt 0 ] ;do
             shift
             ;;
         "--strictly" )
-            strict_concurrent_controle="True"
-            #shift
+            if [ $# -lt 2 ] || [ $2 != "False" -a $2 != "True" ]
+            then
+                echo "$0: --strictly requires a arg of \"True\" or \"False\" ."
+                exit 1
+            fi
+            strict_concurrent_controle="${2}"
+            shift
             ;;
         "--conflict-ok" )
             conflict_ok="True"
             ;;
         "--no-ping" )
             no_ping="True"
+            ;;
+        "--sudo" )
+            cmd_prefix="sudo "
             ;;
         "--version" )
             echo "$0 $script_version"
@@ -3096,13 +2798,13 @@ done
 #running options check
     _show_info
     if [[ $conf_check == "True" ]] ;then 
-        _grp_conf_check
+        _grp_conf_check || exit 1
         _blk_conf_check
         _job_conf_check
     fi
 # check blk group, exit with any wrong name, '-d' skip missing group
         _host_group_check
-        [[ $strict_concurrent_controle == "True" ]] && _gen_concurrent_pipe
+        [[ $strict_concurrent_controle == "True" ]] && _init_concurrency_env $host_concurrency_max 
         #preparation before send fio jobs
         if [[ $send_fio == "True" ]] ;then
             _blk_group_check
@@ -3210,7 +2912,7 @@ done
         # run on group 
         for host_group_name in $host_group_list ;do
             # info 
-            [[ -n $CMD ]] && _yellow "command: \"$CMD\"\n"
+            [[ -n $CMD ]] && _yellow "command: \"${cmd_prefix}$CMD\"\n"
             [[ -n $file_group_list ]] && _yellow "  send files: \"$file_group_list\""
             [[ -n $harvest_file_group_list ]] && _yellow "  harvest files: \"$harvest_file_group_list\""
             # execute 
