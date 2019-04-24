@@ -184,33 +184,46 @@ function _timeout(){
 ##############################################################################################
 # config a user_specified_concurrency for parallel tasks 
 ##############################################################################################
+
 # enable alias for shell
 shopt -s expand_aliases
 
-function _unquote(){
-    local str=${*}
-    if [[ ${str::1} == "'" ]] || [[ ${str::1} == '"' ]];then
-        echo "${str:1:-1}"
-    else
-        echo "$str"
-    fi
-}
+#function _unquote(){
+#    local str=${*}
+#    if [[ ${str::1} == "'" ]] || [[ ${str::1} == '"' ]];then
+#        echo "${str:1:-1}"
+#    else
+#        echo "$str"
+#    fi
+#}
+#function _get_ssh_alias(){
+#
+#    if alias ssh &>/dev/null ;then
+#        old_ssh_alias=$(alias ssh |cut -d '=' -f2)
+#        old_ssh_alias=$(_unquote "$old_ssh_alias")
+#        _info "user scp alias detected: \"$old_ssh_alias\""
+#    else
+#        _info 'no ssh alias detected.'
+#    fi
+#
+#    if alias scp &>/dev/null ;then
+#        old_scp_alias=$(alias scp |cut -d '=' -f2)
+#        old_scp_alias=$(_unquote "$old_scp_alias")
+#        _info "user scp alias detected: \"$old_ssh_alias\""
+#    else
+#        _info 'no scp alias detected.'
+#    fi
+#}
+#
+## check old ssh alias 
+#if grep alias ~/.bashrc ~/.bash_profile |grep -E "ssh|scp" -q ;then
+##[[ -f ~/.bashrc ]] && source ~/.bashrc
+##[[ -f ~/.bash_profile ]] && source ~/.bash_profile 
+#    alias ssh 
+#    _get_ssh_alias
+#fi 
 
-if alias ssh &>/dev/null ;then
-    old_ssh_alias=$(alias ssh |cut -d '=' -f2)
-    old_ssh_alias=$(_unquote "$old_ssh_alias")
-else
-    old_ssh_alias="ssh"
-fi
-
-if alias scp &>/dev/null ;then
-    old_scp_alias=$(alias scp |cut -d '=' -f2)
-    old_scp_alias=$(_unquote "$old_scp_alias")
-else
-    old_scp_alias="scp"
-fi
-
-alias _ssh_fg="$old_ssh_alias -t -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
+alias _ssh_fg="${old_ssh_alias:-ssh} -t -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
 #function _ssh_fg(){
 #    # a ssh command for script, but able to interacte with terminal.
 #    # use eval to control the expansion of parametters passed in if this is included by another function !!!
@@ -222,7 +235,7 @@ alias _ssh_fg="$old_ssh_alias -t -q -o StrictHostKeyChecking=no -o PubkeyAuthent
 #        local ssh_stat=$?
 #        return $ssh_stat 
 #}
-alias _ssh_cmd="$old_ssh_alias -t -t -n -q -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o BatchMode=yes"
+alias _ssh_cmd="${old_ssh_alias:-ssh} -t -t -n -q -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o BatchMode=yes"
 #function _ssh_cmd(){
 ## a passwordless ssh command for most script situations (no interactions at all)
 ## here the timeout option is intended to be set by your onw :
@@ -240,7 +253,7 @@ alias _ssh_cmd="$old_ssh_alias -t -t -n -q -o StrictHostKeyChecking=no -o Passwo
 #        return $cmd_stat 
 #    fi
 #}
-alias _scp="$old_scp_alias -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
+alias _scp="${old_ssh_alias:-ssh} -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
 #function _scp(){
 ## same as ssh above
 #    scp -q \

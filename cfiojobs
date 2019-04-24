@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.80
+script_version=0.12.81
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -31,10 +31,14 @@ j_conf="$0"".job"
 # import function from lib 
 #[[ -f /etc/init.d/functions ]] && . /etc/init.d/functions 
 #. $(dirname)/lib/centos_sys/functions 
-. $(dirname $0)/lib/centos_enhanced/functions 
-. $(dirname $0)/lib/modules/functions 
-. $(dirname $0)/lib/global_profile 
+
+# init ssh and basic functions 
 . $(dirname $0)/lib/usr_profile 
+. $(dirname $0)/lib/global_profile 
+
+# basic functions 
+. $(dirname $0)/lib/modules/functions 
+. $(dirname $0)/lib/centos_enhanced/functions 
 
 function _clean_up(){
     # clean up tmp files
@@ -1065,7 +1069,7 @@ function _ssh_send(){
             #eval _ssh_cmd -o ConnectTimeout=$ssh_timeout \
             #        -l $host_user $host_ip \
             #        -p $host_port "${cmd_prefix}$@"
-            ssh -n -q \
+            ssh -n -q $old_ssh_alias \
                 -o StrictHostKeyChecking=no \
                 -o ConnectTimeout=$ssh_timeout \
                 -o PubkeyAuthentication=yes \
