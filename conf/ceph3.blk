@@ -1,2 +1,0 @@
-/dev/sdb,  # same size as disk of root partition
-/dev/sdc  # same size as disk of root partition

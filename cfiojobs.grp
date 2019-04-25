@@ -1,9 +1,9 @@
 # use a coma',' as ip list delimiter,
 # '--' means: use an extra file to store ip list in conf/<grp_name>.grp
 #grp            user    port      bknd_grps   sh_mode     conf_file/ip_addr_list/hostname_list
-ceph3           root    22        --          --          ceph1,ceph2,ceph3
 
-ceph4           root    22        bknd        --          ceph1
-bknd            root    22        --          local       ceph2
+#grp0            root    22        --          --          host1,host2,host3
+#grp1            root    22        bknd        --          host1
+#bknd1           root    22        --          local       host4
 
-grp0            root    22        --          --          --
+grp2            root    22        --          --          --
