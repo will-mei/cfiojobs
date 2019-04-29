@@ -253,7 +253,7 @@ alias _ssh_cmd="${old_ssh_alias:-ssh} -t -t -n -q -o StrictHostKeyChecking=no -o
 #        return $cmd_stat 
 #    fi
 #}
-alias _scp="${old_ssh_alias:-ssh} -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
+alias _scp="${old_scp_alias:-scp} -q -o StrictHostKeyChecking=no -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o BatchMode=yes"
 #function _scp(){
 ## same as ssh above
 #    scp -q \
