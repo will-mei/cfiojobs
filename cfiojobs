@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.84
+script_version=0.12.85
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -2180,6 +2180,16 @@ function _list_all_running_jobs(){
         echo "no groups to list"
     fi
 }
+function _list_all_hwinfo(){
+    local check_opt=$1
+    if [[ -n $host_group_list ]] ;then
+        for i in $host_group_list ;do
+            _yellow "prepare hwinfo tools ..."
+            bash $0 -g $i -D $(dirname $0)/tools/hwinfo.run -T /tmp/ &>/dev/null
+            bash $0 -g $i "chmod +x /tmp/hwinfo.run; /tmp/hwinfo.run $check_opt ; rm -f /tmp/hwinfo.run " -fp  |sed 1d 
+        done
+    fi
+}
 function _get_default_output_dir(){
     if [[ $send_fio == "True"  ]] ;then
         local dir_name="${0#*/}-test-$date"
@@ -2766,6 +2776,22 @@ while [ $# -gt 0 ] ;do
             ;;
         "--sudo" )
             cmd_prefix="sudo "
+            ;;
+        "--hwinfo" )
+            if [[ $# -lt 2 ]]
+            then
+                echo "$0: --hwinfo requires a arg word, it should be one of : cpu, mem, nic, hdd, nvme, raid, all. "
+                exit 1
+            fi
+            i=" cpu mem nic hdd nvme raid all "
+            j=${2// /}
+            [[ ${i//\ $j\ /} == "$i" ]] && _red "unknown option: $2" && exit 1
+            if [[ $j == "all" ]];then
+                _list_all_hwinfo
+            else
+                _list_all_hwinfo $2
+            fi
+            exit 0
             ;;
         "--version" )
             echo "$0 $script_version"
