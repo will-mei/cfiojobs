@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.85
+script_version=0.12.86
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -142,6 +142,7 @@ trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; 
 #    echo "" >$0".dirlist"
 # temperary history file.
     echo "$(date "+%Y-%m-%d_%H:%M:%S"): $$ $0 $@" >>$0".hst"
+    conflict_args="$*"
 ##############################################################################################
 function _unquiet(){
 # give inof when not quiet mode.
@@ -2180,6 +2181,16 @@ function _list_all_running_jobs(){
         echo "no groups to list"
     fi
 }
+function _test_conflict_check(){
+    local pid 
+    local conflict_test_list=$(grep "${conflict_args//-/\\-}" $0".hst" |grep -v $$ |awk '{print$2}')
+    for pid in $conflict_test_list ;do
+        while ps -u $USER -aeo pid,args | grep $pid |grep -q "${conflict_args//-/\\-}"  ;do 
+            _error "the test you are try to launch \"$conflict_args\" is conflicted with an existing test in history."
+            sleep 60
+        done 
+    done
+}
 function _list_all_hwinfo(){
     local check_opt=$1
     if [[ -n $host_group_list ]] ;then
@@ -2896,6 +2907,7 @@ done
 # send files, jobs and cmd
     elif [[ $send_fio == "True" ]] ;then
 
+        _test_conflict_check 
         #check output directory, set default to a datatime stamp.
         _check_output_dir 
         #check test env for all host groups, fio installation, network reachability, ssh access.
