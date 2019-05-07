@@ -2186,7 +2186,7 @@ function _test_conflict_check(){
     local conflict_test_list=$(grep "${conflict_args//-/\\-}" $0".hst" |grep -v $$ |awk '{print$2}')
     for pid in $conflict_test_list ;do
         while ps -u $USER -aeo pid,args | grep $pid |grep -q "${conflict_args//-/\\-}"  ;do 
-            _error "the test you are try to launch \"$conflict_args\" is conflicted with an existing test in history."
+            _warn "TEST ON HOLD, the test you are try to launch is conflicted with an existing test with pid: $pid, args: \"$0 $conflict_args\" on local host."
             sleep 60
         done 
     done
