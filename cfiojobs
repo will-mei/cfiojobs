@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.87
+script_version=0.12.88
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -1361,7 +1361,7 @@ function _host_fio_check(){
         _pingfail 
         #_error_interrupt
     fi
-    local awargs
+    local kwargs
     [[ rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
     while _ssh_send "ps aux |grep fio |grep $kwargs |grep -qv grep " ;do
         _verbose  hostinfo && _waiting 5 "reading"
@@ -1843,23 +1843,30 @@ function _host_fio_check2(){
             if _ping_check ;then
             # no fio between 15 secends check, three times of send interval
                 if _ssh_check ;then
-                    local BLK awargs
-                    for BLK in $host_blk_list ;do
-                        BLK="${BLK//-/\-}"
+                    local kwblks kwargs
+                    if [[ $rbd_mode == "True" ]] ;then 
+                        local host_blk_list=${HOST_GROUP_RBD_DEV_ARRAY[$host_ip]}
+                        kwblks={host_blk_list// /|}
+                    else 
+                        local host_blk_list=${BLK_DEV_ARRAY[$blk_group_name]}
+                        kwblks={host_blk_list// /|}
+                    fi
+                    #for BLK in $host_blk_list ;do
+                        kwblks="${BLK//-/\-}"
                         [[ rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
-                        if _ssh_send "ps aux |grep fio |grep $kwargs |grep \"$BLK\" |grep -qv grep " ;then
+                        if _ssh_send "ps aux |grep fio |grep $kwargs |grep -E \"$kwblks\" |grep -qv grep " ;then
                             # wait blk / rbd till end
-                            while _ssh_send "ps aux |grep fio |grep $kwargs |grep \"$BLK\" |grep -qv grep " ;do
+                            while _ssh_send "ps aux |grep fio |grep $kwargs |grep -E \"$kwblks\" |grep -qv grep " ;do
                                 sleep 30
                             done
                         else
                             # check after 3 times subprocess check interval
                             sleep 15
-                            while _ssh_send "ps aux |grep fio |grep $kwargs |grep \"$BLK\" |grep -qv grep " ;do
+                            while _ssh_send "ps aux |grep fio |grep $kwargs |grep -E \"$kwblks\" |grep -qv grep " ;do
                                 sleep 30
                             done
                         fi
-                    done
+                    #done
                 else
                     _sshfail &>/dev/null
                 fi
