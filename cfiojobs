@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.86
+script_version=0.12.87
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -588,7 +588,7 @@ function _show_group_info(){
             local tmpfile_group_info=$(mktemp)
             echo "NAME,USER,PORT,BKND,MODE,IP" >$tmpfile_group_info 
             _format_conf $g_conf |sed -e 's/,/\+/g' -e 's/\ /,/g' >>$tmpfile_group_info
-            bash $(dirname $0)/tools/catcsv.sh $tmpfile_group_info
+            bash $(dirname $0)/tools/catcsv.sh $tmpfile_group_info | sed 1d
             rm -f $tmpfile_group_info
 }
 function _job_group_check(){
@@ -1361,11 +1361,9 @@ function _host_fio_check(){
         _pingfail 
         #_error_interrupt
     fi
-    while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
-        _verbose  hostinfo && _waiting 5 "reading"
-        sleep 5
-    done
-    while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
+    local awargs
+    [[ rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
+    while _ssh_send "ps aux |grep fio |grep $kwargs |grep -qv grep " ;do
         _verbose  hostinfo && _waiting 5 "reading"
         sleep 5
     done
@@ -1845,25 +1843,23 @@ function _host_fio_check2(){
             if _ping_check ;then
             # no fio between 15 secends check, three times of send interval
                 if _ssh_check ;then
-                    if _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;then
-                        while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
-                            sleep 30
-                        done
-                    # rbd test check
-                    elif _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;then
-                        while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
-                            sleep 30
-                        done
-                    else
-                        sleep 15
-                        while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
-                            sleep 30
-                        done
-                        # wait rbd
-                        while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
-                            sleep 30
-                        done
-                    fi
+                    local BLK awargs
+                    for BLK in $host_blk_list ;do
+                        BLK="${BLK//-/\-}"
+                        [[ rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
+                        if _ssh_send "ps aux |grep fio |grep $kwargs |grep \"$BLK\" |grep -qv grep " ;then
+                            # wait blk / rbd till end
+                            while _ssh_send "ps aux |grep fio |grep $kwargs |grep \"$BLK\" |grep -qv grep " ;do
+                                sleep 30
+                            done
+                        else
+                            # check after 3 times subprocess check interval
+                            sleep 15
+                            while _ssh_send "ps aux |grep fio |grep $kwargs |grep \"$BLK\" |grep -qv grep " ;do
+                                sleep 30
+                            done
+                        fi
+                    done
                 else
                     _sshfail &>/dev/null
                 fi
