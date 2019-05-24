@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.90
+script_version=0.12.91
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -427,6 +427,10 @@ function _cmdfail(){
     # if ping ok or --no-ping 
     #give command return value check failed info 
     _record_fail
+}
+function _permitfail(){
+    # no permit on file or dir 
+    _record_fail 
 }
 
 ##############################################################################################
@@ -1400,6 +1404,14 @@ function _send_fio(){
         if _ssh_send "fio -v" &>/dev/null ;then
             # log on remote host
             _ssh_send "mkdir -p $log_dir"
+            # check log dir permit
+            if ! _ssh_send "touch $log_dir/fio-err.log" ;then
+                # 
+                _red "   $host_ip, log dir : $log_dir permition check failed"
+                _permitfail
+                # no log dir, no log , no need to continue 
+                return  
+            fi
             if [[ $rbd_mode == "True" ]] ;then 
                 local host_blk_list=${HOST_GROUP_RBD_DEV_ARRAY[$host_ip]}
             else 
@@ -1417,10 +1429,10 @@ function _send_fio(){
                 # check blk file
                 if _ssh_send "ls $BLK" &>/dev/null ;then
                     log_name=$job_name-${BLK//\//}".log.json"
-                    # check sata disk with smartctl, nvme disks are not supported
+                    # add a tag for fio log marking host and job info 
                     local blk_name=${BLK##*/}
                     if [[ $rbd_mode == "True" ]] ;then
-                        local tag=$num_jobs-${host_ip//-/_}-rbd  
+                        local tag=$num_jobs-${host_ip//-/_}-rbd 
                         # skip rbd check   
                         #:
                     elif [[ ${blk_name//nvme/} != "${blk_name}" ]] ;then
@@ -1429,7 +1441,8 @@ function _send_fio(){
                         #:
                     else
                         local tag=$num_jobs-${host_ip//-/_}-hdd  
-                        if [[ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ]] ;then
+                        # check sata disk with smartctl, nvme disks are not supported
+                        if [ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ] ;then
                             # if smartmontools installed, check status.
                             blk_stats=$(_ssh_send "smartctl -H $BLK |grep 'SMART Health Status:' |awk '{print\$NF}' ")
                             [[ $blk_stats != "OK" ]] && _verbose &&"info: $host_ip \"$BLK\" smartmontools check failed."
@@ -1444,6 +1457,8 @@ function _send_fio(){
                     #_red "host: $host_ip, blk or file : \"$BLK\" is not available on host!"
                     _devfail 
                     _verbose "jobinfo"
+                    # no need to continue if there is no such disk 
+                    continue 
                 fi
                 # ready to send
                 # update data size to a random value 
