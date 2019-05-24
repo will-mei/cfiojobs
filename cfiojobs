@@ -1852,7 +1852,7 @@ function _host_fio_check2(){
                         kwblks=${host_blk_list// /|}
                     fi
                     #for BLK in $host_blk_list ;do
-                        kwblks="${BLK//-/\-}"
+                        kwblks="${kwblks//-/\-}"
                         [[ rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
                         if _ssh_send "ps aux |grep fio |grep $kwargs |grep -E \"$kwblks\" |grep -qv grep " ;then
                             # wait blk / rbd till end
