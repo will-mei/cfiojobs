@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.89
+script_version=0.12.90
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -1846,10 +1846,10 @@ function _host_fio_check2(){
                     local kwblks kwargs
                     if [[ $rbd_mode == "True" ]] ;then 
                         local host_blk_list=${HOST_GROUP_RBD_DEV_ARRAY[$host_ip]}
-                        kwblks={host_blk_list// /|}
+                        kwblks=${host_blk_list// /|}
                     else 
                         local host_blk_list=${BLK_DEV_ARRAY[$blk_group_name]}
-                        kwblks={host_blk_list// /|}
+                        kwblks=${host_blk_list// /|}
                     fi
                     #for BLK in $host_blk_list ;do
                         kwblks="${BLK//-/\-}"
