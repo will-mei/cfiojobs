@@ -2377,7 +2377,7 @@ function _fio_scale_control(){
 function _parameter_set(){
 
 pdebug="False"
-log_debug="False"
+log_debug="True"
 conf_check="False"
 quiet_mode="False"
 list_fio="False"
