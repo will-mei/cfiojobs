@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.91
+script_version=0.12.93
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -1366,7 +1366,7 @@ function _host_fio_check(){
         #_error_interrupt
     fi
     local kwargs
-    [[ rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
+    [[ $rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
     while _ssh_send "ps aux |grep fio |grep $kwargs |grep -qv grep " ;do
         _verbose  hostinfo && _waiting 5 "reading"
         sleep 5
@@ -1868,7 +1868,7 @@ function _host_fio_check2(){
                     fi
                     #for BLK in $host_blk_list ;do
                         kwblks="${kwblks//-/\-}"
-                        [[ rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
+                        [[ $rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
                         if _ssh_send "ps aux |grep fio |grep $kwargs |grep -E \"$kwblks\" |grep -qv grep " ;then
                             # wait blk / rbd till end
                             while _ssh_send "ps aux |grep fio |grep $kwargs |grep -E \"$kwblks\" |grep -qv grep " ;do
@@ -2327,6 +2327,7 @@ function _execute_job_batch(){
 function _fio_group_report(){
         #build final report of test
         _yellow "\n$(date "+%Y-%m-%d_%H:%M:%S") FIO TEST \"$output_dir\", LOG ANALYSING ..."
+        [[ $rbd_mode == "True" ]] && local extra_arg="rbd"
         #final_report
         for blk_group_name in $blk_group_list ;do
             # multy blk_group 
@@ -2335,11 +2336,11 @@ function _fio_group_report(){
             # loop through multy jobgroup 
             if [[ $multy_job_group == "True" ]] ;then 
                 for job_group_dir in $(ls $path_flyover/* -d) ;do 
-                    python2 $(dirname $0)/bin/cfiojobs.log2.py $job_group_dir
+                    python2 $(dirname $0)/bin/cfiojobs.log2.py $job_group_dir $extra_arg
                     [[ $? -ne 0 ]] && _red "dir: \"$job_group_dir\" status abnormal!" 
                 done
             else
-                python2 $(dirname $0)/bin/cfiojobs.log2.py $path_flyover 
+                python2 $(dirname $0)/bin/cfiojobs.log2.py $path_flyover $extra_arg
                 [[ $? -ne 0 ]] && _red "dir: \"$path_flyover\" status abnormal!" 
             fi
         done
