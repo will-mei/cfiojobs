@@ -1,13 +1,18 @@
 #!/bin/bash
 
-. $(dirname $0)/lib/global_profile
-
 # default test settings
+. $(dirname $0)/lib/global_profile
 
 #job_group=normal
 #job_group=quicknormal
-
 #nvme_precondition="False"
+
+if $(dirname $0)/cfiojobs -afc ;then
+    ./centos_enhanced/functions
+    for hostgroup_name in $(_format_conf $g_conf |awk '{print$1}' |sed ':label;N;s/\n/\ /;b label');do
+        grep ^"$hostgroup_name"$ $(dirname $0)/grouplist || echo "$hostgroup_name" >> $(dirname $0)/grouplist
+    done
+fi
 
 timestamp=$(date +%Y%m%d)
 output_excel_name="test_fio_"$timestamp'.xlsx'

@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.93
+script_version=0.12.94
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -455,19 +455,28 @@ function _grp_conf_check(){
                 if [[ -z ${group_info[$index]} ]] ;then
                     local missing_info+=" ${index_name_array[$index]},"
                 elif [[ $index -eq 2 ]] ;then 
+                    # check ssh port
                     if _check_port ${group_info[$index]} ;then
                         :
                     else 
                         echo "group :$f1, illegal ssh port ${group_info[$index]} "
                         local check_stat=1 
                     fi
-                elif [[ $index -eq 5 ]] && [[ ${group_info[$index]} == "--" ]] ;then
-                    local grp_file=$(dirname $0)/conf/$f1'.grp'
+                elif [[ $index -eq 5 ]] ;then
+                    # check hostname/ip lisf file 
+                    if [[ ${group_info[$index]} == "--" ]] ;then
+                        local grp_file=$(dirname $0)/conf/$f1'.grp'
+                    elif [[ ${group_info[$index]} == "-"* ]] ;then
+                        local grp_file=${group_info[$index]:1}
+                    fi
                     if [[ -f $grp_file ]] ;then
                         for i in  $(_format_conf $grp_file);do
-                            if ! _check_ip $i ;then
-                                echo "group :$f1, illegal ip format $i"
-                                local check_stat=1 
+                            # ip ip check ip format
+                            if [[ ${i//[0-9]/} == "..." ]] ;then
+                                if ! _check_ip $i ;then
+                                    echo "group :$f1, illegal ip format $i"
+                                    local check_stat=1 
+                                fi
                             fi
                         done
                     fi
@@ -525,9 +534,14 @@ function _group_check(){
                              HOST_GROUP_PORT_ARRAY[$host_group_name]=${group_info[2]}
                              HOST_GROUP_BKND_ARRAY[$host_group_name]=${group_info[3]//,/ }
                           HOST_GROUP_SH_MODE_ARRAY[$host_group_name]=${group_info[4]}
-                    # find ip list in config dir "conf/xxx.grp"
-                    if [[ ${group_info[5]} == '--' ]] ;then
-                        local host_conf=$(dirname $0)/conf/$host_group_name".grp"
+                    # ip/hostname list file 
+                    if [[ ${group_info[$index]} == "-"* ]] ;then
+                        if [[ ${group_info[5]} == '--' ]] ;then
+                            # find ip list in config dir "conf/xxx.grp"
+                            local host_conf=$(dirname $0)/conf/$host_group_name".grp"
+                        else
+                            local grp_file=${group_info[$index]:1}
+                        fi
                         if [[ -f $host_conf ]] ;then
                             # reformat hostname.
                             HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ) | sed 's/-/_/g' )
@@ -2037,6 +2051,7 @@ function _group_pre_check(){
         # if fio failed, no need to continue
         #[[ $check_stat -eq 1 ]] && echo "$1 pre check partially failed." && _timeout 15 && _error_interrupt
     _unquiet "host group $1: pre check action done."
+    return 0
 }
 function _host_blk_detect(){
     #
