@@ -7,20 +7,24 @@ basic test process :
 1. add ssh connection info to 'cfiojobs.grp'
 
     format:
+
             #host group name user    port      --          --          path of hostname list or ip list file for this hostgroup
             host_group_name  root    22        --          --          -/root/hostname_list_file
 
 2. run the test
 
     use command:
+
             'group.sh'
 
     if all goes well, just run the command printed by this script and the test will be started automatically.
 
     the command looks like this:
+
             'nohup group.sh  -all &>grouplist.log &'
 
     you can view host status of host group by run:
+
             './cfiojobs -l'
 
 
