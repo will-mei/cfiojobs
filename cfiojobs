@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.94
+script_version=0.12.95
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -535,12 +535,12 @@ function _group_check(){
                              HOST_GROUP_BKND_ARRAY[$host_group_name]=${group_info[3]//,/ }
                           HOST_GROUP_SH_MODE_ARRAY[$host_group_name]=${group_info[4]}
                     # ip/hostname list file 
-                    if [[ ${group_info[$index]} == "-"* ]] ;then
+                    if [[ ${group_info[5]} == "-"* ]] ;then
                         if [[ ${group_info[5]} == '--' ]] ;then
                             # find ip list in config dir "conf/xxx.grp"
                             local host_conf=$(dirname $0)/conf/$host_group_name".grp"
                         else
-                            local grp_file=${group_info[$index]:1}
+                            local grp_file=${group_info[5]:1}
                         fi
                         if [[ -f $host_conf ]] ;then
                             # reformat hostname.
