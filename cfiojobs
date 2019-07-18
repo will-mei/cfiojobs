@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.95
+script_version=0.12.96
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -388,7 +388,7 @@ function _record_cmd(){
         local failure_time=$(date "+%Y-%m-%d %H:%M:%S")
         local cmd_stat=$1
         shift
-        echo "$failure_time,$host_group_name,$host_ip,cmd_stat:$cmd_stat,${*}" >$output_dir/all_ssh_cmd.log
+        echo "$failure_time,$host_group_name,$host_ip,cmd_stat:$cmd_stat,${*}" >>$output_dir/all_ssh_cmd.log
     fi
 }
 # store log info to output_dir 
@@ -1468,11 +1468,24 @@ function _send_fio(){
                     #
                     _verbose && echo "log name: $log_name"
                 else
-                    #_red "host: $host_ip, blk or file : \"$BLK\" is not available on host!"
-                    _devfail 
-                    _verbose "jobinfo"
-                    # no need to continue if there is no such disk 
-                    continue 
+                    # recheck ping /ssh 
+                    if _ping_check ;then
+                        if _ssh_check ;then
+                            #_red "host: $host_ip, blk or file : \"$BLK\" is not available on host!"
+                            _devfail 
+                            _verbose "jobinfo"
+                            # no need to continue if there is no such disk 
+                            continue 
+                        else
+                            # host unreachable, no need to check other blks 
+                            _sshfail
+                            break
+                        fi
+                    else
+                        # host unreachable, no need to check other blks 
+                        _pingfail
+                        break
+                    fi
                 fi
                 # ready to send
                 # update data size to a random value 
