@@ -1,16 +1,18 @@
 #!/bin/bash
 
 # default test settings
-. $(dirname $0)/lib/global_profile
+local_path="$(dirname $0)"
+. $local_path/lib/global_profile
 
 #job_group=normal
 #job_group=quicknormal
 #nvme_precondition="False"
 
-if $(dirname $0)/cfiojobs -afc ;then
-    ./centos_enhanced/functions
-    for hostgroup_name in $(_format_conf $g_conf |awk '{print$1}' |sed ':label;N;s/\n/\ /;b label');do
-        grep ^"$hostgroup_name"$ $(dirname $0)/grouplist || echo "$hostgroup_name" >> $(dirname $0)/grouplist
+if $local_path/cfiojobs -afc ;then
+    _info "host groups check done"
+    . $local_path/centos_enhanced/functions
+    for hostgroup_name in $(_format_conf $local_path/cfiojobs.grp |awk '{print$1}' |sed ':label;N;s/\n/\ /;b label');do
+        grep ^"$hostgroup_name"$ $local_path/grouplist || echo "$hostgroup_name" >> $local_path/grouplist
     done
 fi
 
@@ -26,7 +28,7 @@ if [[ -z $1 ]] || [[ -z $group_list ]];then
     [[ -z $group_list ]] && echo -e "\e[31mno valid host group name fond in grouplist!\e[0m\n"
     [[ $job_group_stat -ne 0 ]] && echo -e "\e[31mno job group name \"$job_group\" fond in grouplist!\e[0m\n"
     echo -e "function:\vautomatically run test with 'group names' in grouplist, and '<group name>.blk' in 'conf/' dir.\n"
-    echo -e "\tdefault   batch config file : $(dirname $0)/lib/global_profile"
+    echo -e "\tdefault   batch config file : $local_path/lib/global_profile"
     echo -e "\tdefault      job group name : $job_group "
     echo -e "\tdefault   nvme precondition : $nvme_precondition"
     echo -e "\tdefault   excel report name : $output_excel_name"
@@ -44,11 +46,11 @@ function wait_test(){
 }
 
 function _nvme_precondition(){
-        if grep -q nvme $(dirname $0)/conf/${i}.blk ;then 
+        if grep -q nvme $local_path/conf/${i}.blk ;then 
             # precondition nvme disks 
-            nohup $(dirname $0)/cfiojobs -g $i -fp "yum -y install nvme-cli " 
-            nohup $(dirname $0)/cfiojobs -g $i -fp "for i in \$(lsblk -p |grep ^/ |grep nvme |awk '{print\$1}');do nvme format \$i ;done" 
-            nohup $(dirname $0)/cfiojobs -g $i -b nvme -j fill1,fill2 -f --fio -o ${i}_data_fill &>${i}_data_fill.log &
+            nohup $local_path/cfiojobs -g $i -fp "yum -y install nvme-cli " 
+            nohup $local_path/cfiojobs -g $i -fp "for i in \$(lsblk -p |grep ^/ |grep nvme |awk '{print\$1}');do nvme format \$i ;done" 
+            nohup $local_path/cfiojobs -g $i -b nvme -j fill1,fill2 -f --fio -o ${i}_data_fill &>${i}_data_fill.log &
             wait_test
         fi
 }
@@ -57,7 +59,7 @@ function group_test(){
     [[ $mode == "single" ]] && mode_arg="-s"
     for i in $group_list;do
         [[ $nvme_precondition == "True" ]]  && _nvme_precondition 
-        nohup $(dirname $0)/cfiojobs -g $i -b $i -j $job_group -f $mode_arg --fio -o $i"_"$mode"_"$timestamp &> $i"_"$mode"_"$timestamp.log &
+        nohup $local_path/cfiojobs -g $i -b $i -j $job_group -f $mode_arg --fio -o $i"_"$mode"_"$timestamp &> $i"_"$mode"_"$timestamp.log &
     done
 }
 
@@ -75,7 +77,7 @@ elif [[ $1 == "-all" ]] ;then
     sleep 60
     for i in $group_list;do
         #[[ $(grep -vE "^$|^#" conf/$i'.blk' |sort -u |wc -l) -eq 1 ]] && continue
-        $(dirname $0)/bin/cfiojobs.contrast2.sh $i"_parallel_"$timestamp $i"_single_"$timestamp $output_excel_name 
+        $local_path/bin/cfiojobs.contrast2.sh $i"_parallel_"$timestamp $i"_single_"$timestamp $output_excel_name 
     done 
     tar czf test_"$timestamp"_report.tar.gz $(find ./ -type f -name *_all_host.csv) $(find ./ -type f -name *_all_host-contrast.csv) $output_excel_name
     tar czf test_"$timestamp".tar.gz *"$timestamp" *"$timestamp".log 
