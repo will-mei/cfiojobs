@@ -9,8 +9,8 @@ local_path="$(dirname $0)"
 #nvme_precondition="False"
 
 if $local_path/cfiojobs -afc ;then
+    . $local_path/lib/centos_enhanced/functions
     _info "host groups check done"
-    . $local_path/centos_enhanced/functions
     for hostgroup_name in $(_format_conf $local_path/cfiojobs.grp |awk '{print$1}' |sed ':label;N;s/\n/\ /;b label');do
         grep ^"$hostgroup_name"$ $local_path/grouplist || echo "$hostgroup_name" >> $local_path/grouplist
     done
