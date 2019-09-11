@@ -1,0 +1,12 @@
+检测项:
+cpu mem nic hdd nvme raid
+
+1.不加参数运行则检测全部
+2. hwinfo.run <检测项> 将会针对具体项目检测
+
+示例:
+# 查看CPU信息
+./hwinfo.run cpu
+
+# 查看内存信息
+./hwinfo.run mem

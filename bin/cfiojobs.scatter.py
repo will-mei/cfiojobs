@@ -15,6 +15,7 @@ from openpyxl.chart import (
         Reference,
         Series,
 )
+#from openpyxl.chart.axis import SeriesAxis
 from openpyxl.chart._3d import View3D
 # font 
 #from openpyxl.styles import Font 
@@ -50,26 +51,29 @@ def load_conf(conf_file):
 
 try:
     conf_dict = load_conf(conf_file)
-    key_column_num  = int(conf_dict['global options']['key_column_num'])
-    data_columns    = map(lambda x : int(x), conf_dict['global options']['data_columns'])
-    surf_col_range  = map(lambda x : int(x), conf_dict['global options']['surface_columns_range'])
-    surface_columns = map(lambda x : x , range(surf_col_range[0],surf_col_range[-1]))
+    #print(conf_dict)
+    key_column_num  = conf_dict['global options']['key_column_num']
+    data_columns    = conf_dict['global options']['data_columns']
+    surf_col_range  = conf_dict['global options']['surface_columns_range']
 except:
     print('config file format error!')
-    print(key_column_num,data_columns,surface_columns)
+    print(key_column_num,data_columns,surf_col_range)
     sys.exit(1)
 
 key_column_index = key_column_num -1
 key_column       = cu.num2letter(key_column_num)
+
 try:
     outputfile       = './' + cu.get_file_name(sys.argv[1])[1][0:30] + '-ScatterChart' + '.xlsx'
 except:
     print'Usage:', sys.argv[0],'[rbd report csv file1 file2 file3 ...]'
     sys.exit(1)
 
+# create a Workbook for new report
 wb  = Workbook()
 ws  = wb.active 
 ws.title = 'ScatterChart'
+wb.create_sheet(title='SurfaceChart', index=0)
 
 
 def get_uniq_column_info(col_name,work_sheet):
@@ -146,6 +150,47 @@ def draw_pattern_scatterchart(data_work_sheet, data_rows_seq, data_columns_list,
 #    print(wb.chartsheets)
     wb['ScatterChart'].add_chart(chart, chart_position)
 
+# plot SurfaceChart for a work sheet 
+def draw_pattern_surfacechart(data_work_sheet, data_rows_seq, data_columns_list, chart_position, chart_title, surf_col_range):
+    # chart format 
+    chart = SurfaceChart3D()
+    #chart = SurfaceChart()
+    chart.height = 11.5 
+    chart.wireframe = True
+    chart.legend.position = 'r'
+    chart.title = pattern_name
+    #chart.x_axis.title = 'percentile:' + data_work_sheet.title[0:25] + '...'
+    chart.x_axis.title = data_work_sheet.title + '..'
+    chart.y_axis.title = 'latency(ms)'
+
+    # change view3D property 
+    v3d = View3D(rotX=0.0, rotY=330L, depthPercent=120L, rAngAx=False, perspective=15L)
+    #v3d.depthPercent = 20L
+    chart.view3D = v3d 
+
+    # turn majorGridlines off using shapes.GraphicalProperties and drawing.LineProperties
+    #chart.y_axis.majorGridlines.spPr = GraphicalProperties(noFill = 'True')
+    #chart.y_axis.majorGridlines.spPr.ln = LineProperties(solidFill = '000000')
+    #chart.x_axis.majorGridlines = ChartLines()
+    #chart.x_axis.majorGridlines.spPr = GraphicalProperties(noFill = 'True')
+    #chart.x_axis.majorGridlines.spPr.ln = LineProperties(solidFill = '000000')
+    #chart.dLbls = DataLabelList()
+    #chart.dLbls.showVal = 0
+
+    # add data to chart 
+    pattern_name_row_range = pattern_rows_range_dict[pattern_name]
+    #print(pattern_name, pattern_name_row_range[0], pattern_name_row_range[-1])
+
+    # chart inner labels
+    labels   = Reference(data_work_sheet, min_col=surf_col_range[0], max_col=surf_col_range[-1], min_row=1, max_row=1)
+    # data area
+    data_ref = Reference(data_work_sheet, min_col=surf_col_range[0], max_col=surf_col_range[-1], min_row=pattern_name_row_range[0], max_row=pattern_name_row_range[-1])
+    #chart.add_data(data_ref, from_rows=True, titles_from_data=True) #this will lead to a bug when there are too manay rows tobe add 
+    chart.add_data(data_ref, titles_from_data=True)
+    chart.set_categories(labels)
+
+    wb['SurfaceChart'].add_chart(chart, chart_position)
+
 # plot BubbleChart 
 def draw_pattern_bubblechart(data_work_sheet, data_rows_seq, data_columns_list, chart_position, chart_title):
     chart = BubbleChart()
@@ -218,79 +263,14 @@ def draw_lateral_pattern_scatterchart(data_work_book, data_columns_list):
                 chart.series.append(series)
             wb['Lateral Contrast LineChart'].add_chart(chart, chart_position)
 
-# plot SurfaceChart for a work sheet 
-def draw_pattern_surfacechart(data_work_book, data_columns_list ):
-    # build a new work sheet for contrast charts 
-    data_work_book.create_sheet(title='SurfaceChart', index=0)
-    # plot chart, one sheet one column 
-    column_num = 0
-    for data_work_sheet in data_work_book.worksheets :
-        if data_work_sheet.title in ['Lateral Contrast LineChart', 'ScatterChart','SurfaceChart']:
-            #print(work_sheet.title)
-            continue 
-        if data_work_sheet[cu.num2letter(surface_columns[-1]) + '1'].value == None:
-            continue 
-        column_position = cu.num2letter(column_num *8 +1)
-        column_num = column_num +1
-        pattern_num = 0 
-        # get pattern rows range 
-        pattern_rows_range_dict = get_uniq_column_info(key_column, data_work_sheet )
-        for pattern_name in cu.bp_sort(pattern_rows_range_dict.keys(), screening=True) :
-        #for pattern_name in cu.bp_sort(pattern_rows_range_dict.keys()) :
-            row_position = str(pattern_num *25 +1)
-            pattern_num = pattern_num +1
-            chart_position = column_position + row_position
-            # chart format 
-            chart = SurfaceChart3D()
-            #chart = SurfaceChart()
-            chart.height = 11.5 
-            chart.wireframe = True
-            chart.legend.position = 'r'
-            chart.title = str(pattern_name)
-            #chart.x_axis.title = 'percentile:' + data_work_sheet.title[0:25] + '...'
-            chart.x_axis.title = data_work_sheet.title + '..'
-            chart.y_axis.title = 'latency(ms)'
-            # change view3D property 
-            v3d = View3D(rotX=0.0, rotY=355L, depthPercent=150L, rAngAx=False, perspective=10L)
-            #v3d.depthPercent = 20L
-            chart.view3D = v3d 
-            # turn majorGridlines off using shapes.GraphicalProperties and drawing.LineProperties
-            #chart.y_axis.majorGridlines.spPr = GraphicalProperties(noFill = 'True')
-            #chart.y_axis.majorGridlines.spPr.ln = LineProperties(solidFill = '000000')
-            #chart.x_axis.majorGridlines = ChartLines()
-            #chart.x_axis.majorGridlines.spPr = GraphicalProperties(noFill = 'True')
-            #chart.x_axis.majorGridlines.spPr.ln = LineProperties(solidFill = '000000')
-            #chart.dLbls = DataLabelList()
-            #chart.dLbls.showVal = 0
-            # add data to chart 
-            pattern_name_row_range = pattern_rows_range_dict[pattern_name]
-            #range_str = data_work_sheet.title + '!'
-            #range_str += cu.num2letter(data_columns_list[0]) + str(pattern_name_row_range[0]) + ':'
-            #range_str += cu.num2letter(data_columns_list[-1]) + str(pattern_name_row_range[-1]) + ','
-            #range_str += cu.num2letter(data_columns_list[0]) + '1:' 
-            #range_str += cu.num2letter(data_columns_list[-1]) + '1'
-            #print(range_str)
-            #data_ref  = Reference(data_work_sheet, range_string=range_str)
-            #chart.add_data(data_ref, from_rows=True, titles_from_data=True)
-            # data area 1
-            title    = Reference(data_work_sheet, min_col=data_columns_list[0], max_col=data_columns_list[-1], min_row=1)
-            data_ref = Reference(data_work_sheet, min_col=data_columns_list[0], max_col=data_columns_list[-1], min_row=pattern_name_row_range[0], max_row=pattern_name_row_range[-1])
-            chart.add_data(data_ref, from_rows=True, titles_from_data=True)
-            chart.set_categories(title)
-            #chart.add_data(data_ref, from_rows=True )
-            # Series 1
-            #yvalues = Reference(data_work_sheet, min_col=data_columns_list[0], max_col=data_columns_list[-1], min_row=1)
-            #for row in pattern_name_row_range :
-            #    #col_title = data_work_sheet.cell(row=1,column=i).value
-            #    xvalues = Reference(data_work_sheet, min_col=data_columns_list[0], max_col=data_columns_list[-1], min_row=row)
-            #    #size    = Reference(data_work_sheet, min_col=i, min_row=data_rows_seq[0], max_row=data_rows_seq[-1])
-            #    series  = Series(values=yvalues, xvalues=xvalues, title_from_data=True)
-            #    chart.series.append(series)
-            wb['SurfaceChart'].add_chart(chart, chart_position)
-
 # draw patter ScatterChart for each sheet 
-csv_num = 0
+# chart layout: column  --  csv source 
+#               row     --  pattern 
+
+csv_num = 0 # column
 for csv in sys.argv[1:]:
+
+    # 1. check each csv and create work_sheet for them  
     if os.path.isfile(csv):
         pass
     else:
@@ -300,33 +280,45 @@ for csv in sys.argv[1:]:
     tmp_sheet_name = cu.get_file_name(csv)[1][0:30]
     #print(cu.load_csv(csv))
     wb.create_sheet(title=tmp_sheet_name)
-    # add row to Workbook
+
+    # 2. load data form csv and add data(rows) into Worksheet
     for row in cu.load_csv(csv, sort_sheet=True, sort_column_index=key_column_index):
         wb[tmp_sheet_name].append(row)
-    # get pattern_rows_range_dict 
+
+    # 3. each pattern of test get its own chart, use pattern name as the chart title 
+    # get pattern_rows_range_dict will calcaculate the column range for each pattern, those columns containing the data for chart to be drawing
     pattern_rows_range_dict = get_uniq_column_info(key_column, wb[tmp_sheet_name])
     #print(pattern_rows_range_dict.keys())
-    # one sheet one column 
-    chart_column_position = cu.num2letter(csv_num * 8 + 1)
+
+    # 4. calculate chart position in an individual work_sheet
+    # default ScatterChart scale in unit of cell: width 8, height 16 / 25
+    chart_column_position   = cu.num2letter(csv_num * 8 + 1) 
+    # chart position: chart column num for current csv file 
     csv_num = csv_num + 1
-    chart_num = 0
+
+    # chart position: chart row num for current pattern of data
+    chart_num = 0 # row
+
+    # 5. drawing ScatterChart
     #print(cu.bp_sort(pattern_rows_range_dict.keys(), screening=True))
     for pattern_name in cu.bp_sort(pattern_rows_range_dict.keys(), screening=True):
         # count chart number
     #    chart_num=len(wb.chartsheets) * 10 + 1
-        # chart default width(8 columns) 15 height 7.5(16cells) 
-        chart_row_position   = str(chart_num * 16 + 1)
-        chart_num = chart_num + 1
-        chart_position  = chart_column_position + chart_row_position 
-    #    print(position)
-        draw_pattern_scatterchart(wb[tmp_sheet_name], pattern_rows_range_dict[pattern_name], data_columns, chart_position, pattern_name)
 
-s=0
-for data_work_sheet in wb.worksheets:
-    if data_work_sheet[cu.num2letter(surface_columns[-1]) + '1'].value != None:
-        s = 1
-if s != 0 :
-    draw_pattern_surfacechart(wb, surface_columns)
+        # chart default width(8 columns) 15 height 7.5(16cells) 
+        chart_row_position_scatter  = str(chart_num * 16 + 1)
+        chart_row_position_surface  = str(chart_num * 25 + 1)
+        chart_num = chart_num + 1
+
+        # position str looks like this: "A1"
+        chart_position_scatter  = chart_column_position + chart_row_position_scatter 
+        chart_position_surface  = chart_column_position + chart_row_position_surface 
+    #    print(position)
+
+        # plot chart
+        draw_pattern_scatterchart(wb[tmp_sheet_name], pattern_rows_range_dict[pattern_name], data_columns, chart_position_scatter, pattern_name)
+        draw_pattern_surfacechart(wb[tmp_sheet_name], pattern_rows_range_dict[pattern_name], data_columns, chart_position_surface, pattern_name, surf_col_range)
+
 
 if len(sys.argv[1:]) > 1 :
     draw_lateral_pattern_scatterchart(wb, data_columns) 

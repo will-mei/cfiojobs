@@ -13,7 +13,7 @@
 # last edit :   20181225
 ###########################################################
 
-script_version=0.12.83
+script_version=0.12.98
 
 #ssh_timeout=15
 #host_concurrency_max=500
@@ -142,6 +142,7 @@ trap "echo -e '\n job stoped with user signals, stop running, please wait ...'; 
 #    echo "" >$0".dirlist"
 # temperary history file.
     echo "$(date "+%Y-%m-%d_%H:%M:%S"): $$ $0 $@" >>$0".hst"
+    conflict_args="$*"
 ##############################################################################################
 function _unquiet(){
 # give inof when not quiet mode.
@@ -387,7 +388,7 @@ function _record_cmd(){
         local failure_time=$(date "+%Y-%m-%d %H:%M:%S")
         local cmd_stat=$1
         shift
-        echo "$failure_time,$host_group_name,$host_ip,cmd_stat:$cmd_stat,${*}" >$output_dir/all_ssh_cmd.log
+        echo "$failure_time,$host_group_name,$host_ip,cmd_stat:$cmd_stat,${*}" >>$output_dir/all_ssh_cmd.log
     fi
 }
 # store log info to output_dir 
@@ -427,6 +428,10 @@ function _cmdfail(){
     #give command return value check failed info 
     _record_fail
 }
+function _permitfail(){
+    # no permit on file or dir 
+    _record_fail 
+}
 
 ##############################################################################################
 # config file check
@@ -450,19 +455,28 @@ function _grp_conf_check(){
                 if [[ -z ${group_info[$index]} ]] ;then
                     local missing_info+=" ${index_name_array[$index]},"
                 elif [[ $index -eq 2 ]] ;then 
+                    # check ssh port
                     if _check_port ${group_info[$index]} ;then
                         :
                     else 
                         echo "group :$f1, illegal ssh port ${group_info[$index]} "
                         local check_stat=1 
                     fi
-                elif [[ $index -eq 5 ]] && [[ ${group_info[$index]} == "--" ]] ;then
-                    local grp_file=$(dirname $0)/conf/$f1'.grp'
+                elif [[ $index -eq 5 ]] ;then
+                    # check hostname/ip lisf file 
+                    if [[ ${group_info[$index]} == "--" ]] ;then
+                        local grp_file=$(dirname $0)/conf/$f1'.grp'
+                    elif [[ ${group_info[$index]} == "-"* ]] ;then
+                        local grp_file=${group_info[$index]:1}
+                    fi
                     if [[ -f $grp_file ]] ;then
                         for i in  $(_format_conf $grp_file);do
-                            if ! _check_ip $i ;then
-                                echo "group :$f1, illegal ip format $i"
-                                local check_stat=1 
+                            # ip ip check ip format
+                            if [[ ${i//[0-9]/} == "..." ]] ;then
+                                if ! _check_ip $i ;then
+                                    echo "group :$f1, illegal ip format $i"
+                                    local check_stat=1 
+                                fi
                             fi
                         done
                     fi
@@ -520,9 +534,14 @@ function _group_check(){
                              HOST_GROUP_PORT_ARRAY[$host_group_name]=${group_info[2]}
                              HOST_GROUP_BKND_ARRAY[$host_group_name]=${group_info[3]//,/ }
                           HOST_GROUP_SH_MODE_ARRAY[$host_group_name]=${group_info[4]}
-                    # find ip list in config dir "conf/xxx.grp"
-                    if [[ ${group_info[5]} == '--' ]] ;then
-                        local host_conf=$(dirname $0)/conf/$host_group_name".grp"
+                    # ip/hostname list file 
+                    if [[ ${group_info[5]} == "-"* ]] ;then
+                        if [[ ${group_info[5]} == '--' ]] ;then
+                            # find ip list in config dir "conf/xxx.grp"
+                            local host_conf=$(dirname $0)/conf/$host_group_name".grp"
+                        else
+                            local host_conf=${group_info[5]:1}
+                        fi
                         if [[ -f $host_conf ]] ;then
                             # reformat hostname.
                             HOST_GROUP_IP_LIST_ARRAY[$host_group_name]=$(_uniq_list $(_format_conf $host_conf ) | sed 's/-/_/g' )
@@ -587,7 +606,7 @@ function _show_group_info(){
             local tmpfile_group_info=$(mktemp)
             echo "NAME,USER,PORT,BKND,MODE,IP" >$tmpfile_group_info 
             _format_conf $g_conf |sed -e 's/,/\+/g' -e 's/\ /,/g' >>$tmpfile_group_info
-            bash $(dirname $0)/tools/catcsv.sh $tmpfile_group_info
+            bash $(dirname $0)/tools/catcsv.sh $tmpfile_group_info | sed 1d
             rm -f $tmpfile_group_info
 }
 function _job_group_check(){
@@ -1080,7 +1099,7 @@ function _ssh_send(){
         #fi 
         local cmd_stat=$?
         [[ $cmd_stat -ne 0 ]] && _cmdfail
-        [[ $pdebug == "True" ]] && _record_cmd "$cmd_stat" "${cmd_prefix}$@"
+        [[ $pdebug == "True" ]] || [[ $log_debug == "True" ]] && _record_cmd "$cmd_stat" "${cmd_prefix}$@"
         return $cmd_stat 
     fi
 }
@@ -1360,11 +1379,9 @@ function _host_fio_check(){
         _pingfail 
         #_error_interrupt
     fi
-    while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
-        _verbose  hostinfo && _waiting 5 "reading"
-        sleep 5
-    done
-    while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
+    local kwargs
+    [[ $rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
+    while _ssh_send "ps aux |grep fio |grep $kwargs |grep -qv grep " ;do
         _verbose  hostinfo && _waiting 5 "reading"
         sleep 5
     done
@@ -1401,6 +1418,14 @@ function _send_fio(){
         if _ssh_send "fio -v" &>/dev/null ;then
             # log on remote host
             _ssh_send "mkdir -p $log_dir"
+            # check log dir permit
+            if ! _ssh_send "touch $log_dir/fio-err.log" ;then
+                # 
+                _red "   $host_ip, log dir : $log_dir permition check failed"
+                _permitfail
+                # no log dir, no log , no need to continue 
+                return  
+            fi
             if [[ $rbd_mode == "True" ]] ;then 
                 local host_blk_list=${HOST_GROUP_RBD_DEV_ARRAY[$host_ip]}
             else 
@@ -1418,10 +1443,10 @@ function _send_fio(){
                 # check blk file
                 if _ssh_send "ls $BLK" &>/dev/null ;then
                     log_name=$job_name-${BLK//\//}".log.json"
-                    # check sata disk with smartctl, nvme disks are not supported
+                    # add a tag for fio log marking host and job info 
                     local blk_name=${BLK##*/}
                     if [[ $rbd_mode == "True" ]] ;then
-                        local tag=$num_jobs-${host_ip//-/_}-rbd  
+                        local tag=$num_jobs-${host_ip//-/_}-rbd 
                         # skip rbd check   
                         #:
                     elif [[ ${blk_name//nvme/} != "${blk_name}" ]] ;then
@@ -1430,7 +1455,8 @@ function _send_fio(){
                         #:
                     else
                         local tag=$num_jobs-${host_ip//-/_}-hdd  
-                        if [[ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ]] ;then
+                        # check sata disk with smartctl, nvme disks are not supported
+                        if [ $(_ssh_send "smartctl -V &>/dev/null ;echo \$?") -eq 0 ] ;then
                             # if smartmontools installed, check status.
                             blk_stats=$(_ssh_send "smartctl -H $BLK |grep 'SMART Health Status:' |awk '{print\$NF}' ")
                             [[ $blk_stats != "OK" ]] && _verbose &&"info: $host_ip \"$BLK\" smartmontools check failed."
@@ -1442,9 +1468,24 @@ function _send_fio(){
                     #
                     _verbose && echo "log name: $log_name"
                 else
-                    #_red "host: $host_ip, blk or file : \"$BLK\" is not available on host!"
-                    _devfail 
-                    _verbose "jobinfo"
+                    # recheck ping /ssh 
+                    if _ping_check ;then
+                        if _ssh_check ;then
+                            #_red "host: $host_ip, blk or file : \"$BLK\" is not available on host!"
+                            _devfail 
+                            _verbose "jobinfo"
+                            # no need to continue if there is no such disk 
+                            continue 
+                        else
+                            # host unreachable, no need to check other blks 
+                            _sshfail
+                            break
+                        fi
+                    else
+                        # host unreachable, no need to check other blks 
+                        _pingfail
+                        break
+                    fi
                 fi
                 # ready to send
                 # update data size to a random value 
@@ -1844,25 +1885,30 @@ function _host_fio_check2(){
             if _ping_check ;then
             # no fio between 15 secends check, three times of send interval
                 if _ssh_check ;then
-                    if _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;then
-                        while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
-                            sleep 30
-                        done
-                    # rbd test check
-                    elif _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;then
-                        while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
-                            sleep 30
-                        done
-                    else
-                        sleep 15
-                        while _ssh_send 'ps aux |grep fio |grep filename |grep -qv grep ' ;do
-                            sleep 30
-                        done
-                        # wait rbd
-                        while _ssh_send 'ps aux |grep fio |grep rbdname |grep -qv grep ' ;do
-                            sleep 30
-                        done
+                    local kwblks kwargs
+                    if [[ $rbd_mode == "True" ]] ;then 
+                        local host_blk_list=${HOST_GROUP_RBD_DEV_ARRAY[$host_ip]}
+                        kwblks=${host_blk_list// /|}
+                    else 
+                        local host_blk_list=${BLK_DEV_ARRAY[$blk_group_name]}
+                        kwblks=${host_blk_list// /|}
                     fi
+                    #for BLK in $host_blk_list ;do
+                        kwblks="${kwblks//-/\-}"
+                        [[ $rbd_mode == "True" ]] && kwargs="rbdname" || kwargs="filename"
+                        if _ssh_send "ps aux |grep fio |grep $kwargs |grep -E \"$kwblks\" |grep -qv grep " ;then
+                            # wait blk / rbd till end
+                            while _ssh_send "ps aux |grep fio |grep $kwargs |grep -E \"$kwblks\" |grep -qv grep " ;do
+                                sleep 30
+                            done
+                        else
+                            # check after 3 times subprocess check interval
+                            sleep 15
+                            while _ssh_send "ps aux |grep fio |grep $kwargs |grep -E \"$kwblks\" |grep -qv grep " ;do
+                                sleep 30
+                            done
+                        fi
+                    #done
                 else
                     _sshfail &>/dev/null
                 fi
@@ -2018,6 +2064,7 @@ function _group_pre_check(){
         # if fio failed, no need to continue
         #[[ $check_stat -eq 1 ]] && echo "$1 pre check partially failed." && _timeout 15 && _error_interrupt
     _unquiet "host group $1: pre check action done."
+    return 0
 }
 function _host_blk_detect(){
     #
@@ -2180,6 +2227,26 @@ function _list_all_running_jobs(){
         echo "no groups to list"
     fi
 }
+function _test_conflict_check(){
+    local pid 
+    local conflict_test_list=$(grep "${conflict_args//-/\\-}" $0".hst" |grep -v $$ |awk '{print$2}')
+    for pid in $conflict_test_list ;do
+        while ps -u $USER -aeo pid,args | grep $pid |grep -q "${conflict_args//-/\\-}"  ;do 
+            _warn "TEST ON HOLD, the test you are try to launch is conflicted with an existing test with pid: $pid, args: \"$0 $conflict_args\" on local host."
+            sleep 60
+        done 
+    done
+}
+function _list_all_hwinfo(){
+    local check_opt=$1
+    if [[ -n $host_group_list ]] ;then
+        for i in $host_group_list ;do
+            _yellow "prepare hwinfo tools ..."
+            bash $0 -g $i -D $(dirname $0)/tools/hwinfo.run -T /tmp/ &>/dev/null
+            bash $0 -g $i "chmod +x /tmp/hwinfo.run; /tmp/hwinfo.run $check_opt ; rm -f /tmp/hwinfo.run " -fp  |sed 1d 
+        done
+    fi
+}
 function _get_default_output_dir(){
     if [[ $send_fio == "True"  ]] ;then
         local dir_name="${0#*/}-test-$date"
@@ -2288,6 +2355,7 @@ function _execute_job_batch(){
 function _fio_group_report(){
         #build final report of test
         _yellow "\n$(date "+%Y-%m-%d_%H:%M:%S") FIO TEST \"$output_dir\", LOG ANALYSING ..."
+        [[ $rbd_mode == "True" ]] && local extra_arg="rbd"
         #final_report
         for blk_group_name in $blk_group_list ;do
             # multy blk_group 
@@ -2296,11 +2364,11 @@ function _fio_group_report(){
             # loop through multy jobgroup 
             if [[ $multy_job_group == "True" ]] ;then 
                 for job_group_dir in $(ls $path_flyover/* -d) ;do 
-                    python2 $(dirname $0)/bin/cfiojobs.log2.py $job_group_dir
+                    python2 $(dirname $0)/bin/cfiojobs.log2.py $job_group_dir $extra_arg
                     [[ $? -ne 0 ]] && _red "dir: \"$job_group_dir\" status abnormal!" 
                 done
             else
-                python2 $(dirname $0)/bin/cfiojobs.log2.py $path_flyover 
+                python2 $(dirname $0)/bin/cfiojobs.log2.py $path_flyover $extra_arg
                 [[ $? -ne 0 ]] && _red "dir: \"$path_flyover\" status abnormal!" 
             fi
         done
@@ -2353,6 +2421,7 @@ function _fio_scale_control(){
 function _parameter_set(){
 
 pdebug="False"
+log_debug="True"
 conf_check="False"
 quiet_mode="False"
 list_fio="False"
@@ -2478,8 +2547,11 @@ _parse_short_args(){
             ;;
         "-q" )
             quiet_mode="True"
+            # background debug info 
+            log_debug="False"
             ;;
         "-d" )
+            # print front end debug info  
             pdebug="True"
             ;;
         "-f" )
@@ -2767,6 +2839,22 @@ while [ $# -gt 0 ] ;do
         "--sudo" )
             cmd_prefix="sudo "
             ;;
+        "--hwinfo" )
+            if [[ $# -lt 2 ]]
+            then
+                echo "$0: --hwinfo requires a arg word, it should be one of : cpu, mem, nic, hdd, nvme, raid, all. "
+                exit 1
+            fi
+            i=" cpu mem nic hdd nvme raid all "
+            j=${2// /}
+            [[ ${i//\ $j\ /} == "$i" ]] && _red "unknown option: $2" && exit 1
+            if [[ $j == "all" ]];then
+                _list_all_hwinfo
+            else
+                _list_all_hwinfo $2
+            fi
+            exit 0
+            ;;
         "--version" )
             echo "$0 $script_version"
             exit 0
@@ -2870,6 +2958,7 @@ done
 # send files, jobs and cmd
     elif [[ $send_fio == "True" ]] ;then
 
+        _test_conflict_check 
         #check output directory, set default to a datatime stamp.
         _check_output_dir 
         #check test env for all host groups, fio installation, network reachability, ssh access.
